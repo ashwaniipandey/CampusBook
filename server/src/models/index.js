@@ -1,0 +1,40 @@
+import University from './University.js';
+import Category from './Category.js';
+import User from './User.js';
+import Book from './Book.js';
+import Order from './Order.js';
+import ExchangeRequest from './ExchangeRequest.js';
+import DonationRequest from './DonationRequest.js';
+import Conversation from './Conversation.js';
+import Message from './Message.js';
+import Wishlist from './Wishlist.js';
+import Notification from './Notification.js';
+
+export {
+  University,
+  Category,
+  User,
+  Book,
+  Order,
+  ExchangeRequest,
+  DonationRequest,
+  Conversation,
+  Message,
+  Wishlist,
+  Notification,
+};
+
+export default {
+  University,
+  Category,
+  User,
+  Book,
+  Order,
+  ExchangeRequest,
+  DonationRequest,
+  Conversation,
+  Message,
+  Wishlist,
+  Notification,
+};
+
