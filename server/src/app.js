@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
+import authRoutes from './routes/authRoutes.js';
+import universityRoutes from './routes/universityRoutes.js';
 
 const app = express();
 
@@ -55,6 +57,10 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/universities', universityRoutes);
 
 // Root welcome endpoint
 app.get('/', (req, res) => {

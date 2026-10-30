@@ -91,6 +91,22 @@ const userSchema = new mongoose.Schema(
       },
       default: 'active',
     },
+    verificationOtp: {
+      type: String,
+      select: false,
+    },
+    verificationOtpExpires: {
+      type: Date,
+      select: false,
+    },
+    resetPasswordOtp: {
+      type: String,
+      select: false,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      select: false,
+    },
   },
   {
     timestamps: true,
@@ -114,10 +130,14 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Transform to remove password when serialized
+// Transform to remove password and secret tokens when serialized
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;
+  delete user.verificationOtp;
+  delete user.verificationOtpExpires;
+  delete user.resetPasswordOtp;
+  delete user.resetPasswordExpires;
   return user;
 };
 
