@@ -722,10 +722,10 @@ function ExploreContent() {
                     onChange={(e) => handleSortChange(e.target.value)}
                     className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-campus-500 cursor-pointer"
                   >
-                    <option value="newest">Newest Arrivals</option>
+                    <option value="newest">Newest</option>
                     <option value="price_asc">Price: Low to High</option>
                     <option value="price_desc">Price: High to Low</option>
-                    <option value="popular">Most Popular</option>
+                    <option value="popular">Popular</option>
                   </select>
                 </div>
               </div>
@@ -979,17 +979,17 @@ function ExploreContent() {
                     {/* Price Footer */}
                     <div className="p-4 pt-2 border-t border-slate-100 flex items-center justify-between">
                       {book.listingType === 'donate' ? (
-                        <span className="text-xs font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                          FREE DONATION
+                        <span className="text-xs font-black text-emerald-700 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg">
+                          Free
                         </span>
                       ) : book.listingType === 'exchange' ? (
-                        <span className="text-xs font-black text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
-                          EXCHANGE / SWAP
+                        <span className="text-xs font-black text-amber-700 bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-lg">
+                          Exchange
                         </span>
                       ) : (
                         <div className="flex items-baseline gap-1.5">
                           <span className="text-lg font-black text-slate-900">
-                            ${Number(book.sellingPrice || 0).toFixed(2)}
+                            ${Number(book.sellingPrice ?? book.price ?? 0).toFixed(2)}
                           </span>
                           {orig > 0 && (
                             <span className="text-xs text-slate-400 line-through">

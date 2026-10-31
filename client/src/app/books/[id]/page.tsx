@@ -478,68 +478,75 @@ export default function BookDetailPage() {
                 </p>
               </div>
 
-              {/* Academic & Book Metadata Grid */}
+              {/* Academic & Book Details Table */}
               <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Course & Publishing Information
+                  Book Specifications & Details
                 </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-                  {university && (
-                    <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50/70 border border-slate-100">
-                      <GraduationCap className="w-4 h-4 text-campus-600 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="block text-[11px] font-bold text-slate-400 uppercase">
-                          University Campus
-                        </span>
-                        <span className="font-semibold text-slate-800">{university.name}</span>
-                        {university.city && (
-                          <span className="block text-[11px] text-slate-500">
-                            {university.city}, {university.country}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {book.subject && (
-                    <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50/70 border border-slate-100">
-                      <BookOpen className="w-4 h-4 text-campus-600 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="block text-[11px] font-bold text-slate-400 uppercase">
-                          Subject / Department
-                        </span>
-                        <span className="font-semibold text-slate-800">{book.subject}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {book.isbn && (
-                    <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50/70 border border-slate-100">
-                      <Hash className="w-4 h-4 text-campus-600 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="block text-[11px] font-bold text-slate-400 uppercase">
-                          ISBN
-                        </span>
-                        <span className="font-mono font-semibold text-slate-800">{book.isbn}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {(book.publisher || book.publicationYear) && (
-                    <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50/70 border border-slate-100">
-                      <Building className="w-4 h-4 text-campus-600 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="block text-[11px] font-bold text-slate-400 uppercase">
-                          Publisher & Year
-                        </span>
-                        <span className="font-semibold text-slate-800">
-                          {book.publisher || 'N/A'}{' '}
-                          {book.publicationYear ? `(${book.publicationYear})` : ''}
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-2xs">
+                  <table className="w-full text-left text-xs sm:text-sm">
+                    <tbody className="divide-y divide-slate-100">
+                      <tr className="hover:bg-slate-50/50">
+                        <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70 w-1/3">Condition</td>
+                        <td className="py-2.5 px-4 text-slate-800 font-semibold">{book.condition}</td>
+                      </tr>
+                      <tr className="hover:bg-slate-50/50">
+                        <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Listing Type</td>
+                        <td className="py-2.5 px-4 text-slate-800 font-medium capitalize">{book.listingType}</td>
+                      </tr>
+                      {category && (
+                        <tr className="hover:bg-slate-50/50">
+                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Category</td>
+                          <td className="py-2.5 px-4 text-slate-800 font-medium">{category.name}</td>
+                        </tr>
+                      )}
+                      {university && (
+                        <tr className="hover:bg-slate-50/50">
+                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">University Campus</td>
+                          <td className="py-2.5 px-4 text-slate-800 font-medium">{university.name}</td>
+                        </tr>
+                      )}
+                      {book.course && (
+                        <tr className="hover:bg-slate-50/50">
+                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Course Code</td>
+                          <td className="py-2.5 px-4 text-slate-800 font-semibold text-campus-700">{book.course}</td>
+                        </tr>
+                      )}
+                      {book.subject && (
+                        <tr className="hover:bg-slate-50/50">
+                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Subject</td>
+                          <td className="py-2.5 px-4 text-slate-800 font-medium">{book.subject}</td>
+                        </tr>
+                      )}
+                      {book.semester && (
+                        <tr className="hover:bg-slate-50/50">
+                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Semester</td>
+                          <td className="py-2.5 px-4 text-slate-800 font-medium">{book.semester}</td>
+                        </tr>
+                      )}
+                      {book.isbn && (
+                        <tr className="hover:bg-slate-50/50">
+                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">ISBN</td>
+                          <td className="py-2.5 px-4 text-slate-800 font-mono font-medium">{book.isbn}</td>
+                        </tr>
+                      )}
+                      {book.edition && (
+                        <tr className="hover:bg-slate-50/50">
+                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Edition</td>
+                          <td className="py-2.5 px-4 text-slate-800 font-medium">{book.edition}</td>
+                        </tr>
+                      )}
+                      {(book.publisher || book.publicationYear) && (
+                        <tr className="hover:bg-slate-50/50">
+                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Publisher / Year</td>
+                          <td className="py-2.5 px-4 text-slate-800 font-medium">
+                            {book.publisher || 'N/A'}{book.publicationYear ? ` (${book.publicationYear})` : ''}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
