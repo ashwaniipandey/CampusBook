@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
+import { signupSchema, SignupFormValues } from '@/lib/validations/auth';
 import { University } from '@/types';
 import api from '@/lib/api';
 import {
@@ -16,101 +19,139 @@ import {
   ArrowRight,
   AlertCircle,
   Loader2,
-  CheckCircle2,
   BadgeCheck,
   Eye,
   EyeOff,
+  Search,
+  ChevronDown,
+  Check,
+  RotateCw,
+  Sparkles,
 } from 'lucide-react';
 
+const popularCourses = [
+  'Computer Science',
+  'Economics & Finance',
+  'Biology & Pre-Med',
+  'Mechanical Engineering',
+  'Business Administration',
+  'Mathematics & Statistics',
+];
+
 export default function SignupPage() {
-  const { register } = useAuth();
+  const { register: registerUser } = useAuth();
   const router = useRouter();
 
   const [universities, setUniversities] = useState<University[]>([]);
   const [loadingUnis, setLoadingUnis] = useState(true);
+  const [uniError, setUniError] = useState<string | null>(null);
 
-  // Form fields
-  const [name, setName] = useState('');
-  const [universityId, setUniversityId] = useState('');
-  const [email, setEmail] = useState('');
-  const [department, setDepartment] = useState('');
-  const [yearOfStudy, setYearOfStudy] = useState('1');
-  const [studentId, setStudentId] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  // Searchable university dropdown state
+  const [isUniDropdownOpen, setIsUniDropdownOpen] = useState(false);
+  const [uniSearchQuery, setUniSearchQuery] = useState('');
+  const uniDropdownRef = useRef<HTMLDivElement>(null);
+
   const [showPassword, setShowPassword] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  // UI state
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      name: '',
+      universityId: '',
+      email: '',
+      department: '',
+      yearOfStudy: '1',
+      studentId: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
 
-  // Fetch universities
+  const watchedUniId = watch('universityId');
+  const watchedEmail = watch('email') || '';
+
+  // Close dropdown on outside click
   useEffect(() => {
-    async function loadUniversities() {
-      try {
-        const res = await api.getUniversities();
-        if (res && res.universities) {
-          setUniversities(res.universities);
-          if (res.universities.length > 0) {
-            setUniversityId(res.universities[0]._id);
-          }
-        }
-      } catch (err: any) {
-        console.error('Failed to load universities:', err);
-      } finally {
-        setLoadingUnis(false);
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        uniDropdownRef.current &&
+        !uniDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsUniDropdownOpen(false);
       }
     }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch universities
+  const loadUniversities = async () => {
+    setLoadingUnis(true);
+    setUniError(null);
+    try {
+      const res = await api.getUniversities();
+      if (res && res.universities && res.universities.length > 0) {
+        setUniversities(res.universities);
+        // Default to first university if none selected
+        if (!watchedUniId) {
+          setValue('universityId', res.universities[0]._id, { shouldValidate: true });
+        }
+      } else {
+        setUniError('No university campuses returned by server.');
+      }
+    } catch (err: any) {
+      setUniError(err.message || 'Unable to connect to server to load universities.');
+    } finally {
+      setLoadingUnis(false);
+    }
+  };
+
+  useEffect(() => {
     loadUniversities();
   }, []);
 
-  const selectedUni = universities.find((u) => u._id === universityId);
+  const selectedUni = universities.find((u) => u._id === watchedUniId);
+
+  // Filter universities based on search query
+  const filteredUniversities = universities.filter((u) => {
+    const q = uniSearchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      u.name.toLowerCase().includes(q) ||
+      u.code.toLowerCase().includes(q) ||
+      u.domain.toLowerCase().includes(q) ||
+      (u.city && u.city.toLowerCase().includes(q))
+    );
+  });
+
   const isUniEmail =
-    selectedUni && email.toLowerCase().includes(selectedUni.domain.toLowerCase());
+    selectedUni &&
+    watchedEmail.toLowerCase().endsWith(`@${selectedUni.domain.toLowerCase()}`);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const onSubmit = async (data: SignupFormValues) => {
+    setServerError(null);
 
-    // Validations
-    if (!name.trim()) {
-      setError('Please provide your full name');
-      return;
-    }
-    if (!universityId) {
-      setError('Please select your university');
-      return;
-    }
-    if (!email.trim() || !email.includes('@')) {
-      setError('Please provide a valid email address');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    setIsSubmitting(true);
-    const result = await register({
-      name: name.trim(),
-      email: email.trim(),
-      password,
-      universityId,
-      department: department.trim(),
-      yearOfStudy: Number(yearOfStudy),
-      studentId: studentId.trim(),
+    const result = await registerUser({
+      name: data.name.trim(),
+      email: data.email.trim(),
+      password: data.password,
+      universityId: data.universityId,
+      department: data.department ? data.department.trim() : '',
+      yearOfStudy: Number(data.yearOfStudy || 1),
+      studentId: data.studentId ? data.studentId.trim() : '',
     });
-    setIsSubmitting(false);
 
     if (result.success) {
-      // Redirect to OTP verification page
-      router.push(`/verify-otp?email=${encodeURIComponent(email.trim())}`);
+      router.push(`/verify-otp?email=${encodeURIComponent(data.email.trim())}`);
     } else {
-      setError(result.error || 'Failed to create student account');
+      setServerError(result.error || 'Failed to create student account');
     }
   };
 
@@ -126,20 +167,20 @@ export default function SignupPage() {
             Create Student Account
           </h2>
           <p className="text-xs sm:text-sm text-slate-500">
-            Join your campus community to swap, buy, and donate textbooks safely.
+            Join your campus community to trade, swap, and donate textbooks safely.
           </p>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm">
+        {/* Server Error Alert */}
+        {serverError && (
+          <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm animate-in fade-in">
             <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500 mt-0.5" />
-            <span>{error}</span>
+            <span>{serverError}</span>
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Form with React Hook Form + Zod */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Full Name */}
             <div className="space-y-1 sm:col-span-2">
@@ -150,91 +191,211 @@ export default function SignupPage() {
                 <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  {...register('name')}
                   placeholder="e.g. Alex Johnson"
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-sm text-slate-900"
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-none focus:ring-2 ${
+                    errors.name
+                      ? 'border-rose-300 focus:ring-rose-500'
+                      : 'border-slate-200 focus:ring-campus-500'
+                  }`}
                 />
               </div>
+              {errors.name && (
+                <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {errors.name.message}
+                </p>
+              )}
             </div>
 
-            {/* University Selector */}
-            <div className="space-y-1 sm:col-span-2">
+            {/* Searchable University Dropdown */}
+            <div className="space-y-1 sm:col-span-2" ref={uniDropdownRef}>
               <label className="text-xs font-semibold text-slate-700 block">
                 University Campus *
               </label>
-              <div className="relative">
-                <GraduationCap className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <select
-                  value={universityId}
-                  onChange={(e) => setUniversityId(e.target.value)}
-                  disabled={loadingUnis}
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-sm text-slate-800 bg-white"
-                >
-                  {loadingUnis ? (
-                    <option>Loading universities...</option>
-                  ) : (
-                    universities.map((uni) => (
-                      <option key={uni._id} value={uni._id}>
-                        {uni.name} ({uni.domain})
-                      </option>
-                    ))
+
+              {/* Hidden field for React Hook Form registration */}
+              <input type="hidden" {...register('universityId')} />
+
+              {/* Error Loading Universities with Retry Button */}
+              {uniError ? (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                    <span>{uniError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={loadUniversities}
+                    className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg flex items-center gap-1 flex-shrink-0 transition"
+                  >
+                    <RotateCw className="w-3.5 h-3.5" /> Retry
+                  </button>
+                </div>
+              ) : (
+                /* Dropdown Trigger Box */
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsUniDropdownOpen(!isUniDropdownOpen)}
+                    disabled={loadingUnis}
+                    className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm text-left flex items-center justify-between bg-white focus:outline-none focus:ring-2 ${
+                      errors.universityId
+                        ? 'border-rose-300 focus:ring-rose-500'
+                        : 'border-slate-200 focus:ring-campus-500'
+                    }`}
+                  >
+                    <GraduationCap className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <span className="truncate text-slate-800 font-medium">
+                      {loadingUnis ? (
+                        <span className="text-slate-400 flex items-center gap-2">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading universities...
+                        </span>
+                      ) : selectedUni ? (
+                        `${selectedUni.name} (@${selectedUni.domain})`
+                      ) : (
+                        <span className="text-slate-400">Select or search your campus...</span>
+                      )}
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                  </button>
+
+                  {/* Searchable Options Menu */}
+                  {isUniDropdownOpen && !loadingUnis && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 p-2 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                      {/* Search Filter Input */}
+                      <div className="relative">
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={uniSearchQuery}
+                          onChange={(e) => setUniSearchQuery(e.target.value)}
+                          placeholder="Type college name, code, or city..."
+                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-slate-900 bg-slate-50"
+                          autoFocus
+                        />
+                      </div>
+
+                      {/* University Options List */}
+                      <div className="max-h-52 overflow-y-auto space-y-1">
+                        {filteredUniversities.length === 0 ? (
+                          <div className="p-3 text-center text-xs text-slate-400">
+                            No university matching &quot;{uniSearchQuery}&quot; found
+                          </div>
+                        ) : (
+                          filteredUniversities.map((uni) => {
+                            const isSelected = uni._id === watchedUniId;
+                            return (
+                              <button
+                                key={uni._id}
+                                type="button"
+                                onClick={() => {
+                                  setValue('universityId', uni._id, { shouldValidate: true });
+                                  setIsUniDropdownOpen(false);
+                                  setUniSearchQuery('');
+                                }}
+                                className={`w-full px-3 py-2 text-xs rounded-xl flex items-center justify-between text-left transition ${
+                                  isSelected
+                                    ? 'bg-campus-50 text-campus-800 font-bold'
+                                    : 'hover:bg-slate-50 text-slate-700'
+                                }`}
+                              >
+                                <div>
+                                  <div className="font-semibold text-slate-900">{uni.name}</div>
+                                  <div className="text-[11px] text-slate-400">
+                                    @{uni.domain} • {uni.city}, {uni.state || uni.country}
+                                  </div>
+                                </div>
+                                {isSelected && (
+                                  <Check className="w-4 h-4 text-campus-600 flex-shrink-0" />
+                                )}
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
                   )}
-                </select>
-              </div>
+                </div>
+              )}
+
+              {errors.universityId && (
+                <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {errors.universityId.message}
+                </p>
+              )}
             </div>
 
             {/* Email */}
             <div className="space-y-1 sm:col-span-2">
               <label className="text-xs font-semibold text-slate-700 block">
-                Student Email Address *
+                University Email Address *
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register('email')}
                   placeholder={
                     selectedUni
                       ? `e.g. yourname@${selectedUni.domain}`
                       : 'e.g. student@university.edu'
                   }
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-sm text-slate-900"
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-none focus:ring-2 ${
+                    errors.email
+                      ? 'border-rose-300 focus:ring-rose-500'
+                      : 'border-slate-200 focus:ring-campus-500'
+                  }`}
                 />
               </div>
-              {/* Domain Recognition Badge */}
+              {errors.email && (
+                <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {errors.email.message}
+                </p>
+              )}
               {isUniEmail ? (
-                <div className="flex items-center gap-1.5 text-xs text-emerald-700 pt-1">
-                  <BadgeCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <div className="flex items-center gap-1.5 text-xs text-emerald-700 pt-1 font-medium">
+                  <BadgeCheck className="w-4 h-4 text-emerald-600" />
                   <span>
-                    Valid {selectedUni?.domain} domain! Unlocks Verified Student badge upon OTP.
+                    Valid @{selectedUni?.domain} domain recognized! Unlocks Verified Student badge upon OTP.
                   </span>
                 </div>
               ) : selectedUni ? (
-                <p className="text-[11px] text-slate-400 pt-0.5">
-                  Tip: Use your institutional @{selectedUni.domain} address for automatic student verification.
+                <p className="text-[11px] text-slate-500 pt-0.5">
+                  Must end with <strong>@{selectedUni.domain}</strong> to register for this campus.
                 </p>
               ) : null}
             </div>
 
-            {/* Department / Course */}
-            <div className="space-y-1">
+            {/* Department / Course Field */}
+            <div className="space-y-1.5 sm:col-span-2">
               <label className="text-xs font-semibold text-slate-700 block">
-                Course / Department
+                Course / Department / Major
               </label>
               <div className="relative">
                 <BookMarked className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  placeholder="e.g. Computer Science"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-sm text-slate-900"
+                  {...register('department')}
+                  placeholder="e.g. Computer Science, Economics, etc."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-campus-500"
                 />
+              </div>
+              {/* Quick Pick Course Suggestion Chips */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold">Suggested:</span>
+                {popularCourses.map((course) => (
+                  <button
+                    key={course}
+                    type="button"
+                    onClick={() => setValue('department', course, { shouldValidate: true })}
+                    className="text-[11px] px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-campus-50 hover:text-campus-700 text-slate-600 transition"
+                  >
+                    {course}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -244,17 +405,29 @@ export default function SignupPage() {
                 Year of Study
               </label>
               <select
-                value={yearOfStudy}
-                onChange={(e) => setYearOfStudy(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-sm text-slate-800 bg-white"
+                {...register('yearOfStudy')}
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-campus-500"
               >
                 <option value="1">1st Year (Freshman)</option>
                 <option value="2">2nd Year (Sophomore)</option>
                 <option value="3">3rd Year (Junior)</option>
                 <option value="4">4th Year (Senior)</option>
-                <option value="5">5th Year (Graduate / Master's)</option>
+                <option value="5">5th Year (Graduate / Master&apos;s)</option>
                 <option value="6">PhD / Doctorate</option>
               </select>
+            </div>
+
+            {/* Student ID (Optional) */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-700 block">
+                Student ID <span className="text-slate-400 font-normal">(Optional)</span>
+              </label>
+              <input
+                type="text"
+                {...register('studentId')}
+                placeholder="e.g. ST-2024-001"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-campus-500"
+              />
             </div>
 
             {/* Password */}
@@ -266,11 +439,13 @@ export default function SignupPage() {
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register('password')}
                   placeholder="Min 6 characters"
-                  required
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-sm text-slate-900"
+                  className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-none focus:ring-2 ${
+                    errors.password
+                      ? 'border-rose-300 focus:ring-rose-500'
+                      : 'border-slate-200 focus:ring-campus-500'
+                  }`}
                 />
                 <button
                   type="button"
@@ -280,6 +455,12 @@ export default function SignupPage() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             {/* Confirm Password */}
@@ -291,13 +472,21 @@ export default function SignupPage() {
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  {...register('confirmPassword')}
                   placeholder="Re-enter password"
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-sm text-slate-900"
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-none focus:ring-2 ${
+                    errors.confirmPassword
+                      ? 'border-rose-300 focus:ring-rose-500'
+                      : 'border-slate-200 focus:ring-campus-500'
+                  }`}
                 />
               </div>
+              {errors.confirmPassword && (
+                <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {errors.confirmPassword.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -314,7 +503,7 @@ export default function SignupPage() {
               </>
             ) : (
               <>
-                Create Account & Send Verification Code
+                Create Account & Dispatch OTP
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -335,4 +524,3 @@ export default function SignupPage() {
     </div>
   );
 }
-

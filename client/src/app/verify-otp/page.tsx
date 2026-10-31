@@ -3,10 +3,12 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
+import { verifyOtpSchema, VerifyOtpFormValues } from '@/lib/validations/auth';
 import {
   ShieldCheck,
-  Mail,
   ArrowRight,
   AlertCircle,
   Loader2,
@@ -18,19 +20,27 @@ import {
 
 function VerifyOtpContent() {
   const { user, verifyOtp, resendOtp, redirectByRole } = useAuth();
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const queryEmail = searchParams.get('email') || '';
   const emailToVerify = queryEmail || user?.email || '';
 
-  const [otp, setOtp] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [cooldown, setCooldown] = useState(30);
   const [isVerifiedSuccess, setIsVerifiedSuccess] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<VerifyOtpFormValues>({
+    resolver: zodResolver(verifyOtpSchema),
+    defaultValues: {
+      otp: '',
+    },
+  });
 
   // Countdown timer for resend
   useEffect(() => {
@@ -43,30 +53,22 @@ function VerifyOtpContent() {
     return () => clearInterval(timer);
   }, [cooldown]);
 
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const onSubmit = async (data: VerifyOtpFormValues) => {
+    setServerError(null);
     setSuccessMessage(null);
 
-    if (!otp.trim() || otp.trim().length !== 6) {
-      setError('Please enter the 6-digit code');
-      return;
-    }
-
-    setIsSubmitting(true);
-    const result = await verifyOtp(otp.trim(), emailToVerify);
-    setIsSubmitting(false);
+    const result = await verifyOtp(data.otp.trim(), emailToVerify);
 
     if (result.success) {
       setIsVerifiedSuccess(true);
     } else {
-      setError(result.error || 'Invalid or expired code. Please try again.');
+      setServerError(result.error || 'Invalid or expired code. Please try again.');
     }
   };
 
   const handleResend = async () => {
     if (cooldown > 0 || isResending) return;
-    setError(null);
+    setServerError(null);
     setIsResending(true);
 
     const result = await resendOtp(emailToVerify);
@@ -76,7 +78,7 @@ function VerifyOtpContent() {
       setSuccessMessage('A fresh verification code was generated! Check server console.');
       setCooldown(30);
     } else {
-      setError(result.error || 'Failed to resend code');
+      setServerError(result.error || 'Failed to resend code');
     }
   };
 
@@ -94,9 +96,9 @@ function VerifyOtpContent() {
                 Verify Student Email
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-                We generated a 6-digit student verification code for:{' '}
+                Enter the 6-digit verification code sent to:{' '}
                 <span className="font-semibold text-slate-800 block mt-1">
-                  {emailToVerify || 'your email'}
+                  {emailToVerify || 'your registered email'}
                 </span>
               </p>
             </div>
@@ -114,40 +116,49 @@ function VerifyOtpContent() {
             </div>
 
             {/* Error or Success Alert */}
-            {error && (
-              <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm">
+            {serverError && (
+              <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm animate-in fade-in">
                 <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500 mt-0.5" />
-                <span>{error}</span>
+                <span>{serverError}</span>
               </div>
             )}
             {successMessage && (
-              <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs sm:text-sm">
+              <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs sm:text-sm animate-in fade-in">
                 <Sparkles className="w-5 h-5 flex-shrink-0 text-emerald-500 mt-0.5" />
                 <span>{successMessage}</span>
               </div>
             )}
 
-            {/* OTP Form */}
-            <form onSubmit={handleVerify} className="space-y-6">
+            {/* OTP Form with React Hook Form + Zod */}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div className="space-y-2 text-center">
                 <label className="text-xs font-semibold text-slate-700 block">
-                  Enter 6-Digit Verification Code
+                  6-Digit Verification Code (OTP)
                 </label>
                 <input
                   type="text"
                   maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  {...register('otp')}
                   placeholder="123456"
-                  className="w-full text-center tracking-[0.5em] font-mono text-2xl py-3 px-4 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-campus-500 text-slate-900 font-bold"
+                  className={`w-full text-center tracking-[0.5em] font-mono text-2xl py-3 px-4 rounded-xl border font-bold text-slate-900 focus:outline-none focus:ring-2 ${
+                    errors.otp
+                      ? 'border-rose-300 focus:ring-rose-500'
+                      : 'border-slate-300 focus:ring-campus-500'
+                  }`}
                   autoFocus
                 />
+                {errors.otp && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center justify-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {errors.otp.message}
+                  </p>
+                )}
               </div>
 
               {/* Verify Button */}
               <button
                 type="submit"
-                disabled={isSubmitting || otp.length !== 6}
+                disabled={isSubmitting}
                 className="w-full bg-campus-600 hover:bg-campus-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
@@ -178,7 +189,7 @@ function VerifyOtpContent() {
             </div>
           </>
         ) : (
-          /* Success Screen */
+          /* Verified Student Success Celebration */
           <div className="text-center space-y-6 py-4 animate-in zoom-in-95 duration-300">
             <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto shadow-md">
               <BadgeCheck className="w-10 h-10" />
@@ -193,13 +204,13 @@ function VerifyOtpContent() {
                 You Are Now a Verified Student!
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Your university domain has been validated. You now enjoy higher trust ranking, verified seller badge, and full access to student book trades.
+                Your university domain has been validated. You now enjoy higher trust ranking, verified student badge, and full campus marketplace trading rights.
               </p>
             </div>
 
             <button
               onClick={() => redirectByRole()}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2"
+              className="w-full bg-campus-600 hover:bg-campus-700 text-white font-semibold py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2"
             >
               Continue to Student Dashboard
               <ArrowRight className="w-4 h-4" />

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   Search,
   BookOpen,
@@ -172,19 +173,19 @@ export default function HomePage() {
   return (
     <div className="space-y-16 pb-20">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/80 via-white to-slate-50 pt-12 pb-20 border-b border-slate-200">
+      <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/80 via-white to-slate-50 pt-12 pb-20 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-100/80 text-blue-800 text-xs sm:text-sm font-semibold shadow-xs">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <span>Peer-to-Peer Campus Textbook Network • Phase 1 Live</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/80 text-emerald-800 text-xs sm:text-sm font-semibold shadow-xs">
+            <Sparkles className="w-4 h-4 text-emerald-600" />
+            <span>Peer-to-Peer Campus Textbook Network • Phase 2 Live</span>
           </div>
 
           {/* Heading */}
           <div className="max-w-3xl mx-auto space-y-4">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
               Buy, Sell, Exchange & Donate{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-campus-600 to-indigo-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-campus-600 to-emerald-800">
                 Textbooks on Campus
               </span>
             </h1>
@@ -471,20 +472,26 @@ export default function HomePage() {
 
       {/* CTA Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-campus-600 to-indigo-700 rounded-3xl p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="bg-gradient-to-r from-campus-600 to-emerald-800 rounded-3xl p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="space-y-3 max-w-xl">
             <h2 className="text-3xl font-extrabold tracking-tight">Ready to clear your bookshelf?</h2>
-            <p className="text-blue-100 text-sm leading-relaxed">
+            <p className="text-emerald-100 text-sm leading-relaxed">
               Join thousands of university students saving hundreds of dollars every semester. Post your books or request books in seconds.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <button className="bg-white text-campus-700 hover:bg-blue-50 font-semibold px-6 py-3 rounded-xl text-sm transition shadow-sm">
+            <Link
+              href="/signup"
+              className="bg-white text-campus-800 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-xl text-sm transition shadow-sm text-center"
+            >
               Register with .edu Email
-            </button>
-            <button className="bg-campus-800/80 hover:bg-campus-800 border border-white/20 text-white font-semibold px-6 py-3 rounded-xl text-sm transition">
+            </Link>
+            <Link
+              href="#browse"
+              className="bg-campus-800/80 hover:bg-campus-800 border border-white/20 text-white font-semibold px-6 py-3 rounded-xl text-sm transition text-center"
+            >
               Explore Listings
-            </button>
+            </Link>
           </div>
         </div>
       </section>

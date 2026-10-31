@@ -2,8 +2,10 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
+import { loginSchema, LoginFormValues } from '@/lib/validations/auth';
 import {
   BookOpen,
   Mail,
@@ -17,42 +19,35 @@ import {
 } from 'lucide-react';
 
 export default function LoginPage() {
-  const { login, redirectByRole } = useAuth();
-  const router = useRouter();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-    // Validation
-    if (!email.trim()) {
-      setError('Please enter your university or registered email');
-      return;
-    }
-    if (!password) {
-      setError('Please enter your password');
-      return;
-    }
-
-    setIsSubmitting(true);
-    const result = await login(email.trim(), password);
-    setIsSubmitting(false);
-
+  const onSubmit = async (data: LoginFormValues) => {
+    setServerError(null);
+    const result = await login(data.email.trim(), data.password);
     if (!result.success) {
-      setError(result.error || 'Invalid email or password');
+      setServerError(result.error || 'Invalid email or password');
     }
   };
 
   const handleQuickFill = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setError(null);
+    setValue('email', demoEmail, { shouldValidate: true });
+    setValue('password', demoPass, { shouldValidate: true });
+    setServerError(null);
   };
 
   return (
@@ -72,41 +67,41 @@ export default function LoginPage() {
         </div>
 
         {/* Quick Fill Demo Badges */}
-        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
-          <div className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+        <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+          <div className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Quick Test Credentials:</span>
+            <span>Quick Fill Test Accounts:</span>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => handleQuickFill('admin@campusbook.edu', 'AdminPass123!')}
-              className="text-xs font-medium px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 hover:bg-purple-200 transition"
+              className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 hover:bg-purple-200 transition"
             >
               Demo Admin (admin@campusbook.edu)
             </button>
             <button
               type="button"
               onClick={() => handleQuickFill('alex.johnson@stanford.edu', 'StudentPass123!')}
-              className="text-xs font-medium px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 transition"
+              className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-campus-100 text-campus-800 hover:bg-campus-200 transition"
             >
               Demo Student (Stanford)
             </button>
           </div>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm">
+        {/* Server Error Alert */}
+        {serverError && (
+          <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm animate-in fade-in">
             <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500 mt-0.5" />
-            <span>{error}</span>
+            <span>{serverError}</span>
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Form with React Hook Form + Zod */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Email */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 block">
               University / Account Email
             </label>
@@ -114,17 +109,25 @@ export default function LoginPage() {
               <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                {...register('email')}
                 placeholder="e.g. yourname@stanford.edu"
-                required
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 focus:border-transparent text-sm text-slate-900 placeholder-slate-400"
+                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${
+                  errors.email
+                    ? 'border-rose-300 focus:ring-rose-500'
+                    : 'border-slate-200 focus:ring-campus-500'
+                }`}
               />
             </div>
+            {errors.email && (
+              <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" />
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           {/* Password */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold text-slate-700 block">
                 Password
@@ -140,11 +143,13 @@ export default function LoginPage() {
               <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                {...register('password')}
                 placeholder="••••••••"
-                required
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 focus:border-transparent text-sm text-slate-900 placeholder-slate-400"
+                className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${
+                  errors.password
+                    ? 'border-rose-300 focus:ring-rose-500'
+                    : 'border-slate-200 focus:ring-campus-500'
+                }`}
               />
               <button
                 type="button"
@@ -155,13 +160,19 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" />
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-campus-600 hover:bg-campus-700 disabled:bg-campus-400 text-white font-semibold py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2"
+            className="w-full bg-campus-600 hover:bg-campus-700 disabled:bg-campus-400 text-white font-semibold py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 mt-2"
           >
             {isSubmitting ? (
               <>
@@ -191,4 +202,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

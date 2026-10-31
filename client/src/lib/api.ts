@@ -25,7 +25,13 @@ async function request<T>(
 
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+    let data: any;
+
+    try {
+      data = await response.json();
+    } catch {
+      data = { message: response.statusText || 'Server returned an invalid response' };
+    }
 
     if (!response.ok) {
       throw new Error(data.message || `Request failed with status ${response.status}`);
@@ -33,7 +39,17 @@ async function request<T>(
 
     return data as T;
   } catch (error: any) {
-    throw new Error(error.message || 'Network error occurred. Please check your connection.');
+    if (
+      error.name === 'TypeError' &&
+      (error.message.toLowerCase().includes('failed to fetch') ||
+        error.message.toLowerCase().includes('networkerror') ||
+        error.message.toLowerCase().includes('load failed'))
+    ) {
+      throw new Error(
+        `Unable to connect to CampusBook server at ${API_BASE_URL}. Please verify the backend is running on http://localhost:5000.`
+      );
+    }
+    throw error;
   }
 }
 

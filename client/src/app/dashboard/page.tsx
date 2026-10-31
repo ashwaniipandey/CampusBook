@@ -101,7 +101,7 @@ export default function StudentDashboardPage() {
     <ProtectedRoute requiredRole="student">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
         {/* Student Welcome Banner */}
-        <div className="bg-gradient-to-r from-campus-700 via-campus-600 to-indigo-700 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="bg-gradient-to-r from-campus-800 via-campus-700 to-emerald-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4 sm:gap-5">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/10 backdrop-blur border border-white/20 text-white flex items-center justify-center font-extrabold text-2xl shadow-inner">
               {user?.avatar ? (
@@ -131,8 +131,8 @@ export default function StudentDashboardPage() {
                   </span>
                 )}
               </div>
-              <p className="text-xs sm:text-sm text-blue-100 flex items-center gap-1.5">
-                <GraduationCap className="w-4 h-4 text-blue-200" />
+              <p className="text-xs sm:text-sm text-emerald-100 flex items-center gap-1.5">
+                <GraduationCap className="w-4 h-4 text-emerald-200" />
                 {universityName} • {user?.department || 'Student'}
               </p>
             </div>
@@ -141,7 +141,7 @@ export default function StudentDashboardPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/#browse"
-              className="px-4 py-2.5 rounded-xl bg-white text-campus-700 hover:bg-blue-50 font-semibold text-xs sm:text-sm shadow-sm transition"
+              className="px-4 py-2.5 rounded-xl bg-white text-campus-800 hover:bg-emerald-50 font-semibold text-xs sm:text-sm shadow-sm transition"
             >
               Browse Campus Books
             </Link>

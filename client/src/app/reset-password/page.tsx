@@ -3,7 +3,10 @@
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import api from '@/lib/api';
+import { resetPasswordSchema, ResetPasswordFormValues } from '@/lib/validations/auth';
 import {
   Lock,
   Mail,
@@ -20,50 +23,38 @@ import {
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const defaultEmail = searchParams.get('email') || '';
 
-  const [email, setEmail] = useState(searchParams.get('email') || '');
-  const [otp, setOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-  const [error, setError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: defaultEmail,
+      otp: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
 
-    if (!email.trim()) {
-      setError('Email address is required');
-      return;
-    }
-    if (!otp.trim() || otp.trim().length !== 6) {
-      setError('Please enter the 6-digit reset code');
-      return;
-    }
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters long');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
+  const onSubmit = async (data: ResetPasswordFormValues) => {
+    setServerError(null);
 
-    setIsSubmitting(true);
     try {
       await api.resetPassword({
-        email: email.trim(),
-        otp: otp.trim(),
-        newPassword,
+        email: data.email.trim(),
+        otp: data.otp.trim(),
+        newPassword: data.newPassword,
       });
-      setIsSubmitting(false);
       setSuccess(true);
     } catch (err: any) {
-      setIsSubmitting(false);
-      setError(err.message || 'Failed to reset password. Please check your code.');
+      setServerError(err.message || 'Failed to reset password. Please check your reset code.');
     }
   };
 
@@ -80,7 +71,7 @@ function ResetPasswordContent() {
                 Reset Password
               </h2>
               <p className="text-xs sm:text-sm text-slate-500">
-                Enter your reset code and pick a new secure password.
+                Enter your 6-digit reset code and pick a new secure password.
               </p>
             </div>
 
@@ -95,14 +86,14 @@ function ResetPasswordContent() {
               </p>
             </div>
 
-            {error && (
-              <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm">
+            {serverError && (
+              <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm animate-in fade-in">
                 <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500 mt-0.5" />
-                <span>{error}</span>
+                <span>{serverError}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Email */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 block">
@@ -112,12 +103,21 @@ function ResetPasswordContent() {
                   <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-sm text-slate-900"
+                    {...register('email')}
+                    placeholder="e.g. alex.johnson@stanford.edu"
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-none focus:ring-2 ${
+                      errors.email
+                        ? 'border-rose-300 focus:ring-rose-500'
+                        : 'border-slate-200 focus:ring-campus-500'
+                    }`}
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
 
               {/* OTP */}
@@ -130,13 +130,21 @@ function ResetPasswordContent() {
                   <input
                     type="text"
                     maxLength={6}
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                    {...register('otp')}
                     placeholder="123456"
-                    required
-                    className="w-full pl-10 pr-4 py-2.5 font-mono tracking-widest rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-sm text-slate-900 font-bold"
+                    className={`w-full pl-10 pr-4 py-2.5 font-mono tracking-widest text-base rounded-xl border text-slate-900 font-bold focus:outline-none focus:ring-2 ${
+                      errors.otp
+                        ? 'border-rose-300 focus:ring-rose-500'
+                        : 'border-slate-200 focus:ring-campus-500'
+                    }`}
                   />
                 </div>
+                {errors.otp && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {errors.otp.message}
+                  </p>
+                )}
               </div>
 
               {/* New Password */}
@@ -148,11 +156,13 @@ function ResetPasswordContent() {
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    {...register('newPassword')}
                     placeholder="Min 6 characters"
-                    required
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-sm text-slate-900"
+                    className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-none focus:ring-2 ${
+                      errors.newPassword
+                        ? 'border-rose-300 focus:ring-rose-500'
+                        : 'border-slate-200 focus:ring-campus-500'
+                    }`}
                   />
                   <button
                     type="button"
@@ -162,6 +172,12 @@ function ResetPasswordContent() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {errors.newPassword && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {errors.newPassword.message}
+                  </p>
+                )}
               </div>
 
               {/* Confirm Password */}
@@ -173,13 +189,21 @@ function ResetPasswordContent() {
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    {...register('confirmPassword')}
                     placeholder="Re-enter new password"
-                    required
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 text-sm text-slate-900"
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-none focus:ring-2 ${
+                      errors.confirmPassword
+                        ? 'border-rose-300 focus:ring-rose-500'
+                        : 'border-slate-200 focus:ring-campus-500'
+                    }`}
                   />
                 </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
               </div>
 
               <button
@@ -209,14 +233,14 @@ function ResetPasswordContent() {
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-slate-900">Password Reset Successful!</h2>
               <p className="text-xs sm:text-sm text-slate-500">
-                You can now sign in to CampusBook with your new password.
+                Your password has been securely updated. You can now log in.
               </p>
             </div>
             <Link
               href="/login"
               className="inline-flex w-full items-center justify-center gap-2 bg-campus-600 hover:bg-campus-700 text-white font-semibold py-3 px-4 rounded-xl text-sm transition shadow-sm"
             >
-              Sign In Now
+              Sign In to CampusBook
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

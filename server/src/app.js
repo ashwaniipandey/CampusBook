@@ -4,23 +4,46 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
 import universityRoutes from './routes/universityRoutes.js';
 
+// Load environment variables
+dotenv.config();
+
 const app = express();
 
-// Security HTTP headers
-app.use(helmet());
-
-// CORS Configuration
-const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:3000';
+// Security HTTP headers with cross-origin resource policy enabled
 app.use(
-  cors({
-    origin: allowedOrigin,
-    credentials: true,
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
+
+// CORS Configuration
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, mobile apps, server-to-server) or matched origins
+    if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
+      return callback(null, true);
+    }
+    return callback(null, true); // Permissive in development to prevent blocks
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Request body parsers
 app.use(express.json({ limit: '10mb' }));

@@ -79,6 +79,22 @@ export const register = async (req, res, next) => {
       return next(new AppError('Selected university does not exist', 404));
     }
 
+    // Verify email belongs to the selected university domain
+    const emailDomain = normalizedEmail.split('@')[1] || '';
+    const expectedDomain = university.domain ? university.domain.toLowerCase() : '';
+    const isDomainMatch =
+      expectedDomain &&
+      (emailDomain === expectedDomain || emailDomain.endsWith('.' + expectedDomain));
+
+    if (!isDomainMatch) {
+      return next(
+        new AppError(
+          `Please use your official university email ending in @${university.domain} to register for ${university.name}`,
+          400
+        )
+      );
+    }
+
     // 4. Generate 6-digit OTP for email verification
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -273,6 +289,8 @@ export const logout = (req, res) => {
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 5 * 1000),
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     path: '/',
   });
 
