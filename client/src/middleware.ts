@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Paths requiring authentication
-const protectedPaths = ['/dashboard', '/admin', '/profile'];
+const protectedPaths = ['/dashboard', '/admin', '/profile', '/sell', '/my-books'];
 
 // Paths only for unauthenticated guests
 const authOnlyPaths = ['/login', '/signup', '/forgot-password', '/reset-password'];
@@ -34,10 +34,11 @@ export const config = {
     '/dashboard/:path*',
     '/admin/:path*',
     '/profile/:path*',
+    '/sell/:path*',
+    '/my-books/:path*',
     '/login',
     '/signup',
     '/forgot-password',
     '/reset-password',
   ],
 };
-

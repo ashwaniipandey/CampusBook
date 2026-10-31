@@ -37,3 +37,57 @@ export interface AuthResponse {
   user?: User;
 }
 
+export interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  isActive?: boolean;
+}
+
+export interface BookImage {
+  url: string;
+  public_id?: string;
+}
+
+export type BookCondition = 'New' | 'Like New' | 'Good' | 'Fair' | 'Poor';
+export type ListingType = 'sell' | 'exchange' | 'donate';
+export type BookStatus =
+  | 'pending'
+  | 'available'
+  | 'approved'
+  | 'reserved'
+  | 'sold'
+  | 'exchanged'
+  | 'donated'
+  | 'rejected';
+
+export interface Book {
+  _id: string;
+  title: string;
+  author: string;
+  isbn?: string;
+  edition?: string;
+  publisher?: string;
+  publicationYear?: number;
+  category: Category | string;
+  subject?: string;
+  course?: string;
+  semester?: string;
+  university: University | string;
+  seller: User | string;
+  condition: BookCondition;
+  listingType: ListingType;
+  originalPrice: number;
+  sellingPrice: number;
+  price?: number;
+  description: string;
+  images: (string | BookImage)[];
+  exchangePreferences?: string;
+  status: BookStatus;
+  viewsCount?: number;
+  isApproved?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}

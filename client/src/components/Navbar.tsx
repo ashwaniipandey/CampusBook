@@ -89,16 +89,25 @@ export default function Navbar() {
               <HeartHandshake className="w-4 h-4 text-emerald-500" />
               Free Donations
             </Link>
+            {isAuthenticated && (
+              <Link
+                href="/my-books"
+                className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
+              >
+                <BookOpen className="w-4 h-4 text-campus-600" />
+                My Books
+              </Link>
+            )}
           </nav>
 
           {/* User Auth & Actions */}
           <div className="hidden md:flex items-center space-x-3">
             <Link
-              href={isAuthenticated ? (user?.role === 'admin' ? '/admin' : '/dashboard') : '/login'}
+              href={isAuthenticated ? '/sell' : '/login?redirect=/sell'}
               className="inline-flex items-center gap-1.5 bg-campus-600 hover:bg-campus-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition"
             >
               <PlusCircle className="w-4 h-4" />
-              Post a Book
+              Sell a Book
             </Link>
 
             {isAuthenticated && user ? (
@@ -201,6 +210,24 @@ export default function Navbar() {
                           Student Dashboard
                         </Link>
                       )}
+
+                      <Link
+                        href="/sell"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        <PlusCircle className="w-4 h-4 text-campus-600" />
+                        Sell a Book
+                      </Link>
+
+                      <Link
+                        href="/my-books"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        <BookOpen className="w-4 h-4 text-campus-600" />
+                        My Books
+                      </Link>
 
                       {!user.isVerified && user.role !== 'admin' && (
                         <Link
@@ -308,6 +335,22 @@ export default function Navbar() {
               >
                 <LayoutDashboard className="w-4 h-4" />
                 {user.role === 'admin' ? 'Admin Dashboard' : 'Student Dashboard'}
+              </Link>
+
+              <Link
+                href="/sell"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-campus-700 hover:bg-campus-50 font-medium"
+              >
+                <PlusCircle className="w-4 h-4 text-campus-600" /> Sell a Book
+              </Link>
+
+              <Link
+                href="/my-books"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
+              >
+                <BookOpen className="w-4 h-4 text-campus-600" /> My Books
               </Link>
 
               <button

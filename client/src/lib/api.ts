@@ -1,10 +1,11 @@
-import { AuthResponse, University, User } from '@/types';
+import { AuthResponse, University, User, Category, Book } from '@/types';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 
 /**
  * Universal fetch wrapper ensuring httpOnly cookies are included
+ * Handles JSON and FormData payloads transparently
  */
 async function request<T>(
   endpoint: string,
@@ -12,9 +13,11 @@ async function request<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(options.headers || {}),
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
+  const headers: Record<string, string> = {
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+    ...((options.headers as Record<string, string>) || {}),
   };
 
   const config: RequestInit = {
@@ -131,6 +134,48 @@ export const api = {
       }
     ),
 
+  // Categories
+  getCategories: () =>
+    request<{ status: string; results: number; categories: Category[] }>(
+      '/categories',
+      {
+        method: 'GET',
+      }
+    ),
+
+  // Books
+  createBook: (formData: FormData) =>
+    request<{ status: string; message: string; book: Book }>('/books', {
+      method: 'POST',
+      body: formData,
+    }),
+
+  updateBook: (id: string, formData: FormData) =>
+    request<{ status: string; message: string; book: Book }>(`/books/${id}`, {
+      method: 'PUT',
+      body: formData,
+    }),
+
+  getMyBooks: () =>
+    request<{ status: string; results: number; books: Book[] }>('/books/my', {
+      method: 'GET',
+    }),
+
+  getBookById: (id: string) =>
+    request<{ status: string; book: Book }>(`/books/${id}`, {
+      method: 'GET',
+    }),
+
+  deleteBook: (id: string) =>
+    request<{ status: string; message: string }>(`/books/${id}`, {
+      method: 'DELETE',
+    }),
+
+  markBookSold: (id: string) =>
+    request<{ status: string; message: string; book: Book }>(`/books/${id}/mark-sold`, {
+      method: 'PATCH',
+    }),
+
   // Health
   getHealth: () =>
     request<{ status: string; service: string; environment: string; database: string }>(
@@ -142,4 +187,3 @@ export const api = {
 };
 
 export default api;
-
