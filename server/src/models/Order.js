@@ -4,8 +4,6 @@ const orderSchema = new mongoose.Schema(
   {
     orderNumber: {
       type: String,
-      required: [true, 'Order number is required'],
-      unique: true,
       trim: true,
     },
     buyer: {
@@ -23,14 +21,32 @@ const orderSchema = new mongoose.Schema(
       ref: 'Book',
       required: [true, 'Purchased book is required'],
     },
+    price: {
+      type: Number,
+      min: [0, 'Price cannot be negative'],
+    },
     amount: {
       type: Number,
-      required: [true, 'Order amount is required'],
       min: [0, 'Amount cannot be negative'],
+    },
+    status: {
+      type: String,
+      enum: {
+        values: ['placed', 'confirmed', 'completed', 'cancelled', 'ready_for_pickup'],
+        message: '{VALUE} is not a valid order status',
+      },
+      default: 'placed',
+    },
+    orderStatus: {
+      type: String,
+      enum: {
+        values: ['placed', 'confirmed', 'ready_for_pickup', 'completed', 'cancelled'],
+        message: '{VALUE} is not a valid order status',
+      },
+      default: 'placed',
     },
     paymentMethod: {
       type: String,
-      required: [true, 'Payment method is required'],
       enum: {
         values: ['cash_on_delivery', 'upi', 'card', 'campus_wallet', 'handover'],
         message: '{VALUE} is not a supported payment method',
@@ -39,7 +55,6 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      required: [true, 'Payment status is required'],
       enum: {
         values: ['pending', 'completed', 'failed', 'refunded'],
         message: '{VALUE} is not a valid payment status',
@@ -48,26 +63,21 @@ const orderSchema = new mongoose.Schema(
     },
     deliveryMethod: {
       type: String,
-      required: [true, 'Delivery method is required'],
       enum: {
         values: ['campus_pickup', 'handover', 'shipping'],
         message: '{VALUE} is not a valid delivery method',
       },
       default: 'handover',
     },
-    pickupLocation: {
+    meetingLocation: {
       type: String,
       trim: true,
       default: '',
     },
-    orderStatus: {
+    pickupLocation: {
       type: String,
-      required: [true, 'Order status is required'],
-      enum: {
-        values: ['placed', 'confirmed', 'ready_for_pickup', 'completed', 'cancelled'],
-        message: '{VALUE} is not a valid order status',
-      },
-      default: 'placed',
+      trim: true,
+      default: '',
     },
     notes: {
       type: String,
@@ -87,11 +97,49 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-// Indexes (orderNumber is indexed via unique: true)
+// Pre-save synchronization hook
+orderSchema.pre('save', function (next) {
+  // Generate orderNumber if missing
+  if (!this.orderNumber) {
+    this.orderNumber = `CB-ORD-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+  }
+
+  // Sync price and amount
+  if (this.price !== undefined && this.amount === undefined) {
+    this.amount = this.price;
+  } else if (this.amount !== undefined && this.price === undefined) {
+    this.price = this.amount;
+  }
+
+  // Sync status and orderStatus
+  if (this.status && !this.orderStatus) {
+    this.orderStatus = this.status;
+  } else if (this.orderStatus && !this.status) {
+    this.status = this.orderStatus;
+  } else if (this.isModified('status')) {
+    this.orderStatus = this.status;
+  } else if (this.isModified('orderStatus')) {
+    this.status = this.orderStatus;
+  }
+
+  // Sync meetingLocation and pickupLocation
+  if (this.meetingLocation && !this.pickupLocation) {
+    this.pickupLocation = this.meetingLocation;
+  } else if (this.pickupLocation && !this.meetingLocation) {
+    this.meetingLocation = this.pickupLocation;
+  }
+
+  next();
+});
+
+// Indexes
+orderSchema.index({ orderNumber: 1 }, { unique: true });
 orderSchema.index({ buyer: 1, createdAt: -1 });
 orderSchema.index({ seller: 1, createdAt: -1 });
 orderSchema.index({ book: 1 });
 orderSchema.index({ orderStatus: 1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ buyer: 1, book: 1, status: 1 });
 
 const Order = mongoose.model('Order', orderSchema);
 

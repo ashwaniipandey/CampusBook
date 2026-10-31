@@ -1,4 +1,15 @@
-import { AuthResponse, University, User, Category, Book, FiltersMeta } from '@/types';
+import {
+  AuthResponse,
+  University,
+  User,
+  Category,
+  Book,
+  FiltersMeta,
+  Order,
+  Cart,
+  Review,
+  OrderStatus,
+} from '@/types';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
@@ -193,7 +204,12 @@ export const api = {
     }),
 
   getBookById: (id: string) =>
-    request<{ status: string; book: Book }>(`/books/${id}`, {
+    request<{ status: string; book: Book; isWishlisted?: boolean }>(`/books/${id}`, {
+      method: 'GET',
+    }),
+
+  getSimilarBooks: (id: string) =>
+    request<{ status: string; results: number; books: Book[] }>(`/books/${id}/similar`, {
       method: 'GET',
     }),
 
@@ -205,6 +221,116 @@ export const api = {
   markBookSold: (id: string) =>
     request<{ status: string; message: string; book: Book }>(`/books/${id}/mark-sold`, {
       method: 'PATCH',
+    }),
+
+  // Wishlist
+  getWishlist: () =>
+    request<{ status: string; results: number; wishlist: any[]; books: Book[] }>('/wishlist', {
+      method: 'GET',
+    }),
+
+  addToWishlist: (bookId: string) =>
+    request<{ status: string; message: string; book: Book }>(`/wishlist/${bookId}`, {
+      method: 'POST',
+    }),
+
+  removeFromWishlist: (bookId: string) =>
+    request<{ status: string; message: string; bookId: string }>(`/wishlist/${bookId}`, {
+      method: 'DELETE',
+    }),
+
+  // Cart
+  getCart: () =>
+    request<{
+      status: string;
+      cart: Cart;
+      items: any[];
+      books: Book[];
+      totalItems: number;
+      totalAmount: number;
+    }>('/cart', {
+      method: 'GET',
+    }),
+
+  addToCart: (bookId: string) =>
+    request<{
+      status: string;
+      message: string;
+      cart: Cart;
+      totalItems: number;
+      totalAmount: number;
+    }>(`/cart/${bookId}`, {
+      method: 'POST',
+    }),
+
+  removeFromCart: (bookId: string) =>
+    request<{
+      status: string;
+      message: string;
+      cart: Cart;
+      totalItems: number;
+      totalAmount: number;
+    }>(`/cart/${bookId}`, {
+      method: 'DELETE',
+    }),
+
+  clearCart: () =>
+    request<{
+      status: string;
+      message: string;
+      cart: Cart;
+      totalItems: number;
+      totalAmount: number;
+    }>('/cart', {
+      method: 'DELETE',
+    }),
+
+  // Orders
+  getOrders: (params: { role?: 'buying' | 'selling'; status?: OrderStatus } = {}) => {
+    const query = new URLSearchParams();
+    if (params.role) query.append('role', params.role);
+    if (params.status) query.append('status', params.status);
+    const queryString = query.toString();
+    return request<{ status: string; results: number; orders: Order[] }>(
+      `/orders${queryString ? `?${queryString}` : ''}`,
+      {
+        method: 'GET',
+      }
+    );
+  },
+
+  createOrder: (data: {
+    bookId?: string;
+    fromCart?: boolean;
+    meetingLocation?: string;
+    notes?: string;
+  }) =>
+    request<{ status: string; message: string; order?: Order; orders?: Order[] }>('/orders', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateOrderStatus: (id: string, status: 'confirmed' | 'completed' | 'cancelled') =>
+    request<{ status: string; message: string; order: Order }>(`/orders/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+
+  // Reviews
+  createReview: (data: { orderId: string; rating: number; comment?: string }) =>
+    request<{ status: string; message: string; review: Review }>('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getSellerReviews: (sellerId: string) =>
+    request<{
+      status: string;
+      seller: Partial<User>;
+      results: number;
+      reviews: Review[];
+    }>(`/users/${sellerId}/reviews`, {
+      method: 'GET',
     }),
 
   // Health

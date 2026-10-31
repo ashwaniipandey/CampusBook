@@ -88,6 +88,67 @@ export interface Book {
   status: BookStatus;
   viewsCount?: number;
   isApproved?: boolean;
+  isWishlisted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type OrderStatus = 'placed' | 'confirmed' | 'ready_for_pickup' | 'completed' | 'cancelled';
+
+export interface Order {
+  _id: string;
+  orderNumber: string;
+  buyer: User | string;
+  seller: User | string;
+  book: Book;
+  price: number;
+  amount: number;
+  status: OrderStatus;
+  orderStatus?: OrderStatus;
+  meetingLocation?: string;
+  pickupLocation?: string;
+  notes?: string;
+  completedAt?: string;
+  cancelledAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CartItem {
+  _id: string;
+  book: Book;
+  addedAt?: string;
+}
+
+export interface Cart {
+  _id: string;
+  user: string;
+  items: CartItem[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Review {
+  _id: string;
+  order: Order | string;
+  reviewer: User | string;
+  seller: User | string;
+  rating: number;
+  comment?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Notification {
+  _id: string;
+  recipient: string;
+  sender?: User | string;
+  type: 'order' | 'exchange_request' | 'donation_request' | 'message' | 'book_status' | 'wishlist_alert' | 'system';
+  title: string;
+  message: string;
+  link?: string;
+  data?: Record<string, any>;
+  isRead: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

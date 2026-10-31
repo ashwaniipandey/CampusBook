@@ -5,6 +5,7 @@ import {
   createBook,
   getMyBooks,
   getBookById,
+  getSimilarBooks,
   updateBook,
   deleteBook,
   markSold,
@@ -38,6 +39,13 @@ router.get('/my', protect, getMyBooks);
  * @access  Public
  */
 router.get('/filters-meta', getFiltersMeta);
+
+/**
+ * @route   GET /api/books/:id/similar
+ * @desc    Get up to 6 similar approved books in same category or subject
+ * @access  Public
+ */
+router.get('/:id/similar', getSimilarBooks);
 
 /**
  * @route   GET /api/books/:id

@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Book from '../models/Book.js';
 import University from '../models/University.js';
 import Category from '../models/Category.js';
+import Wishlist from '../models/Wishlist.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { uploadToCloudinary, deleteFromCloudinary } from '../config/cloudinary.js';
 
@@ -430,7 +431,7 @@ export const getMyBooks = async (req, res, next) => {
 export const getBookById = async (req, res, next) => {
   try {
     const book = await Book.findById(req.params.id)
-      .populate('seller', 'name email avatar rating isVerified department yearOfStudy')
+      .populate('seller', 'name email avatar rating totalRatings isVerified department yearOfStudy')
       .populate('category', 'name slug description icon')
       .populate('university', 'name code domain city state campuses');
 
@@ -458,9 +459,97 @@ export const getBookById = async (req, res, next) => {
     await Book.findByIdAndUpdate(req.params.id, { $inc: { viewsCount: 1 } });
     book.viewsCount = (book.viewsCount || 0) + 1;
 
+    // Check if the current logged-in user has wishlisted this book
+    let isWishlisted = false;
+    if (req.user) {
+      const exists = await Wishlist.exists({
+        user: req.user._id,
+        book: book._id,
+      });
+      isWishlisted = Boolean(exists);
+    }
+
+    const bookObj = book.toObject();
+    bookObj.isWishlisted = isWishlisted;
+    if (bookObj.seller && typeof bookObj.seller === 'object') {
+      bookObj.seller.rating = bookObj.seller.rating ?? 5.0;
+      bookObj.seller.totalRatings = bookObj.seller.totalRatings ?? 0;
+    }
+
     res.status(200).json({
       status: 'success',
-      book,
+      book: bookObj,
+      isWishlisted,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get up to 6 similar approved books in the same category or subject
+ * GET /api/books/:id/similar
+ * Access: Public
+ */
+export const getSimilarBooks = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return next(new AppError('Invalid book ID format', 400));
+    }
+
+    const sourceBook = await Book.findById(id);
+    if (!sourceBook) {
+      return next(new AppError('Book listing not found', 404));
+    }
+
+    const conditions = [];
+    if (sourceBook.category) {
+      conditions.push({ category: sourceBook.category });
+    }
+    if (sourceBook.subject && sourceBook.subject.trim()) {
+      conditions.push({
+        subject: { $regex: new RegExp(`^${sourceBook.subject.trim()}$`, 'i') },
+      });
+    }
+
+    const matchFilter = {
+      _id: { $ne: sourceBook._id },
+      status: { $in: ['approved', 'available'] },
+    };
+
+    if (conditions.length > 0) {
+      matchFilter.$or = conditions;
+    }
+
+    let similarBooks = await Book.find(matchFilter)
+      .limit(6)
+      .sort({ viewsCount: -1, createdAt: -1 })
+      .populate('category', 'name slug icon')
+      .populate('university', 'name code domain city state')
+      .populate('seller', 'name avatar rating totalRatings isVerified');
+
+    // If fewer than 6, supplement with other approved books
+    if (similarBooks.length < 6) {
+      const excludeIds = [sourceBook._id, ...similarBooks.map((b) => b._id)];
+      const fillBooks = await Book.find({
+        _id: { $nin: excludeIds },
+        status: { $in: ['approved', 'available'] },
+      })
+        .limit(6 - similarBooks.length)
+        .sort({ createdAt: -1 })
+        .populate('category', 'name slug icon')
+        .populate('university', 'name code domain city state')
+        .populate('seller', 'name avatar rating totalRatings isVerified');
+
+      similarBooks = [...similarBooks, ...fillBooks];
+    }
+
+    res.status(200).json({
+      status: 'success',
+      results: similarBooks.length,
+      books: similarBooks,
     });
   } catch (error) {
     next(error);

@@ -10,6 +10,11 @@ import authRoutes from './routes/authRoutes.js';
 import universityRoutes from './routes/universityRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
+import wishlistRoutes from './routes/wishlistRoutes.js';
+import cartRoutes from './routes/cartRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -88,6 +93,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/universities', universityRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/books', bookRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/users', userRoutes);
 
 // Root welcome endpoint
 app.get('/', (req, res) => {

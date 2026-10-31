@@ -9,6 +9,8 @@ import Conversation from './Conversation.js';
 import Message from './Message.js';
 import Wishlist from './Wishlist.js';
 import Notification from './Notification.js';
+import Cart from './Cart.js';
+import Review from './Review.js';
 
 export {
   University,
@@ -22,6 +24,8 @@ export {
   Message,
   Wishlist,
   Notification,
+  Cart,
+  Review,
 };
 
 export default {
@@ -36,5 +40,6 @@ export default {
   Message,
   Wishlist,
   Notification,
+  Cart,
+  Review,
 };
-
