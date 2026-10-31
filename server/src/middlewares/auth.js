@@ -87,5 +87,40 @@ export const requireVerified = (req, res, next) => {
   next();
 };
 
-export default { protect, authorize, requireVerified };
+/**
+ * Middleware to optionally authenticate users (if token present)
+ * Allows unauthenticated requests to continue without throwing 401
+ */
+export const optionalAuth = async (req, res, next) => {
+  try {
+    let token;
+
+    if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    } else if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer ')
+    ) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (!token) {
+      return next();
+    }
+
+    const jwtSecret = process.env.JWT_SECRET || 'campusbook_jwt_secret_dev_key_2026_xyz';
+    const decoded = jwt.verify(token, jwtSecret);
+
+    const currentUser = await User.findById(decoded.id).populate('university');
+    if (currentUser && currentUser.status !== 'suspended') {
+      req.user = currentUser;
+    }
+    next();
+  } catch (error) {
+    // If token verification fails, simply continue unauthenticated
+    next();
+  }
+};
+
+export default { protect, authorize, requireVerified, optionalAuth };
 

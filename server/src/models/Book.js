@@ -41,6 +41,21 @@ const bookSchema = new mongoose.Schema(
       ref: 'Category',
       required: [true, 'Category is required'],
     },
+    subject: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    course: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    semester: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     university: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'University',
@@ -64,18 +79,22 @@ const bookSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Listing type is required'],
       enum: {
-        values: ['sale', 'exchange', 'donation'],
+        values: ['sell', 'sale', 'exchange', 'donate', 'donation'],
         message: '{VALUE} is not a valid listing type',
       },
-      default: 'sale',
+      default: 'sell',
+    },
+    sellingPrice: {
+      type: Number,
+      min: [0, 'Selling price cannot be negative'],
+      default: 0,
     },
     price: {
       type: Number,
       min: [0, 'Price cannot be negative'],
       validate: {
         validator: function (val) {
-          // Price is required and > 0 if listingType is 'sale'
-          if (this.listingType === 'sale') {
+          if (['sale', 'sell'].includes(this.listingType)) {
             return typeof val === 'number' && val >= 0;
           }
           return true;
@@ -97,7 +116,7 @@ const bookSchema = new mongoose.Schema(
       maxlength: [2500, 'Description cannot exceed 2500 characters'],
     },
     images: {
-      type: [String],
+      type: [mongoose.Schema.Types.Mixed],
       default: [],
     },
     exchangePreferences: {
@@ -110,10 +129,19 @@ const bookSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Listing status is required'],
       enum: {
-        values: ['available', 'reserved', 'sold', 'exchanged', 'donated'],
+        values: [
+          'pending',
+          'available',
+          'approved',
+          'reserved',
+          'sold',
+          'exchanged',
+          'donated',
+          'rejected',
+        ],
         message: '{VALUE} is not a valid status',
       },
-      default: 'available',
+      default: 'pending',
     },
     viewsCount: {
       type: Number,
@@ -121,7 +149,7 @@ const bookSchema = new mongoose.Schema(
     },
     isApproved: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   {
@@ -129,16 +157,41 @@ const bookSchema = new mongoose.Schema(
   }
 );
 
+// Pre-save hook to synchronize price and sellingPrice, set isApproved
+bookSchema.pre('save', function (next) {
+  // Sync price and sellingPrice
+  if (this.sellingPrice !== undefined && (!this.price || this.price === 0)) {
+    this.price = this.sellingPrice;
+  } else if (this.price !== undefined && (!this.sellingPrice || this.sellingPrice === 0)) {
+    this.sellingPrice = this.price;
+  }
+
+  // If donation, price is 0
+  if (['donate', 'donation'].includes(this.listingType)) {
+    this.price = 0;
+    this.sellingPrice = 0;
+  }
+
+  // Update isApproved flag based on status
+  if (this.status === 'approved' || this.status === 'available') {
+    this.isApproved = true;
+  } else if (this.status === 'pending' || this.status === 'rejected') {
+    this.isApproved = false;
+  }
+
+  next();
+});
+
 // Indexes
-bookSchema.index({ title: 'text', author: 'text', description: 'text' });
+bookSchema.index({ title: 'text', author: 'text', description: 'text', subject: 'text' });
 bookSchema.index({ university: 1, status: 1 });
 bookSchema.index({ category: 1, status: 1 });
 bookSchema.index({ listingType: 1, status: 1 });
 bookSchema.index({ seller: 1, status: 1 });
 bookSchema.index({ price: 1 });
+bookSchema.index({ sellingPrice: 1 });
 bookSchema.index({ createdAt: -1 });
 
 const Book = mongoose.model('Book', bookSchema);
 
 export default Book;
-

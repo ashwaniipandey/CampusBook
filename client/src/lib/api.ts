@@ -1,7 +1,7 @@
 import { AuthResponse, University, User } from '@/types';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 
 /**
  * Universal fetch wrapper ensuring httpOnly cookies are included
@@ -46,7 +46,7 @@ async function request<T>(
         error.message.toLowerCase().includes('load failed'))
     ) {
       throw new Error(
-        `Unable to connect to CampusBook server at ${API_BASE_URL}. Please verify the backend is running on http://localhost:5000.`
+        `Unable to connect to CampusBook server at ${API_BASE_URL}. Please verify the backend is running on http://localhost:5001.`
       );
     }
     throw error;

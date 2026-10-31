@@ -8,6 +8,8 @@ import dotenv from 'dotenv';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
 import universityRoutes from './routes/universityRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+import bookRoutes from './routes/bookRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -84,6 +86,8 @@ app.get('/api/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/universities', universityRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/books', bookRoutes);
 
 // Root welcome endpoint
 app.get('/', (req, res) => {
