@@ -91,3 +91,20 @@ export interface Book {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface FiltersMeta {
+  totalApproved: number;
+  categoryCounts: {
+    _id: string;
+    name: string;
+    slug: string;
+    icon?: string;
+    count: number;
+  }[];
+  conditionCounts: Record<string, number>;
+  listingTypeCounts: Record<string, number>;
+  priceRange: {
+    minPrice: number;
+    maxPrice: number;
+  };
+}

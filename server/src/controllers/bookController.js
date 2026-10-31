@@ -1,8 +1,303 @@
+import mongoose from 'mongoose';
 import Book from '../models/Book.js';
 import University from '../models/University.js';
 import Category from '../models/Category.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { uploadToCloudinary, deleteFromCloudinary } from '../config/cloudinary.js';
+
+/**
+ * Get all approved books with search, multi-filters, sorting, and pagination
+ * GET /api/books
+ * Access: Public
+ */
+export const getAllBooks = async (req, res, next) => {
+  try {
+    const approvedStatuses = ['approved', 'available'];
+    const andClauses = [{ status: { $in: approvedStatuses } }];
+
+    // 1. Search Query (q): case-insensitive on title, author, isbn, subject
+    if (req.query.q && typeof req.query.q === 'string') {
+      const q = req.query.q.trim();
+      if (q) {
+        const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(safeQ, 'i');
+        andClauses.push({
+          $or: [
+            { title: regex },
+            { author: regex },
+            { isbn: regex },
+            { subject: regex },
+          ],
+        });
+      }
+    }
+
+    // 2. Category Filter (supports single ID, multiple comma-separated IDs, or array)
+    if (req.query.category) {
+      let catList = [];
+      if (Array.isArray(req.query.category)) {
+        catList = req.query.category.flatMap((c) => String(c).split(','));
+      } else {
+        catList = String(req.query.category).split(',');
+      }
+
+      catList = catList
+        .map((c) => c.trim())
+        .filter((c) => mongoose.Types.ObjectId.isValid(c));
+
+      if (catList.length > 0) {
+        andClauses.push({ category: { $in: catList } });
+      }
+    }
+
+    // 3. University Filter
+    if (req.query.university) {
+      const uniId = String(req.query.university).trim();
+      if (mongoose.Types.ObjectId.isValid(uniId)) {
+        andClauses.push({ university: uniId });
+      }
+    }
+
+    // 4. Condition Filter (supports multiple, e.g. condition=New,Like New)
+    if (req.query.condition) {
+      let condList = [];
+      if (Array.isArray(req.query.condition)) {
+        condList = req.query.condition.flatMap((c) => String(c).split(','));
+      } else {
+        condList = String(req.query.condition).split(',');
+      }
+
+      const allowedConditions = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
+      condList = condList
+        .map((c) => c.trim())
+        .filter((c) => allowedConditions.includes(c));
+
+      if (condList.length > 0) {
+        andClauses.push({ condition: { $in: condList } });
+      }
+    }
+
+    // 5. Listing Type Filter (sell/exchange/donate)
+    if (req.query.listingType) {
+      const lt = String(req.query.listingType).trim().toLowerCase();
+      if (['sell', 'sale'].includes(lt)) {
+        andClauses.push({ listingType: { $in: ['sell', 'sale'] } });
+      } else if (['donate', 'donation'].includes(lt)) {
+        andClauses.push({ listingType: { $in: ['donate', 'donation'] } });
+      } else if (lt === 'exchange') {
+        andClauses.push({ listingType: 'exchange' });
+      }
+    }
+
+    // 6. Semester Filter (case-insensitive substring)
+    if (req.query.semester && typeof req.query.semester === 'string') {
+      const sem = req.query.semester.trim();
+      if (sem) {
+        const safeSem = sem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        andClauses.push({ semester: new RegExp(safeSem, 'i') });
+      }
+    }
+
+    // 7. Course Filter (case-insensitive substring)
+    if (req.query.course && typeof req.query.course === 'string') {
+      const crs = req.query.course.trim();
+      if (crs) {
+        const safeCrs = crs.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        andClauses.push({ course: new RegExp(safeCrs, 'i') });
+      }
+    }
+
+    // 8. Price Range (minPrice and maxPrice on sellingPrice / price)
+    const priceCriteria = {};
+    if (req.query.minPrice !== undefined && req.query.minPrice !== '') {
+      const min = Number(req.query.minPrice);
+      if (!isNaN(min) && min >= 0) {
+        priceCriteria.$gte = min;
+      }
+    }
+    if (req.query.maxPrice !== undefined && req.query.maxPrice !== '') {
+      const max = Number(req.query.maxPrice);
+      if (!isNaN(max) && max >= 0) {
+        priceCriteria.$lte = max;
+      }
+    }
+    if (Object.keys(priceCriteria).length > 0) {
+      andClauses.push({
+        $or: [
+          { sellingPrice: priceCriteria },
+          { price: priceCriteria },
+        ],
+      });
+    }
+
+    // Combine all criteria
+    const filterQuery = andClauses.length > 1 ? { $and: andClauses } : andClauses[0];
+
+    // 9. Sorting
+    let sortOption = { createdAt: -1 };
+    if (req.query.sort) {
+      switch (req.query.sort) {
+        case 'price_asc':
+          sortOption = { sellingPrice: 1, price: 1, createdAt: -1 };
+          break;
+        case 'price_desc':
+          sortOption = { sellingPrice: -1, price: -1, createdAt: -1 };
+          break;
+        case 'popular':
+          sortOption = { viewsCount: -1, createdAt: -1 };
+          break;
+        case 'newest':
+        default:
+          sortOption = { createdAt: -1 };
+          break;
+      }
+    }
+
+    // 10. Pagination (default 12, max 50)
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 12));
+    const skip = (page - 1) * limit;
+
+    const [total, books] = await Promise.all([
+      Book.countDocuments(filterQuery),
+      Book.find(filterQuery)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit)
+        .populate('category', 'name slug icon')
+        .populate('university', 'name code domain city state')
+        .populate('seller', 'name avatar isVerified department yearOfStudy rating'),
+    ]);
+
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    res.status(200).json({
+      status: 'success',
+      books,
+      total,
+      page,
+      totalPages,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get aggregated filter metadata for marketplace sidebars
+ * GET /api/books/filters-meta
+ * Access: Public
+ */
+export const getFiltersMeta = async (req, res, next) => {
+  try {
+    const matchStage = { status: { $in: ['approved', 'available'] } };
+
+    // 1. Category counts with details
+    const categoryCountsRaw = await Book.aggregate([
+      { $match: matchStage },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'categoryDoc',
+        },
+      },
+      { $unwind: { path: '$categoryDoc', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          count: 1,
+          name: '$categoryDoc.name',
+          slug: '$categoryDoc.slug',
+          icon: '$categoryDoc.icon',
+        },
+      },
+      { $sort: { count: -1 } },
+    ]);
+
+    // 2. Condition counts
+    const conditionCountsRaw = await Book.aggregate([
+      { $match: matchStage },
+      { $group: { _id: '$condition', count: { $sum: 1 } } },
+    ]);
+    const conditionCounts = {
+      New: 0,
+      'Like New': 0,
+      Good: 0,
+      Fair: 0,
+      Poor: 0,
+    };
+    conditionCountsRaw.forEach((item) => {
+      if (item._id && conditionCounts[item._id] !== undefined) {
+        conditionCounts[item._id] = item.count;
+      }
+    });
+
+    // 3. Listing Type counts
+    const listingTypeCountsRaw = await Book.aggregate([
+      { $match: matchStage },
+      { $group: { _id: '$listingType', count: { $sum: 1 } } },
+    ]);
+    const listingTypeCounts = {
+      sell: 0,
+      exchange: 0,
+      donate: 0,
+    };
+    listingTypeCountsRaw.forEach((item) => {
+      if (['sell', 'sale'].includes(item._id)) listingTypeCounts.sell += item.count;
+      else if (['donate', 'donation'].includes(item._id)) listingTypeCounts.donate += item.count;
+      else if (item._id === 'exchange') listingTypeCounts.exchange += item.count;
+    });
+
+    // 4. Price range among approved sale listings
+    const priceStatsRaw = await Book.aggregate([
+      {
+        $match: {
+          ...matchStage,
+          $or: [{ sellingPrice: { $gt: 0 } }, { price: { $gt: 0 } }],
+        },
+      },
+      {
+        $project: {
+          effectivePrice: {
+            $cond: {
+              if: { $gt: ['$sellingPrice', 0] },
+              then: '$sellingPrice',
+              else: '$price',
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          minPrice: { $min: '$effectivePrice' },
+          maxPrice: { $max: '$effectivePrice' },
+        },
+      },
+    ]);
+
+    const priceRange = {
+      minPrice: priceStatsRaw[0]?.minPrice ?? 0,
+      maxPrice: priceStatsRaw[0]?.maxPrice ?? 100,
+    };
+
+    const totalApproved = await Book.countDocuments(matchStage);
+
+    res.status(200).json({
+      status: 'success',
+      totalApproved,
+      categoryCounts: categoryCountsRaw,
+      conditionCounts,
+      listingTypeCounts,
+      priceRange,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * Create a new book listing
@@ -373,4 +668,3 @@ export const markSold = async (req, res, next) => {
     next(error);
   }
 };
-

@@ -191,6 +191,14 @@ bookSchema.index({ seller: 1, status: 1 });
 bookSchema.index({ price: 1 });
 bookSchema.index({ sellingPrice: 1 });
 bookSchema.index({ createdAt: -1 });
+bookSchema.index({ status: 1, createdAt: -1 });
+bookSchema.index({ status: 1, sellingPrice: 1 });
+bookSchema.index({ status: 1, price: 1 });
+bookSchema.index({ status: 1, viewsCount: -1 });
+bookSchema.index({ status: 1, condition: 1 });
+bookSchema.index({ status: 1, listingType: 1 });
+bookSchema.index({ status: 1, category: 1 });
+bookSchema.index({ status: 1, university: 1 });
 
 const Book = mongoose.model('Book', bookSchema);
 

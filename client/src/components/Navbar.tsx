@@ -69,11 +69,11 @@ export default function Navbar() {
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium text-slate-700">
             <Link
-              href="/#browse"
+              href="/explore"
               className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
             >
               <Search className="w-4 h-4 text-slate-500" />
-              Browse Books
+              Explore
             </Link>
             <Link
               href="/#exchange"
@@ -285,11 +285,11 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2 text-sm font-medium">
           <Link
-            href="/#browse"
+            href="/explore"
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700"
           >
-            <Search className="w-4 h-4" /> Browse Books
+            <Search className="w-4 h-4" /> Explore Books
           </Link>
           <Link
             href="/#exchange"

@@ -1,4 +1,4 @@
-import { AuthResponse, University, User, Category, Book } from '@/types';
+import { AuthResponse, University, User, Category, Book, FiltersMeta } from '@/types';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
@@ -144,6 +144,37 @@ export const api = {
     ),
 
   // Books
+  getBooks: (params: Record<string, string | number | undefined> = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== '') {
+        query.append(key, String(val));
+      }
+    });
+    const queryString = query.toString();
+    return request<{
+      status: string;
+      books: Book[];
+      total: number;
+      page: number;
+      totalPages: number;
+    }>(`/books${queryString ? `?${queryString}` : ''}`, {
+      method: 'GET',
+    });
+  },
+
+  getFiltersMeta: () =>
+    request<{
+      status: string;
+      totalApproved: number;
+      categoryCounts: { _id: string; name: string; slug: string; icon?: string; count: number }[];
+      conditionCounts: Record<string, number>;
+      listingTypeCounts: Record<string, number>;
+      priceRange: { minPrice: number; maxPrice: number };
+    }>('/books/filters-meta', {
+      method: 'GET',
+    }),
+
   createBook: (formData: FormData) =>
     request<{ status: string; message: string; book: Book }>('/books', {
       method: 'POST',

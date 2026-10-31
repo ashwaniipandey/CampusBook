@@ -1,5 +1,7 @@
 import express from 'express';
 import {
+  getAllBooks,
+  getFiltersMeta,
   createBook,
   getMyBooks,
   getBookById,
@@ -17,11 +19,11 @@ import {
 const router = express.Router();
 
 /**
- * @route   POST /api/books
- * @desc    Create a new book listing (multipart with up to 5 images)
- * @access  Private
+ * @route   GET /api/books
+ * @desc    Get all approved books with search, multi-filters, sorting, and pagination
+ * @access  Public
  */
-router.post('/', uploadBookImages, protect, validateCreateBook, createBook);
+router.get('/', getAllBooks);
 
 /**
  * @route   GET /api/books/my
@@ -31,11 +33,25 @@ router.post('/', uploadBookImages, protect, validateCreateBook, createBook);
 router.get('/my', protect, getMyBooks);
 
 /**
+ * @route   GET /api/books/filters-meta
+ * @desc    Get aggregated filter metadata for marketplace sidebars
+ * @access  Public
+ */
+router.get('/filters-meta', getFiltersMeta);
+
+/**
  * @route   GET /api/books/:id
  * @desc    Get book listing details (public for approved; owner/admin for any status)
  * @access  Public / Optional Auth
  */
 router.get('/:id', optionalAuth, getBookById);
+
+/**
+ * @route   POST /api/books
+ * @desc    Create a new book listing (multipart with up to 5 images)
+ * @access  Private
+ */
+router.post('/', uploadBookImages, protect, validateCreateBook, createBook);
 
 /**
  * @route   PUT /api/books/:id
@@ -59,4 +75,3 @@ router.delete('/:id', protect, deleteBook);
 router.patch('/:id/mark-sold', protect, markSold);
 
 export default router;
-

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Search,
   BookOpen,
@@ -156,9 +157,17 @@ const sampleBooks = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
   const [filterType, setFilterType] = useState<'all' | 'sale' | 'exchange' | 'donation'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUniversity, setSelectedUniversity] = useState('all');
+
+  const handleHeroSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set('q', searchQuery.trim());
+    router.push(`/explore${params.toString() ? `?${params.toString()}` : ''}`);
+  };
 
   const filteredBooks = sampleBooks.filter((book) => {
     const matchesType = filterType === 'all' || book.listingType === filterType;
@@ -196,7 +205,10 @@ export default function HomePage() {
           </div>
 
           {/* Search Box Card */}
-          <div className="max-w-4xl mx-auto bg-white p-3 sm:p-4 rounded-2xl shadow-xl border border-slate-200/80">
+          <form
+            onSubmit={handleHeroSearch}
+            className="max-w-4xl mx-auto bg-white p-3 sm:p-4 rounded-2xl shadow-xl border border-slate-200/80 text-left"
+          >
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
               {/* Text Search */}
               <div className="md:col-span-6 relative">
@@ -231,15 +243,15 @@ export default function HomePage() {
               {/* Search Button */}
               <div className="md:col-span-2">
                 <button
-                  onClick={() => {}}
-                  className="w-full bg-campus-600 hover:bg-campus-700 text-white font-medium py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-1.5"
+                  type="submit"
+                  className="w-full bg-campus-600 hover:bg-campus-700 text-white font-medium py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Search className="w-4 h-4" />
-                  Search
+                  Browse Books
                 </button>
               </div>
             </div>
-          </div>
+          </form>
 
           {/* Quick Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto pt-6 text-left">
@@ -487,7 +499,7 @@ export default function HomePage() {
               Register with .edu Email
             </Link>
             <Link
-              href="#browse"
+              href="/explore"
               className="bg-campus-800/80 hover:bg-campus-800 border border-white/20 text-white font-semibold px-6 py-3 rounded-xl text-sm transition text-center"
             >
               Explore Listings
