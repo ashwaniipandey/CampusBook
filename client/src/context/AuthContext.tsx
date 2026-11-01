@@ -2,7 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Book, User } from '@/types';
+import { Book, CartItem, User } from '@/types';
 import api from '@/lib/api';
 
 interface AuthContextType {
@@ -15,6 +15,16 @@ interface AuthContextType {
   wishlistError: string | null;
   refreshWishlist: () => Promise<void>;
   setWishlistItem: (bookId: string, wishlisted: boolean, book?: Book) => Promise<void>;
+  cartItems: CartItem[];
+  cartCount: number;
+  cartTotalAmount: number;
+  cartLoading: boolean;
+  cartError: string | null;
+  refreshCart: () => Promise<void>;
+  addCartBook: (book: Book) => Promise<string>;
+  removeCartBook: (bookId: string) => Promise<string>;
+  clearCart: () => Promise<string>;
+  emptyCart: () => void;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: User }>;
   register: (data: {
     name: string;
@@ -44,9 +54,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [wishlistBookIds, setWishlistBookIds] = useState<string[]>([]);
   const [wishlistLoading, setWishlistLoading] = useState<boolean>(false);
   const [wishlistError, setWishlistError] = useState<string | null>(null);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartTotalAmount, setCartTotalAmount] = useState(0);
+  const [cartLoading, setCartLoading] = useState(false);
+  const [cartError, setCartError] = useState<string | null>(null);
   const wishlistBooksRef = useRef<Book[]>([]);
   const wishlistBookIdsRef = useRef<string[]>([]);
   const loadedWishlistUserRef = useRef<string | null>(null);
+  const cartItemsRef = useRef<CartItem[]>([]);
+  const loadedCartUserRef = useRef<string | null>(null);
   const currentUserIdRef = useRef<string | null>(null);
   currentUserIdRef.current = user?._id || null;
   const router = useRouter();
@@ -57,6 +73,114 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setWishlistBooks(books);
     setWishlistBookIds(wishlistBookIdsRef.current);
   }, []);
+
+  const replaceCart = useCallback((items: CartItem[]) => {
+    cartItemsRef.current = items;
+    setCartItems(items);
+    setCartTotalAmount(items.reduce((total, item) => {
+      const book = item.book;
+      return total + Number(book?.sellingPrice ?? book?.price ?? 0);
+    }, 0));
+  }, []);
+
+  const refreshCart = useCallback(async () => {
+    const userId = user?._id;
+    if (!userId) return;
+
+    loadedCartUserRef.current = userId;
+    setCartLoading(true);
+    setCartError(null);
+    try {
+      const response = await api.getCart();
+      if (currentUserIdRef.current === userId) {
+        replaceCart(response.items || []);
+        setCartTotalAmount(Number(response.totalAmount || 0));
+      }
+    } catch (error) {
+      if (currentUserIdRef.current === userId) {
+        setCartError(error instanceof Error ? error.message : 'Unable to load your cart.');
+      }
+    } finally {
+      if (currentUserIdRef.current === userId) setCartLoading(false);
+    }
+  }, [user?._id, replaceCart]);
+
+  const emptyCart = useCallback(() => {
+    replaceCart([]);
+    setCartTotalAmount(0);
+    setCartError(null);
+  }, [replaceCart]);
+
+  const addCartBook = async (book: Book) => {
+    if (!user) throw new Error('Please sign in to add items to your cart.');
+
+    const userId = user._id;
+    const previousItems = cartItemsRef.current;
+    const alreadyAdded = previousItems.some((item) => item.book._id === book._id);
+    if (!alreadyAdded) {
+      replaceCart([...previousItems, { _id: book._id, book }]);
+    }
+
+    try {
+      const response = await api.addToCart(book._id);
+      if (currentUserIdRef.current === userId) {
+        replaceCart(response.items?.length ? response.items : cartItemsRef.current);
+        setCartTotalAmount(Number(response.totalAmount ?? cartTotalAmount));
+        setCartError(null);
+      }
+      return response.message;
+    } catch (error) {
+      if (!alreadyAdded && currentUserIdRef.current === userId) {
+        replaceCart(cartItemsRef.current.filter((item) => item.book._id !== book._id));
+      }
+      throw error;
+    }
+  };
+
+  const removeCartBook = async (bookId: string) => {
+    if (!user) throw new Error('Please sign in to update your cart.');
+
+    const userId = user._id;
+    const previousItem = cartItemsRef.current.find((item) => item.book._id === bookId);
+    if (!previousItem) throw new Error('Book not found in your cart.');
+    replaceCart(cartItemsRef.current.filter((item) => item.book._id !== bookId));
+
+    try {
+      const response = await api.removeFromCart(bookId);
+      if (currentUserIdRef.current === userId) {
+        replaceCart(response.items || []);
+        setCartTotalAmount(Number(response.totalAmount || 0));
+        setCartError(null);
+      }
+      return response.message;
+    } catch (error) {
+      if (currentUserIdRef.current === userId && !cartItemsRef.current.some((item) => item.book._id === bookId)) {
+        replaceCart([...cartItemsRef.current, previousItem]);
+      }
+      throw error;
+    }
+  };
+
+  const clearCart = async () => {
+    if (!user) throw new Error('Please sign in to clear your cart.');
+
+    const userId = user._id;
+    const previousItems = cartItemsRef.current;
+    emptyCart();
+    try {
+      const response = await api.clearCart();
+      if (currentUserIdRef.current === userId) {
+        replaceCart(response.items || []);
+        setCartTotalAmount(Number(response.totalAmount || 0));
+      }
+      return response.message;
+    } catch (error) {
+      if (currentUserIdRef.current === userId && cartItemsRef.current.length === 0) {
+        replaceCart(previousItems);
+      }
+      throw error;
+    }
+  };
 
   const refreshWishlist = useCallback(async () => {
     const userId = user?._id;
@@ -93,6 +217,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     replaceWishlist([]);
     void refreshWishlist();
   }, [user?._id, replaceWishlist, refreshWishlist]);
+
+  useEffect(() => {
+    const userId = user?._id;
+    if (!userId) {
+      loadedCartUserRef.current = null;
+      emptyCart();
+      setCartLoading(false);
+      setCartError(null);
+      return;
+    }
+
+    if (loadedCartUserRef.current === userId) return;
+    replaceCart([]);
+    void refreshCart();
+  }, [user?._id, emptyCart, replaceCart, refreshCart]);
 
   const setWishlistItem = async (bookId: string, wishlisted: boolean, book?: Book) => {
     if (!user) throw new Error('Please sign in to update your wishlist.');
@@ -294,6 +433,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         wishlistError,
         refreshWishlist,
         setWishlistItem,
+        cartItems,
+        cartCount: cartItems.length,
+        cartTotalAmount,
+        cartLoading,
+        cartError,
+        refreshCart,
+        addCartBook,
+        removeCartBook,
+        clearCart,
+        emptyCart,
         login,
         register,
         verifyOtp,

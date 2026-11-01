@@ -7,6 +7,7 @@ import {
   FiltersMeta,
   Order,
   Cart,
+  CartItem,
   Review,
   OrderStatus,
 } from '@/types';
@@ -244,7 +245,7 @@ export const api = {
     request<{
       status: string;
       cart: Cart;
-      items: any[];
+      items: CartItem[];
       books: Book[];
       totalItems: number;
       totalAmount: number;
@@ -257,6 +258,8 @@ export const api = {
       status: string;
       message: string;
       cart: Cart;
+      items: CartItem[];
+      books: Book[];
       totalItems: number;
       totalAmount: number;
     }>(`/cart/${bookId}`, {
@@ -268,6 +271,8 @@ export const api = {
       status: string;
       message: string;
       cart: Cart;
+      items: CartItem[];
+      books: Book[];
       totalItems: number;
       totalAmount: number;
     }>(`/cart/${bookId}`, {
@@ -279,6 +284,8 @@ export const api = {
       status: string;
       message: string;
       cart: Cart;
+      items: CartItem[];
+      books: Book[];
       totalItems: number;
       totalAmount: number;
     }>('/cart', {

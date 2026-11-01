@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { BookOpen, GraduationCap, Heart, LoaderCircle, ShoppingCart, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Book, BookImage, University } from '@/types';
-import api from '@/lib/api';
 
 type Toast = { message: string; type: 'success' | 'error' };
 
@@ -28,6 +27,7 @@ export default function WishlistPage() {
     wishlistError,
     refreshWishlist,
     setWishlistItem,
+    addCartBook,
   } = useAuth();
   const [pendingBook, setPendingBook] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState<Toast | null>(null);
@@ -63,9 +63,9 @@ export default function WishlistPage() {
   const moveToCart = async (book: Book) => {
     setPendingBook((previous) => ({ ...previous, [book._id]: true }));
     try {
-      const response = await api.addToCart(book._id);
+      const message = await addCartBook(book);
       await setWishlistItem(book._id, false);
-      showToast(response.message || 'Book moved to your cart.');
+      showToast(message || 'Book moved to your cart.');
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Unable to move this book to your cart.', 'error');
     } finally {

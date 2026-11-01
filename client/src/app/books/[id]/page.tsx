@@ -75,6 +75,7 @@ export default function BookDetailPage() {
     wishlistLoading,
     wishlistError,
     setWishlistItem,
+    addCartBook,
   } = useAuth();
   const bookId = typeof params?.id === 'string' ? params.id : '';
 
@@ -184,8 +185,8 @@ export default function BookDetailPage() {
     if (!book || !requireLogin()) return;
     setAddingToCart(true);
     try {
-      const response = await api.addToCart(book._id);
-      showToast(response.message || 'Added to your cart.');
+      const message = await addCartBook(book);
+      showToast(message || 'Added to your cart.');
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Unable to add this book to your cart.', 'error');
     } finally {

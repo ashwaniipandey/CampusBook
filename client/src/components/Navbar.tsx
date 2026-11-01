@@ -9,6 +9,7 @@ import {
   HeartHandshake,
   PlusCircle,
   Heart,
+  ShoppingCart,
   Menu,
   X,
   BadgeCheck,
@@ -22,7 +23,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, cartCount } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -112,6 +113,18 @@ export default function Navbar() {
 
           {/* User Auth & Actions */}
           <div className="hidden md:flex items-center space-x-3">
+            {isAuthenticated && (
+              <Link
+                href="/cart"
+                aria-label={`Shopping cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
+                className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-campus-700"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-campus-600 px-1 text-[10px] font-bold text-white">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              </Link>
+            )}
             <Link
               href={isAuthenticated ? '/sell' : '/login?redirect=/sell'}
               className="inline-flex items-center gap-1.5 bg-campus-600 hover:bg-campus-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition"
@@ -378,6 +391,17 @@ export default function Navbar() {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
               >
                 <Heart className="w-4 h-4 text-rose-500" /> Wishlist
+              </Link>
+
+              <Link
+                href="/cart"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4 text-campus-600" /> Cart
+                </span>
+                <span className="rounded-full bg-campus-100 px-2 py-0.5 text-xs font-bold text-campus-800">{cartCount}</span>
               </Link>
 
               <button
