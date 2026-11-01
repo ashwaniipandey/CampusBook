@@ -10,6 +10,7 @@ import {
   PlusCircle,
   Heart,
   ShoppingCart,
+  ClipboardList,
   Menu,
   X,
   BadgeCheck,
@@ -107,6 +108,15 @@ export default function Navbar() {
               >
                 <Heart className="w-4 h-4 text-rose-500" />
                 Wishlist
+              </Link>
+            )}
+            {isAuthenticated && (
+              <Link
+                href="/orders"
+                className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
+              >
+                <ClipboardList className="w-4 h-4 text-campus-600" />
+                Orders
               </Link>
             )}
           </nav>
@@ -261,6 +271,15 @@ export default function Navbar() {
                         Wishlist
                       </Link>
 
+                      <Link
+                        href="/orders"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        <ClipboardList className="w-4 h-4 text-campus-600" />
+                        Orders
+                      </Link>
+
                       {!user.isVerified && user.role !== 'admin' && (
                         <Link
                           href="/verify-otp"
@@ -402,6 +421,14 @@ export default function Navbar() {
                   <ShoppingCart className="h-4 w-4 text-campus-600" /> Cart
                 </span>
                 <span className="rounded-full bg-campus-100 px-2 py-0.5 text-xs font-bold text-campus-800">{cartCount}</span>
+              </Link>
+
+              <Link
+                href="/orders"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
+              >
+                <ClipboardList className="w-4 h-4 text-campus-600" /> Orders
               </Link>
 
               <button
