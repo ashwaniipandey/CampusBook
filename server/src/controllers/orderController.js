@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import Book from '../models/Book.js';
 import Cart from '../models/Cart.js';
-import Notification from '../models/Notification.js';
 import { AppError } from '../middlewares/errorHandler.js';
+import { createNotification } from '../utils/notifications.js';
 
 /**
  * Helper to populate order references
@@ -91,14 +91,14 @@ export const createOrder = async (req, res, next) => {
         });
 
         // Notify seller
-        await Notification.create({
-          recipient: book.seller,
+        await createNotification({
+          user: book.seller,
           sender: req.user._id,
           type: 'order',
           title: 'New Order Received',
           message: `${req.user.name} placed an order for "${book.title}" ($${price.toFixed(2)}).`,
-          link: '/dashboard/orders',
-          data: { orderId: newOrder._id, bookId: book._id },
+          ids: { orderId: newOrder._id, bookId: book._id },
+          io: req.app.get('io'),
         });
 
         createdOrders.push(newOrder);
@@ -191,14 +191,14 @@ export const createOrder = async (req, res, next) => {
     );
 
     // Notify seller
-    await Notification.create({
-      recipient: book.seller,
+    await createNotification({
+      user: book.seller,
       sender: req.user._id,
       type: 'order',
       title: 'New Order Received',
       message: `${req.user.name} placed an order for "${book.title}" ($${price.toFixed(2)}).`,
-      link: '/dashboard/orders',
-      data: { orderId: order._id, bookId: book._id },
+      ids: { orderId: order._id, bookId: book._id },
+      io: req.app.get('io'),
     });
 
     await populateOrder(order);
@@ -311,14 +311,14 @@ export const updateOrderStatus = async (req, res, next) => {
       await order.save();
 
       // Notify buyer
-      await Notification.create({
-        recipient: order.buyer._id,
+      await createNotification({
+        user: order.buyer._id,
         sender: req.user._id,
         type: 'order',
         title: 'Order Confirmed',
         message: `${order.seller.name} confirmed your order #${order.orderNumber} for "${order.book?.title}". Please coordinate campus meeting.`,
-        link: '/dashboard/orders',
-        data: { orderId: order._id },
+        ids: { orderId: order._id, bookId: order.book?._id },
+        io: req.app.get('io'),
       });
     }
 
@@ -351,14 +351,14 @@ export const updateOrderStatus = async (req, res, next) => {
       const notifyRecipient = isBuyer ? order.seller._id : order.buyer._id;
       const cancelledByName = isBuyer ? 'The buyer' : 'The seller';
 
-      await Notification.create({
-        recipient: notifyRecipient,
+      await createNotification({
+        user: notifyRecipient,
         sender: req.user._id,
         type: 'order',
         title: 'Order Cancelled',
         message: `${cancelledByName} cancelled order #${order.orderNumber} for "${order.book?.title}".`,
-        link: '/dashboard/orders',
-        data: { orderId: order._id },
+        ids: { orderId: order._id, bookId: order.book?._id },
+        io: req.app.get('io'),
       });
     }
 
@@ -384,14 +384,14 @@ export const updateOrderStatus = async (req, res, next) => {
       const notifyRecipient = isBuyer ? order.seller._id : order.buyer._id;
       const completedByName = isBuyer ? order.buyer.name : order.seller.name;
 
-      await Notification.create({
-        recipient: notifyRecipient,
+      await createNotification({
+        user: notifyRecipient,
         sender: req.user._id,
         type: 'order',
         title: 'Order Completed',
         message: `${completedByName} marked order #${order.orderNumber} for "${order.book?.title}" as completed. Please leave a review!`,
-        link: '/dashboard/orders',
-        data: { orderId: order._id },
+        ids: { orderId: order._id, bookId: order.book?._id },
+        io: req.app.get('io'),
       });
     } else {
       return next(new AppError(`Invalid status transition to '${newStatus}'`, 400));

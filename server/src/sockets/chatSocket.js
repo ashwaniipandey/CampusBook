@@ -2,10 +2,10 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
-import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { saveConversationMessage } from '../services/conversationMessageService.js';
+import { createNotification } from '../utils/notifications.js';
 
 const personalRoom = (userId) => `user:${userId}`;
 const conversationRoom = (conversationId) => `conversation:${conversationId}`;
@@ -154,28 +154,24 @@ export const configureChatSockets = (io) => {
             text: message.text || 'Image',
             createdAt: message.createdAt,
           });
-        } else {
-          try {
-            await Notification.create({
-              recipient: recipientId,
-              sender: userId,
-              type: 'message',
-              title: `New message from ${socket.data.user.name}`,
-              message: message.text || 'You received an image.',
-              link: `/messages?conversation=${conversationId}`,
-              data: {
-                conversationId,
-                messageId: message._id,
-                senderId: userId,
-              },
-            });
-          } catch (error) {
-            console.error(`Unable to create offline message notification: ${error.message}`);
-            socket.emit('chat_error', {
-              event: 'new_message_notification',
-              message: 'Your message was sent, but its offline notification could not be saved',
-            });
-          }
+        }
+        try {
+          await createNotification({
+            user: recipientId,
+            sender: userId,
+            type: 'message',
+            title: `New message from ${socket.data.user.name}`,
+            message: message.text || 'You received an image.',
+            ids: { conversationId, messageId: message._id },
+            data: { senderId: userId },
+            io,
+          });
+        } catch (error) {
+          console.error(`Unable to create chat notification: ${error.message}`);
+          socket.emit('chat_error', {
+            event: 'notification',
+            message: 'Your message was sent, but its notification could not be saved',
+          });
         }
       } catch (error) {
         sendEventError(socket, 'send_message', error, acknowledge);

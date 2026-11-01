@@ -49,6 +49,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    course: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    semester: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     yearOfStudy: {
       type: Number,
       min: [1, 'Year of study must be at least 1'],

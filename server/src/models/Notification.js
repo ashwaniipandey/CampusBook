@@ -21,6 +21,7 @@ const notificationSchema = new mongoose.Schema(
           'exchange_request',
           'donation_request',
           'message',
+          'review',
           'book_status',
           'wishlist_alert',
           'system',
@@ -71,4 +72,3 @@ notificationSchema.index({ recipient: 1, createdAt: -1 });
 const Notification = mongoose.model('Notification', notificationSchema);
 
 export default Notification;
-

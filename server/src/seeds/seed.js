@@ -1175,7 +1175,7 @@ const seedDatabase = async () => {
     });
 
     // Sample Completed Order
-    await Order.create({
+    const sampleOrder = await Order.create({
       orderNumber: `ORD-${Date.now().toString().slice(-6)}01`,
       buyer: students[6]._id, // Liam
       seller: students[0]._id, // Alex
@@ -1197,6 +1197,8 @@ const seedDatabase = async () => {
       type: 'order',
       title: 'Order Completed',
       message: 'Liam Chen completed the handover for Clean Code.',
+      link: '/orders',
+      data: { orderId: sampleOrder._id, bookId: createdBooks[1]._id },
       isRead: false,
     });
 

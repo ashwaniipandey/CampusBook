@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import Book from '../models/Book.js';
 import DonationRequest from '../models/DonationRequest.js';
-import Notification from '../models/Notification.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { isApprovedBook } from '../utils/bookRequestHelpers.js';
+import { createNotification } from '../utils/notifications.js';
 
 const populateDonation = (query) =>
   query
@@ -43,20 +43,21 @@ const notificationContent = (status, sender, donationRequest) => {
   return contents[status];
 };
 
-const notifyParty = ({ recipient, sender, status, donationRequest }) => {
+const notifyParty = ({ recipient, sender, status, donationRequest, io }) => {
   const { title, message } = notificationContent(status, sender, donationRequest);
-  return Notification.create({
-    recipient,
+  return createNotification({
+    user: recipient,
     sender: sender._id,
     type: 'donation_request',
     title,
     message,
-    link: '/donations',
-    data: {
+    ids: {
+      donationId: donationRequest._id,
       donationRequestId: donationRequest._id,
       bookId: donationRequest.book._id,
       status,
     },
+    io,
   });
 };
 
@@ -100,6 +101,7 @@ export const createDonationRequest = async (req, res, next) => {
       recipient: book.seller,
       sender: req.user,
       status: 'pending',
+      io: req.app.get('io'),
       donationRequest: { ...donationRequest.toObject(), book },
     });
 
@@ -196,6 +198,7 @@ export const updateDonationRequestStatus = async (req, res, next) => {
             sender: req.user,
             status: 'rejected',
             donationRequest: otherRequest,
+            io: req.app.get('io'),
           });
         }
       }
@@ -226,6 +229,7 @@ export const updateDonationRequestStatus = async (req, res, next) => {
       sender: req.user,
       status: newStatus,
       donationRequest,
+      io: req.app.get('io'),
     });
 
     const populatedDonation = await populateDonation(

@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 import Review from '../models/Review.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
-import Notification from '../models/Notification.js';
 import { AppError } from '../middlewares/errorHandler.js';
+import { createNotification } from '../utils/notifications.js';
 
 /**
  * Submit a review for a completed order
@@ -65,14 +65,14 @@ export const createReview = async (req, res, next) => {
     }
 
     // Notify seller
-    await Notification.create({
-      recipient: order.seller,
+    await createNotification({
+      user: order.seller,
       sender: req.user._id,
-      type: 'system',
+      type: 'review',
       title: 'New Review Received',
       message: `${req.user.name} gave you a ${rating}★ review for "${order.book?.title}".`,
-      link: '/profile',
-      data: { reviewId: review._id, orderId: order._id },
+      ids: { reviewId: review._id, orderId: order._id, bookId: order.book?._id },
+      io: req.app.get('io'),
     });
 
     await review.populate('reviewer', 'name avatar isVerified department yearOfStudy');
@@ -133,4 +133,3 @@ export const getSellerReviews = async (req, res, next) => {
     next(error);
   }
 };
-

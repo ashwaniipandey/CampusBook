@@ -2,11 +2,11 @@ import mongoose from 'mongoose';
 import Book from '../models/Book.js';
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
-import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 import { saveConversationMessage } from '../services/conversationMessageService.js';
+import { createNotification } from '../utils/notifications.js';
 
 const populateConversation = (query) =>
   query
@@ -31,6 +31,41 @@ const serializeConversation = (conversation, currentUserId) => {
   result.otherParticipant = getParticipant(conversation, currentUserId);
   result.unreadCount = Number(unreadCounts?.get(currentUserId.toString()) || 0);
   return result;
+};
+
+const notifyConversationRecipient = async ({
+  req,
+  conversationId,
+  message,
+  recipientId,
+}) => {
+  const io = req.app.get('io');
+  const senderId = req.user._id.toString();
+  const recipientRoom = `user:${recipientId}`;
+  if (io) {
+    const messageData = message.toObject();
+    io.to(`user:${senderId}`).to(recipientRoom).emit('receive_message', messageData);
+    if (io.sockets.adapter.rooms.get(recipientRoom)?.size) {
+      io.to(recipientRoom).emit('new_message_notification', {
+        conversationId,
+        messageId: message._id,
+        senderId,
+        senderName: req.user.name,
+        text: message.text || 'Image',
+        createdAt: message.createdAt,
+      });
+    }
+  }
+  await createNotification({
+    user: recipientId,
+    sender: req.user._id,
+    type: 'message',
+    title: `New message from ${req.user.name}`,
+    message: message.text || 'You received an image.',
+    ids: { conversationId, messageId: message._id },
+    data: { senderId },
+    io,
+  });
 };
 
 export const requireConversationParticipant = async (req, res, next) => {
@@ -224,10 +259,16 @@ export const sendMessage = async (req, res, next) => {
       return next(new AppError('Message cannot exceed 2000 characters', 400));
     }
 
-    const { message } = await saveConversationMessage({
+    const { message, recipientId } = await saveConversationMessage({
       conversationId: req.conversation._id,
       senderId: req.user._id,
       text: text.trim(),
+    });
+    await notifyConversationRecipient({
+      req,
+      conversationId: req.conversation._id,
+      message,
+      recipientId,
     });
     res.status(201).json({
       status: 'success',
@@ -288,43 +329,12 @@ export const uploadConversationImage = async (req, res, next) => {
       text,
       image: uploadedImage.url,
     });
-    const io = req.app.get('io');
-    if (io) {
-      const senderId = req.user._id.toString();
-      const recipientRoom = `user:${recipientId}`;
-      const messageData = message.toObject();
-      io.to(`user:${senderId}`).to(recipientRoom).emit('receive_message', messageData);
-
-      const recipientIsOnline = Boolean(io.sockets.adapter.rooms.get(recipientRoom)?.size);
-      if (recipientIsOnline) {
-        io.to(recipientRoom).emit('new_message_notification', {
-          conversationId: req.conversation._id,
-          messageId: message._id,
-          senderId,
-          senderName: req.user.name,
-          text: message.text || 'Image',
-          createdAt: message.createdAt,
-        });
-      } else {
-        try {
-          await Notification.create({
-            recipient: recipientId,
-            sender: req.user._id,
-            type: 'message',
-            title: `New message from ${req.user.name}`,
-            message: message.text || 'You received an image.',
-            link: `/messages/${req.conversation._id}`,
-            data: {
-              conversationId: req.conversation._id,
-              messageId: message._id,
-              senderId,
-            },
-          });
-        } catch (error) {
-          console.error(`Unable to create offline image-message notification: ${error.message}`);
-        }
-      }
-    }
+    await notifyConversationRecipient({
+      req,
+      conversationId: req.conversation._id,
+      message,
+      recipientId,
+    });
     res.status(201).json({
       status: 'success',
       message: 'Image message sent',

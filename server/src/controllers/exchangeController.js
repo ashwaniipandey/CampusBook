@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import Book from '../models/Book.js';
 import ExchangeRequest from '../models/ExchangeRequest.js';
-import Notification from '../models/Notification.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { isApprovedBook } from '../utils/bookRequestHelpers.js';
+import { createNotification } from '../utils/notifications.js';
 
 const populateExchange = (query) =>
   query
@@ -24,7 +24,7 @@ const populateExchange = (query) =>
     .populate('requester', 'name email avatar isVerified')
     .populate('bookOwner', 'name email avatar isVerified');
 
-const notifyParty = ({ recipient, sender, status, exchangeRequest }) => {
+const notifyParty = ({ recipient, sender, status, exchangeRequest, io }) => {
   const statusMessages = {
     pending: {
       title: 'New Exchange Request',
@@ -49,19 +49,21 @@ const notifyParty = ({ recipient, sender, status, exchangeRequest }) => {
   };
   const notification = statusMessages[status];
 
-  return Notification.create({
-    recipient,
+  return createNotification({
+    user: recipient,
     sender: sender._id,
     type: 'exchange_request',
     title: notification.title,
     message: notification.message,
-    link: '/exchanges',
-    data: {
+    ids: {
+      exchangeId: exchangeRequest._id,
       exchangeRequestId: exchangeRequest._id,
+      bookId: exchangeRequest.requestedBook._id,
       requestedBookId: exchangeRequest.requestedBook._id,
       offeredBookId: exchangeRequest.offeredBook._id,
       status,
     },
+    io,
   });
 };
 
@@ -125,6 +127,7 @@ export const createExchangeRequest = async (req, res, next) => {
       recipient: requestedBook.seller,
       sender: req.user,
       status: 'pending',
+      io: req.app.get('io'),
       exchangeRequest: {
         ...exchangeRequest.toObject(),
         requestedBook,
@@ -242,6 +245,7 @@ export const updateExchangeRequestStatus = async (req, res, next) => {
       sender: req.user,
       status: newStatus,
       exchangeRequest,
+      io: req.app.get('io'),
     });
 
     const populatedExchange = await populateExchange(

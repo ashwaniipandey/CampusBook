@@ -18,6 +18,8 @@ import userRoutes from './routes/userRoutes.js';
 import exchangeRoutes from './routes/exchangeRoutes.js';
 import donationRoutes from './routes/donationRoutes.js';
 import conversationRoutes from './routes/conversationRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -104,6 +106,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/exchanges', exchangeRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/conversations', conversationRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Root welcome endpoint
 app.get('/', (req, res) => {
