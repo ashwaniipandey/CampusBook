@@ -86,7 +86,7 @@ export interface Book {
   images: (string | BookImage)[];
   exchangePreferences?: string;
   status: BookStatus;
-  viewsCount?: number;
+  views?: number;
   isApproved?: boolean;
   isWishlisted?: boolean;
   createdAt?: string;
@@ -110,6 +110,32 @@ export interface Order {
   notes?: string;
   completedAt?: string;
   cancelledAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type RequestStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'completed';
+
+export interface ExchangeRequest {
+  _id: string;
+  requester: User | string;
+  bookOwner: User | string;
+  requestedBook: Book;
+  offeredBook: Book;
+  status: RequestStatus;
+  message?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DonationRequest {
+  _id: string;
+  requester: User | string;
+  donor: User | string;
+  book: Book;
+  status: RequestStatus;
+  message?: string;
+  reason?: string;
   createdAt?: string;
   updatedAt?: string;
 }

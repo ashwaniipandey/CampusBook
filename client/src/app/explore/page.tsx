@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { getBookPrice } from '@/lib/pricing';
 import { Book, University, Category, FiltersMeta, BookCondition, ListingType } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -943,7 +944,7 @@ function ExploreContent() {
 
                 // Discount calculation
                 const orig = Number(book.originalPrice || 0);
-                const sell = Number(book.sellingPrice || 0);
+                const sell = getBookPrice(book);
                 const discount = orig > 0 && sell < orig ? Math.round(((orig - sell) / orig) * 100) : 0;
 
                 return (
@@ -1041,7 +1042,7 @@ function ExploreContent() {
                       ) : (
                         <div className="flex items-baseline gap-1.5">
                           <span className="text-lg font-black text-slate-900">
-                            ${Number(book.sellingPrice ?? book.price ?? 0).toFixed(2)}
+                            ${sell.toFixed(2)}
                           </span>
                           {orig > 0 && (
                             <span className="text-xs text-slate-400 line-through">

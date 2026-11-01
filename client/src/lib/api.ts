@@ -10,6 +10,9 @@ import {
   CartItem,
   Review,
   OrderStatus,
+  ExchangeRequest,
+  DonationRequest,
+  RequestStatus,
 } from '@/types';
 
 const API_BASE_URL =
@@ -319,6 +322,64 @@ export const api = {
 
   updateOrderStatus: (id: string, status: 'confirmed' | 'completed' | 'cancelled') =>
     request<{ status: string; message: string; order: Order }>(`/orders/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+
+  // Exchange requests
+  createExchangeRequest: (data: {
+    requestedBookId: string;
+    offeredBookId: string;
+    message?: string;
+  }) =>
+    request<{ status: string; message: string; exchangeRequest: ExchangeRequest }>('/exchanges', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getExchangeRequests: (role: 'received' | 'sent') =>
+    request<{
+      status: string;
+      results: number;
+      exchangeRequests: ExchangeRequest[];
+    }>(`/exchanges?role=${role}`, { method: 'GET' }),
+
+  updateExchangeRequestStatus: (
+    id: string,
+    status: Extract<RequestStatus, 'accepted' | 'rejected' | 'cancelled' | 'completed'>
+  ) =>
+    request<{
+      status: string;
+      message: string;
+      exchangeRequest: ExchangeRequest;
+    }>(`/exchanges/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+
+  // Donation requests
+  createDonationRequest: (data: { bookId: string; message?: string }) =>
+    request<{ status: string; message: string; donationRequest: DonationRequest }>('/donations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getDonationRequests: (role: 'received' | 'sent') =>
+    request<{
+      status: string;
+      results: number;
+      donationRequests: DonationRequest[];
+    }>(`/donations?role=${role}`, { method: 'GET' }),
+
+  updateDonationRequestStatus: (
+    id: string,
+    status: Extract<RequestStatus, 'accepted' | 'rejected' | 'cancelled' | 'completed'>
+  ) =>
+    request<{
+      status: string;
+      message: string;
+      donationRequest: DonationRequest;
+    }>(`/donations/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     }),

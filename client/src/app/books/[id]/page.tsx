@@ -19,6 +19,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { Book, BookImage, Category, Review, University, User } from '@/types';
+import { getBookPrice } from '@/lib/pricing';
 
 type Toast = { message: string; type: 'success' | 'error' };
 
@@ -37,7 +38,7 @@ function getReviewerName(review: Review) {
 
 function BookCard({ book }: { book: Book }) {
   const image = book.images?.[0];
-  const price = book.listingType === 'donate' ? 'Free' : `$${Number(book.sellingPrice ?? book.price ?? 0).toFixed(2)}`;
+  const price = book.listingType === 'donate' ? 'Free' : `$${getBookPrice(book).toFixed(2)}`;
 
   return (
     <Link
@@ -94,12 +95,28 @@ export default function BookDetailPage() {
   const [orderNotes, setOrderNotes] = useState('');
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
+  const [donationModalOpen, setDonationModalOpen] = useState(false);
+  const [myBooks, setMyBooks] = useState<Book[]>([]);
+  const [myBooksLoading, setMyBooksLoading] = useState(false);
+  const [offeredBookId, setOfferedBookId] = useState('');
+  const [requestMessage, setRequestMessage] = useState('');
+  const [submittingRequest, setSubmittingRequest] = useState(false);
 
   const seller = book && typeof book.seller !== 'string' ? (book.seller as User) : null;
   const sellerId = typeof book?.seller === 'string' ? book.seller : seller?._id;
   const isOwner = Boolean(user && sellerId === user._id);
   const isSold = book?.status === 'sold';
   const canPurchase = Boolean(book && book.listingType === 'sell' && !isOwner && !isSold);
+  const isApproved = Boolean(
+    book && (['approved', 'available'].includes(book.status) || book.isApproved === true)
+  );
+  const canRequestExchange = Boolean(
+    book && book.listingType === 'exchange' && isApproved && !isOwner && !isSold
+  );
+  const canRequestDonation = Boolean(
+    book && book.listingType === 'donate' && isApproved && !isOwner && !isSold
+  );
   const wishlisted = Boolean(book && wishlistBookIds.includes(book._id));
   const images = useMemo(
     () => (book?.images || []).map(getImageUrl).filter((image) => Boolean(image)),
@@ -107,7 +124,7 @@ export default function BookDetailPage() {
   );
   const categoryName = getName(book?.category, 'Not provided');
   const universityName = getName(book?.university, 'Not provided');
-  const sellingPrice = Number(book?.sellingPrice ?? book?.price ?? 0);
+  const sellingPrice = book ? getBookPrice(book) : 0;
   const originalPrice = Number(book?.originalPrice || 0);
   const discount = originalPrice > sellingPrice && originalPrice > 0
     ? Math.round(((originalPrice - sellingPrice) / originalPrice) * 100)
@@ -208,6 +225,64 @@ export default function BookDetailPage() {
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Unable to place your order.', 'error');
       setSubmittingOrder(false);
+    }
+  };
+
+  const openExchangeRequest = async () => {
+    if (!book || !requireLogin()) return;
+    setMyBooksLoading(true);
+    try {
+      const response = await api.getMyBooks();
+      const eligibleBooks = (response.books || []).filter(
+        (ownedBook) =>
+          ownedBook.status !== 'sold' &&
+          (['approved', 'available'].includes(ownedBook.status) || ownedBook.isApproved === true)
+      );
+      setMyBooks(eligibleBooks);
+      setOfferedBookId(eligibleBooks[0]?._id || '');
+      setRequestMessage('');
+      setExchangeModalOpen(true);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to load your eligible books.', 'error');
+    } finally {
+      setMyBooksLoading(false);
+    }
+  };
+
+  const submitExchangeRequest = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!book || !offeredBookId || !requireLogin()) return;
+    setSubmittingRequest(true);
+    try {
+      const response = await api.createExchangeRequest({
+        requestedBookId: book._id,
+        offeredBookId,
+        message: requestMessage.trim(),
+      });
+      showToast(response.message || 'Exchange request sent.');
+      setExchangeModalOpen(false);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to send the exchange request.', 'error');
+    } finally {
+      setSubmittingRequest(false);
+    }
+  };
+
+  const submitDonationRequest = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!book || !requireLogin()) return;
+    setSubmittingRequest(true);
+    try {
+      const response = await api.createDonationRequest({
+        bookId: book._id,
+        message: requestMessage.trim(),
+      });
+      showToast(response.message || 'Donation request sent.');
+      setDonationModalOpen(false);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to send the donation request.', 'error');
+    } finally {
+      setSubmittingRequest(false);
     }
   };
 
@@ -406,29 +481,46 @@ export default function BookDetailPage() {
                           Buy Now
                         </button>
                       </div>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-400">
-                          Request Exchange · Phase 6
-                        </button>
-                        <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-400">
-                          Request Donation · Phase 6
-                        </button>
-                      </div>
                     </div>
                   ) : (
                     <div className="mt-5 space-y-3">
                       <p className="text-sm font-semibold text-slate-500">
-                        {isSold ? 'Purchase unavailable · This book is sold' : isOwner ? 'Purchase unavailable · This is your listing' : book.listingType === 'exchange' ? 'Purchase unavailable · Exchange listing' : 'Purchase unavailable · Free donation'}
+                        {isSold
+                          ? 'Purchase unavailable · This book is sold'
+                          : isOwner
+                            ? 'Purchase unavailable · This is your listing'
+                            : book.listingType === 'exchange'
+                              ? 'Purchase unavailable · Exchange listing'
+                              : book.listingType === 'donate'
+                                ? 'Purchase unavailable · Free donation'
+                                : 'Purchase unavailable'}
                       </p>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-400">
-                          Request Exchange · Phase 6
-                        </button>
-                        <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-400">
-                          Request Donation · Phase 6
-                        </button>
-                      </div>
                     </div>
+                  )}
+                  {canRequestExchange && (
+                    <button
+                      type="button"
+                      onClick={() => void openExchangeRequest()}
+                      disabled={myBooksLoading || authLoading}
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-campus-600 px-4 py-3 text-sm font-bold text-campus-700 hover:bg-campus-50 disabled:opacity-50"
+                    >
+                      {myBooksLoading && <LoaderCircle className="h-4 w-4 animate-spin" />}
+                      Request Exchange
+                    </button>
+                  )}
+                  {canRequestDonation && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!requireLogin()) return;
+                        setRequestMessage('');
+                        setDonationModalOpen(true);
+                      }}
+                      disabled={authLoading}
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-50"
+                    >
+                      Request Donation
+                    </button>
                   )}
                 </div>
 
@@ -577,6 +669,77 @@ export default function BookDetailPage() {
               <button type="submit" disabled={submittingOrder} className="flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-60">
                 {submittingOrder && <LoaderCircle className="h-4 w-4 animate-spin" />}
                 {submittingOrder ? 'Placing order…' : `Place order · $${sellingPrice.toFixed(2)}`}
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {exchangeModalOpen && book && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !submittingRequest) setExchangeModalOpen(false);
+        }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="exchange-dialog-title" className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="exchange-dialog-title" className="text-xl font-extrabold text-slate-900">Request an exchange</h2>
+                <p className="mt-1 text-sm text-slate-500">Choose one of your approved books to offer for “{book.title}”.</p>
+              </div>
+              <button type="button" aria-label="Close dialog" disabled={submittingRequest} onClick={() => setExchangeModalOpen(false)} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {myBooks.length === 0 ? (
+              <div className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
+                <p>You have no eligible approved books to offer.</p>
+                <Link href="/sell" className="mt-2 inline-flex font-bold text-campus-700 hover:text-campus-900">List a book</Link>
+              </div>
+            ) : (
+              <form onSubmit={submitExchangeRequest} className="mt-5 space-y-4">
+                <label className="block text-sm font-semibold text-slate-700">
+                  Your offer
+                  <select value={offeredBookId} onChange={(event) => setOfferedBookId(event.target.value)} required className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100">
+                    {myBooks.map((ownedBook) => (
+                      <option key={ownedBook._id} value={ownedBook._id}>{ownedBook.title}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm font-semibold text-slate-700">
+                  Message <span className="font-normal text-slate-400">(optional)</span>
+                  <textarea value={requestMessage} onChange={(event) => setRequestMessage(event.target.value)} maxLength={1000} rows={3} placeholder="Add a note for the owner" className="mt-1.5 w-full resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100" />
+                </label>
+                <button type="submit" disabled={!offeredBookId || submittingRequest} className="flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-60">
+                  {submittingRequest && <LoaderCircle className="h-4 w-4 animate-spin" />}
+                  {submittingRequest ? 'Sending…' : 'Send Request'}
+                </button>
+              </form>
+            )}
+          </section>
+        </div>
+      )}
+
+      {donationModalOpen && book && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !submittingRequest) setDonationModalOpen(false);
+        }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="donation-dialog-title" className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="donation-dialog-title" className="text-xl font-extrabold text-slate-900">Request this donation</h2>
+                <p className="mt-1 text-sm text-slate-500">Send an optional message to the donor.</p>
+              </div>
+              <button type="button" aria-label="Close dialog" disabled={submittingRequest} onClick={() => setDonationModalOpen(false)} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={submitDonationRequest} className="mt-5 space-y-4">
+              <label className="block text-sm font-semibold text-slate-700">
+                Message <span className="font-normal text-slate-400">(optional)</span>
+                <textarea value={requestMessage} onChange={(event) => setRequestMessage(event.target.value)} maxLength={1000} rows={4} placeholder="Add a note for the donor" className="mt-1.5 w-full resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100" />
+              </label>
+              <button type="submit" disabled={submittingRequest} className="flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-60">
+                {submittingRequest && <LoaderCircle className="h-4 w-4 animate-spin" />}
+                {submittingRequest ? 'Sending…' : 'Send Request'}
               </button>
             </form>
           </section>

@@ -16,6 +16,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { BookImage, Order, OrderStatus, Review, User } from '@/types';
+import { getBookPrice } from '@/lib/pricing';
 
 type OrderRole = 'buying' | 'selling';
 type Toast = { message: string; type: 'success' | 'error' };
@@ -273,7 +274,8 @@ export default function OrdersPage() {
               const book = order.book;
               const image = book?.images?.[0];
               const bookHref = book?._id ? `/books/${book._id}` : '/explore';
-              const price = Number(order.price ?? order.amount ?? 0);
+              const storedPrice = Number(order.price || order.amount || 0);
+              const price = storedPrice > 0 ? storedPrice : getBookPrice(book);
               const otherParty = activeRole === 'buying' ? order.seller : order.buyer;
               const review = reviews[order._id];
               const reviewForm = reviewForms[order._id] || { rating: 5, comment: '' };
@@ -324,7 +326,9 @@ export default function OrdersPage() {
                     </div>
 
                     <div className="flex items-start justify-between gap-3 sm:flex-col sm:items-end">
-                      <p className="text-lg font-extrabold text-slate-900">{price === 0 ? 'Free' : `$${price.toFixed(2)}`}</p>
+                      <p className="text-lg font-extrabold text-slate-900">
+                        {book?.listingType === 'donate' ? 'Free' : `$${price.toFixed(2)}`}
+                      </p>
                       <Link href={bookHref} className="text-xs font-bold text-campus-700 hover:text-campus-900">
                         View book
                       </Link>

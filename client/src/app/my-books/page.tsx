@@ -407,7 +407,7 @@ export default function MyBooksPage() {
                       {/* Views Count */}
                       <div className="absolute bottom-2.5 right-3 bg-slate-900/70 text-white text-[11px] font-medium px-2 py-0.5 rounded-full backdrop-blur-xs flex items-center gap-1">
                         <Eye className="w-3 h-3" />
-                        <span>{book.viewsCount || 0} views</span>
+                        <span>{book.views || 0} views</span>
                       </div>
                     </div>
 
@@ -582,4 +582,3 @@ export default function MyBooksPage() {
     </ProtectedRoute>
   );
 }
-

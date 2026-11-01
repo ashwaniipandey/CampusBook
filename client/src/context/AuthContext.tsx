@@ -4,6 +4,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { useRouter } from 'next/navigation';
 import { Book, CartItem, User } from '@/types';
 import api from '@/lib/api';
+import { getBookPrice } from '@/lib/pricing';
 
 interface AuthContextType {
   user: User | null;
@@ -77,10 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const replaceCart = useCallback((items: CartItem[]) => {
     cartItemsRef.current = items;
     setCartItems(items);
-    setCartTotalAmount(items.reduce((total, item) => {
-      const book = item.book;
-      return total + Number(book?.sellingPrice ?? book?.price ?? 0);
-    }, 0));
+    setCartTotalAmount(items.reduce((total, item) => total + getBookPrice(item.book), 0));
   }, []);
 
   const refreshCart = useCallback(async () => {
@@ -94,7 +92,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await api.getCart();
       if (currentUserIdRef.current === userId) {
         replaceCart(response.items || []);
-        setCartTotalAmount(Number(response.totalAmount || 0));
       }
     } catch (error) {
       if (currentUserIdRef.current === userId) {
@@ -125,7 +122,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await api.addToCart(book._id);
       if (currentUserIdRef.current === userId) {
         replaceCart(response.items?.length ? response.items : cartItemsRef.current);
-        setCartTotalAmount(Number(response.totalAmount ?? cartTotalAmount));
         setCartError(null);
       }
       return response.message;
@@ -149,7 +145,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await api.removeFromCart(bookId);
       if (currentUserIdRef.current === userId) {
         replaceCart(response.items || []);
-        setCartTotalAmount(Number(response.totalAmount || 0));
         setCartError(null);
       }
       return response.message;
@@ -171,7 +166,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await api.clearCart();
       if (currentUserIdRef.current === userId) {
         replaceCart(response.items || []);
-        setCartTotalAmount(Number(response.totalAmount || 0));
       }
       return response.message;
     } catch (error) {

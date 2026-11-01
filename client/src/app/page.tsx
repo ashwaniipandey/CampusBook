@@ -34,7 +34,7 @@ const sampleBooks = [
     campusCity: 'Cambridge, MA',
     seller: 'Emily Zhang',
     sellerRating: 5.0,
-    listingType: 'sale',
+    listingType: 'sell',
     price: 65,
     originalPrice: 135,
     condition: 'Like New',
@@ -50,7 +50,7 @@ const sampleBooks = [
     campusCity: 'Stanford, CA',
     seller: 'Alex Johnson',
     sellerRating: 4.9,
-    listingType: 'sale',
+    listingType: 'sell',
     price: 25,
     originalPrice: 55,
     condition: 'Good',
@@ -83,7 +83,7 @@ const sampleBooks = [
     campusCity: 'Cambridge, MA',
     seller: 'Sophia Patel',
     sellerRating: 4.95,
-    listingType: 'sale',
+    listingType: 'sell',
     price: 80,
     originalPrice: 220,
     condition: 'Like New',
@@ -99,7 +99,7 @@ const sampleBooks = [
     campusCity: 'Cambridge, MA',
     seller: 'Sophia Patel',
     sellerRating: 4.95,
-    listingType: 'donation',
+    listingType: 'donate',
     price: 0,
     originalPrice: 45,
     condition: 'Like New',
@@ -115,7 +115,7 @@ const sampleBooks = [
     campusCity: 'Stanford, CA',
     seller: 'Liam Chen',
     sellerRating: 5.0,
-    listingType: 'sale',
+    listingType: 'sell',
     price: 35,
     originalPrice: 150,
     condition: 'Good',
@@ -148,7 +148,7 @@ const sampleBooks = [
     campusCity: 'Cambridge, MA',
     seller: 'Hannah Martinez',
     sellerRating: 5.0,
-    listingType: 'donation',
+    listingType: 'donate',
     price: 0,
     originalPrice: 30,
     condition: 'Good',
@@ -158,7 +158,7 @@ const sampleBooks = [
 
 export default function HomePage() {
   const router = useRouter();
-  const [filterType, setFilterType] = useState<'all' | 'sale' | 'exchange' | 'donation'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'sell' | 'exchange' | 'donate'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUniversity, setSelectedUniversity] = useState('all');
 
@@ -299,9 +299,9 @@ export default function HomePage() {
               All Listings
             </button>
             <button
-              onClick={() => setFilterType('sale')}
+              onClick={() => setFilterType('sell')}
               className={`px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                filterType === 'sale'
+                filterType === 'sell'
                   ? 'bg-white text-campus-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
@@ -319,9 +319,9 @@ export default function HomePage() {
               <ArrowLeftRight className="w-3.5 h-3.5" /> Exchange
             </button>
             <button
-              onClick={() => setFilterType('donation')}
+              onClick={() => setFilterType('donate')}
               className={`px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                filterType === 'donation'
+                filterType === 'donate'
                   ? 'bg-white text-emerald-700 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
@@ -354,7 +354,7 @@ export default function HomePage() {
                   />
                   {/* Badge: Listing Type */}
                   <div className="absolute top-3 left-3">
-                    {book.listingType === 'sale' && (
+                    {book.listingType === 'sell' && (
                       <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-campus-600 text-white shadow-xs">
                         For Sale
                       </span>
@@ -364,7 +364,7 @@ export default function HomePage() {
                         Exchange
                       </span>
                     )}
-                    {book.listingType === 'donation' && (
+                    {book.listingType === 'donate' && (
                       <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white shadow-xs">
                         Free Donation
                       </span>
@@ -391,7 +391,7 @@ export default function HomePage() {
 
                   {/* Price / Exchange detail */}
                   <div className="pt-2 border-t border-slate-100">
-                    {book.listingType === 'sale' && (
+                    {book.listingType === 'sell' && (
                       <div className="flex items-baseline gap-2">
                         <span className="text-xl font-bold text-slate-900">${book.price}</span>
                         {book.originalPrice > 0 && (
@@ -407,7 +407,7 @@ export default function HomePage() {
                         🔄 Wants: {book.exchangeFor}
                       </div>
                     )}
-                    {book.listingType === 'donation' && (
+                    {book.listingType === 'donate' && (
                       <div className="text-xs text-emerald-700 bg-emerald-50 p-2 rounded-lg font-medium">
                         🎁 Free for student in need
                       </div>
@@ -428,9 +428,9 @@ export default function HomePage() {
 
                   {/* Action Button */}
                   <button className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-campus-600 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5">
-                    {book.listingType === 'sale' && 'Contact Seller'}
+                    {book.listingType === 'sell' && 'Contact Seller'}
                     {book.listingType === 'exchange' && 'Propose Exchange'}
-                    {book.listingType === 'donation' && 'Request Donation'}
+                    {book.listingType === 'donate' && 'Request Donation'}
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>

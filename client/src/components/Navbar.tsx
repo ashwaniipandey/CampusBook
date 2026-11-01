@@ -79,14 +79,14 @@ export default function Navbar() {
               Explore
             </Link>
             <Link
-              href="/#exchange"
+              href="/explore?listingType=exchange"
               className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
             >
               <ArrowLeftRight className="w-4 h-4 text-amber-500" />
               Exchange
             </Link>
             <Link
-              href="/#donations"
+              href="/explore?listingType=donate"
               className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
             >
               <HeartHandshake className="w-4 h-4 text-emerald-500" />
@@ -280,6 +280,24 @@ export default function Navbar() {
                         Orders
                       </Link>
 
+                      <Link
+                        href="/exchanges"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        <ArrowLeftRight className="w-4 h-4 text-amber-500" />
+                        Exchanges
+                      </Link>
+
+                      <Link
+                        href="/donations"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        <HeartHandshake className="w-4 h-4 text-emerald-500" />
+                        Donations
+                      </Link>
+
                       {!user.isVerified && user.role !== 'admin' && (
                         <Link
                           href="/verify-otp"
@@ -343,14 +361,14 @@ export default function Navbar() {
             <Search className="w-4 h-4" /> Explore Books
           </Link>
           <Link
-            href="/#exchange"
+            href="/explore?listingType=exchange"
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700"
           >
             <ArrowLeftRight className="w-4 h-4 text-amber-500" /> Exchange
           </Link>
           <Link
-            href="/#donations"
+            href="/explore?listingType=donate"
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700"
           >
@@ -429,6 +447,22 @@ export default function Navbar() {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
               >
                 <ClipboardList className="w-4 h-4 text-campus-600" /> Orders
+              </Link>
+
+              <Link
+                href="/exchanges"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
+              >
+                <ArrowLeftRight className="w-4 h-4 text-amber-500" /> Exchanges
+              </Link>
+
+              <Link
+                href="/donations"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
+              >
+                <HeartHandshake className="w-4 h-4 text-emerald-500" /> Donations
               </Link>
 
               <button

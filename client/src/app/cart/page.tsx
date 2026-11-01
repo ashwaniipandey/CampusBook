@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { BookImage, User } from '@/types';
 import api from '@/lib/api';
+import { getBookPrice } from '@/lib/pricing';
 
 type Toast = { message: string; type: 'success' | 'error' };
 
@@ -201,7 +202,8 @@ export default function CartPage() {
                 const book = item.book;
                 const cover = book.images?.[0];
                 const seller = typeof book.seller === 'string' ? 'Campus seller' : (book.seller as User).name;
-                const price = Number(book.sellingPrice ?? book.price ?? 0);
+                const price = getBookPrice(book);
+                const priceLabel = book.listingType === 'donate' ? 'Free' : `$${price.toFixed(2)}`;
 
                 return (
                   <article key={item._id || book._id} className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row">
@@ -229,7 +231,7 @@ export default function CartPage() {
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end">
-                        <span className="text-lg font-extrabold text-slate-900">${price.toFixed(2)}</span>
+                        <span className="text-lg font-extrabold text-slate-900">{priceLabel}</span>
                         <button
                           type="button"
                           disabled={pendingBook[book._id] || placingOrder}
