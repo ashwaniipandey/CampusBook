@@ -439,8 +439,7 @@ export const getBookById = async (req, res, next) => {
       return next(new AppError('Book listing not found', 404));
     }
 
-    const isPublic =
-      book.status === 'approved' || book.status === 'available' || book.isApproved === true;
+    const isPublic = ['approved', 'available', 'sold'].includes(book.status);
     const isOwner =
       req.user && book.seller && book.seller._id.toString() === req.user._id.toString();
     const isAdmin = req.user && req.user.role === 'admin';

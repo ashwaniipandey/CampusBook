@@ -188,7 +188,7 @@ export default function BookDetailPage() {
   };
 
   const toggleWishlist = async () => {
-    if (!book || !requireLogin()) return;
+    if (!book || isSold || !requireLogin()) return;
     const previousValue = wishlisted;
     try {
       await setWishlistItem(book._id, !previousValue, book);
@@ -345,16 +345,18 @@ export default function BookDetailPage() {
                 <Share2 className="h-4 w-4" />
                 <span className="hidden sm:inline">Share</span>
               </button>
-              <button
-                type="button"
-                onClick={toggleWishlist}
-                disabled={authLoading || wishlistLoading}
-                aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                aria-pressed={wishlisted}
-                className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:border-rose-200 hover:text-rose-600 disabled:opacity-50"
-              >
-                <Heart className={`h-5 w-5 ${wishlisted ? 'fill-rose-500 text-rose-500' : ''}`} />
-              </button>
+              {!isSold && (
+                <button
+                  type="button"
+                  onClick={toggleWishlist}
+                  disabled={authLoading || wishlistLoading}
+                  aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                  aria-pressed={wishlisted}
+                  className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:border-rose-200 hover:text-rose-600 disabled:opacity-50"
+                >
+                  <Heart className={`h-5 w-5 ${wishlisted ? 'fill-rose-500 text-rose-500' : ''}`} />
+                </button>
+              )}
             </div>
           )}
         </div>
