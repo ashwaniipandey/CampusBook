@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import api from '@/lib/api';
+import { Book, BookImage, StudentDashboard } from '@/types';
+import { getBookPrice } from '@/lib/pricing';
 import {
   User,
   GraduationCap,
@@ -20,10 +23,26 @@ import {
   BookMarked,
   Sparkles,
   Calendar,
+  ShoppingBag,
+  Repeat2,
+  HeartHandshake,
+  MessageCircle,
+  ClipboardList,
+  Compass,
+  PlusCircle,
+  RefreshCw,
 } from 'lucide-react';
+
+function getCover(book: Book) {
+  const image = book.images?.[0];
+  return image ? (typeof image === 'string' ? image : (image as BookImage).url) : '';
+}
 
 export default function StudentDashboardPage() {
   const { user, updateProfile, changePassword } = useAuth();
+  const [dashboard, setDashboard] = useState<StudentDashboard | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<'overview' | 'edit-profile' | 'security'>('overview');
@@ -48,6 +67,23 @@ export default function StudentDashboardPage() {
     typeof user?.university === 'object' && user.university
       ? user.university.name
       : 'Campus Member';
+
+  const loadDashboard = async () => {
+    setDashboardLoading(true);
+    setDashboardError(null);
+    try {
+      const response = await api.getStudentDashboard();
+      setDashboard(response);
+    } catch (error) {
+      setDashboardError(error instanceof Error ? error.message : 'Unable to load your dashboard.');
+    } finally {
+      setDashboardLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadDashboard();
+  }, []);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +153,7 @@ export default function StudentDashboardPage() {
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                  {user?.name}
+                  Welcome back, {user?.name}
                 </h1>
                 {user?.isVerified ? (
                   <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-400/40 text-xs font-semibold backdrop-blur">
@@ -140,10 +176,16 @@ export default function StudentDashboardPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              href="/#browse"
+              href="/explore"
               className="px-4 py-2.5 rounded-xl bg-white text-campus-800 hover:bg-emerald-50 font-semibold text-xs sm:text-sm shadow-sm transition"
             >
-              Browse Campus Books
+              Explore books
+            </Link>
+            <Link
+              href="/profile"
+              className="px-4 py-2.5 rounded-xl border border-white/40 bg-white/10 hover:bg-white/20 font-semibold text-xs sm:text-sm transition"
+            >
+              Edit profile
             </Link>
           </div>
         </div>
@@ -172,8 +214,151 @@ export default function StudentDashboardPage() {
           </div>
         )}
 
+        <section aria-label="Dashboard overview" className="space-y-6">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Your campus activity</h2>
+              <p className="mt-1 text-sm text-slate-500">A snapshot of your CampusBook marketplace activity.</p>
+            </div>
+            <Link href="/settings" className="text-sm font-semibold text-campus-700 hover:text-campus-900">
+              Account settings
+            </Link>
+          </div>
+
+          {dashboardError ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
+              <p className="font-semibold">{dashboardError}</p>
+              <button
+                type="button"
+                onClick={() => void loadDashboard()}
+                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-campus-700 px-3 py-2 font-semibold text-white hover:bg-campus-800"
+              >
+                <RefreshCw className="h-4 w-4" /> Retry
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                {[
+                  { label: 'Books Listed', value: dashboard?.booksListed, icon: BookOpen },
+                  { label: 'Books Sold', value: dashboard?.booksSold, icon: ShoppingBag },
+                  { label: 'Books Purchased', value: dashboard?.booksPurchased, icon: ClipboardList },
+                  { label: 'Active Exchanges', value: dashboard?.activeExchanges, icon: Repeat2 },
+                  { label: 'Donations Made', value: dashboard?.donationsMade, icon: HeartHandshake },
+                  { label: 'Total Money Saved', value: dashboard ? `$${dashboard.totalMoneySaved.toFixed(2)}` : undefined, icon: Sparkles },
+                ].map(({ label, value, icon: Icon }) => (
+                  <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-campus-50 text-campus-700">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    {dashboardLoading ? (
+                      <div className="mt-4 h-7 w-16 animate-pulse rounded bg-slate-200" />
+                    ) : (
+                      <p className="mt-3 text-2xl font-extrabold text-slate-900">{value ?? 0}</p>
+                    )}
+                    <p className="mt-1 text-xs font-medium text-slate-500">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+                <div className="space-y-4">
+                  <Link href="/exchanges" className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 p-5 transition hover:bg-amber-100">
+                    <span className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-amber-700"><Repeat2 className="h-5 w-5" /></span>
+                      <span><span className="block font-bold text-slate-900">Pending requests</span><span className="text-xs text-slate-600">Exchange and donation requests</span></span>
+                    </span>
+                    <span className="text-2xl font-extrabold text-amber-800">{dashboardLoading ? '—' : dashboard?.pendingRequests ?? 0}</span>
+                  </Link>
+                  <Link href="/messages" className="flex items-center justify-between rounded-2xl border border-campus-200 bg-campus-50 p-5 transition hover:bg-campus-100">
+                    <span className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-campus-700"><MessageCircle className="h-5 w-5" /></span>
+                      <span><span className="block font-bold text-slate-900">Unread messages</span><span className="text-xs text-slate-600">Open your conversations</span></span>
+                    </span>
+                    <span className="text-2xl font-extrabold text-campus-800">{dashboardLoading ? '—' : dashboard?.unreadMessages ?? 0}</span>
+                  </Link>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                    <h3 className="font-bold text-slate-900">Quick actions</h3>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <Link href="/sell" className="flex items-center gap-2 rounded-xl bg-campus-700 px-3 py-3 text-sm font-bold text-white hover:bg-campus-800"><PlusCircle className="h-4 w-4" />Sell a Book</Link>
+                      <Link href="/explore" className="flex items-center gap-2 rounded-xl bg-campus-50 px-3 py-3 text-sm font-bold text-campus-800 hover:bg-campus-100"><Compass className="h-4 w-4" />Explore</Link>
+                      <Link href="/messages" className="flex items-center gap-2 rounded-xl bg-campus-50 px-3 py-3 text-sm font-bold text-campus-800 hover:bg-campus-100"><MessageCircle className="h-4 w-4" />Messages</Link>
+                      <Link href="/orders" className="flex items-center gap-2 rounded-xl bg-campus-50 px-3 py-3 text-sm font-bold text-campus-800 hover:bg-campus-100"><ClipboardList className="h-4 w-4" />Orders</Link>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-slate-900">Recent Activity</h3>
+                    <Link href="/notifications" className="text-xs font-bold text-campus-700 hover:underline">Notifications</Link>
+                  </div>
+                  {dashboardLoading ? (
+                    <div className="mt-4 space-y-3">
+                      {[0, 1, 2, 3].map((item) => <div key={item} className="h-12 animate-pulse rounded-lg bg-slate-100" />)}
+                    </div>
+                  ) : dashboard?.recentActivity.length ? (
+                    <ul className="mt-3 divide-y divide-slate-100">
+                      {dashboard.recentActivity.map((activity, index) => (
+                        <li key={`${activity.type}-${activity.createdAt}-${index}`}>
+                          <Link href={activity.link || '/dashboard'} className="flex items-center justify-between gap-3 py-3 hover:text-campus-700">
+                            <span className="min-w-0 truncate text-sm font-medium text-slate-700">{activity.text}</span>
+                            <time className="shrink-0 text-xs text-slate-400">{new Date(activity.createdAt).toLocaleDateString()}</time>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="py-12 text-center">
+                      <Calendar className="mx-auto h-8 w-8 text-slate-300" />
+                      <p className="mt-2 text-sm font-semibold text-slate-700">No recent activity yet</p>
+                      <p className="mt-1 text-xs text-slate-500">Your orders and requests will appear here.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">Recommended for You</h3>
+                    <p className="text-sm text-slate-500">Books picked based on your campus and interests.</p>
+                  </div>
+                  <Link href="/explore" className="text-sm font-bold text-campus-700 hover:underline">Browse all</Link>
+                </div>
+                {dashboardLoading ? (
+                  <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    {[0, 1, 2, 3].map((item) => <div key={item} className="h-48 animate-pulse rounded-xl bg-slate-100" />)}
+                  </div>
+                ) : dashboard?.recommended.length ? (
+                  <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                    {dashboard.recommended.map((book) => (
+                      <Link key={book._id} href={`/books/${book._id}`} className="overflow-hidden rounded-xl border border-slate-200 transition hover:border-campus-300 hover:shadow-md">
+                        <div className="aspect-[4/3] bg-slate-100">
+                          {getCover(book) ? <img src={getCover(book)} alt={book.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-slate-300"><BookOpen className="h-10 w-10" /></div>}
+                        </div>
+                        <div className="p-3">
+                          <p className="line-clamp-2 min-h-10 text-sm font-bold text-slate-900">{book.title}</p>
+                          <p className="mt-1 text-xs text-slate-500">{book.author}</p>
+                          <p className="mt-2 text-sm font-extrabold text-campus-700">{book.listingType === 'donate' ? 'Free' : `$${getBookPrice(book).toFixed(2)}`}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-10 text-center">
+                    <BookOpen className="mx-auto h-9 w-9 text-slate-300" />
+                    <p className="mt-2 text-sm font-semibold text-slate-700">No recommendations yet</p>
+                    <p className="mt-1 text-xs text-slate-500">Explore books to find something for your courses.</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </section>
+
         {/* Dashboard Navigation Tabs */}
-        <div className="border-b border-slate-200 flex space-x-6 text-sm font-semibold">
+        <div className="hidden">
           <button
             onClick={() => setActiveTab('overview')}
             className={`pb-3 border-b-2 transition ${
@@ -496,4 +681,3 @@ export default function StudentDashboardPage() {
     </ProtectedRoute>
   );
 }
-

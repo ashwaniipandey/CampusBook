@@ -15,6 +15,9 @@ import {
   RequestStatus,
   Conversation,
   ChatMessage,
+  Notification,
+  NotificationListResponse,
+  StudentDashboard,
 } from '@/types';
 
 const API_BASE_URL =
@@ -119,9 +122,23 @@ export const api = {
     }),
 
   updateProfile: (data: Partial<User>) =>
-    request<{ status: string; message: string; user: User }>('/auth/profile', {
+    request<{ status: string; message: string; user: User }>('/users/me', {
       method: 'PUT',
       body: JSON.stringify(data),
+    }),
+
+  uploadAvatar: (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return request<{ status: string; message: string; user: User }>('/users/me/avatar', {
+      method: 'POST',
+      body: formData,
+    });
+  },
+
+  getStudentDashboard: () =>
+    request<{ status: string } & StudentDashboard>('/dashboard/student', {
+      method: 'GET',
     }),
 
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
@@ -439,6 +456,42 @@ export const api = {
       conversationId: string;
       unreadCount: number;
     }>(`/conversations/${id}/read`, { method: 'PATCH' }),
+
+  // Notifications
+  getNotifications: (options: { page?: number; limit?: number; unread?: boolean } = {}) => {
+    const params = new URLSearchParams();
+    if (options.page !== undefined) params.set('page', String(options.page));
+    if (options.limit !== undefined) params.set('limit', String(options.limit));
+    if (options.unread !== undefined) params.set('unread', String(options.unread));
+    const query = params.toString();
+    return request<NotificationListResponse>(
+      `/notifications${query ? `?${query}` : ''}`,
+      { method: 'GET' }
+    );
+  },
+
+  getUnreadNotificationCount: () =>
+    request<{ status: string; unreadCount: number }>('/notifications/unread-count', {
+      method: 'GET',
+    }),
+
+  markNotificationRead: (id: string) =>
+    request<{ status: string; message: string; notification: Notification }>(
+      `/notifications/${id}/read`,
+      { method: 'PATCH' }
+    ),
+
+  markAllNotificationsRead: () =>
+    request<{ status: string; message: string; modifiedCount: number; unreadCount: number }>(
+      '/notifications/read-all',
+      { method: 'PATCH' }
+    ),
+
+  deleteNotification: (id: string) =>
+    request<{ status: string; message: string; notificationId: string }>(
+      `/notifications/${id}`,
+      { method: 'DELETE' }
+    ),
 
   // Reviews
   createReview: (data: { orderId: string; rating: number; comment?: string }) =>

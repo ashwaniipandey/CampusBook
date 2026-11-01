@@ -2,7 +2,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
+  Bell,
   BookOpen,
   Search,
   ArrowLeftRight,
@@ -21,16 +23,55 @@ import {
   LayoutDashboard,
   Shield,
   ChevronDown,
+  CheckCheck,
+  PackageCheck,
+  Star,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
+import { Notification } from '@/types';
+
+function relativeTime(value?: string) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return days < 7 ? `${days}d ago` : date.toLocaleDateString();
+}
+
+function notificationIcon(type: Notification['type']) {
+  if (type === 'order') return PackageCheck;
+  if (type === 'exchange_request') return ArrowLeftRight;
+  if (type === 'donation_request') return HeartHandshake;
+  if (type === 'message') return MessageCircle;
+  if (type === 'review') return Star;
+  if (type === 'book_status' || type === 'wishlist_alert') return BookOpen;
+  return Bell;
+}
 
 export default function Navbar() {
+  const router = useRouter();
   const { user, isAuthenticated, logout, cartCount } = useAuth();
-  const { totalUnread } = useSocket();
+  const {
+    socket,
+    totalUnread,
+    notifications,
+    unreadNotificationCount,
+    markNotificationRead,
+    markAllNotificationsRead,
+  } = useSocket();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
+  const [notificationToast, setNotificationToast] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -38,10 +79,47 @@ export default function Navbar() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setUserDropdownOpen(false);
       }
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setNotificationDropdownOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleNotification = (notification: Notification) => {
+      setNotificationToast(notification.title || notification.message);
+      window.setTimeout(() => setNotificationToast(null), 4000);
+    };
+    socket.on('notification', handleNotification);
+    return () => {
+      socket.off('notification', handleNotification);
+    };
+  }, [socket]);
+
+  const openNotification = async (notification: Notification) => {
+    if (!notification.isRead) {
+      try {
+        await markNotificationRead(notification._id);
+      } catch (error) {
+        setNotificationToast(error instanceof Error ? error.message : 'Unable to mark notification as read.');
+        window.setTimeout(() => setNotificationToast(null), 4000);
+      }
+    }
+    setNotificationDropdownOpen(false);
+    router.push(notification.link || '/notifications');
+  };
+
+  const markAllFromBell = async () => {
+    try {
+      await markAllNotificationsRead();
+    } catch (error) {
+      setNotificationToast(error instanceof Error ? error.message : 'Unable to mark notifications as read.');
+      window.setTimeout(() => setNotificationToast(null), 4000);
+    }
+  };
 
   const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -138,6 +216,86 @@ export default function Navbar() {
               </Link>
             )}
           </nav>
+
+          {isAuthenticated && (
+            <div className="relative" ref={notificationRef}>
+              <button
+                type="button"
+                onClick={() => setNotificationDropdownOpen((open) => !open)}
+                aria-label={`Notifications, ${unreadNotificationCount} unread`}
+                aria-expanded={notificationDropdownOpen}
+                className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-campus-700"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadNotificationCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                  </span>
+                )}
+              </button>
+              {notificationDropdownOpen && (
+                <div className="absolute right-0 top-full z-[65] mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                    <div>
+                      <h2 className="font-bold text-slate-900">Notifications</h2>
+                      <p className="text-xs text-slate-500">{unreadNotificationCount} unread</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={!unreadNotificationCount}
+                      onClick={() => void markAllFromBell()}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-campus-700 hover:text-campus-900 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <CheckCheck className="h-3.5 w-3.5" />
+                      Mark all read
+                    </button>
+                  </div>
+                  <div className="max-h-[min(28rem,65vh)] overflow-y-auto">
+                    {notifications.length ? notifications.slice(0, 8).map((notification) => {
+                      const Icon = notificationIcon(notification.type);
+                      return (
+                        <button
+                          key={notification._id}
+                          type="button"
+                          onClick={() => void openNotification(notification)}
+                          className={`flex w-full gap-3 border-b border-slate-100 px-4 py-3 text-left transition hover:bg-campus-50 ${
+                            notification.isRead ? 'bg-white' : 'bg-campus-50/60'
+                          }`}
+                        >
+                          <span className="relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-campus-100 text-campus-700">
+                            <Icon className="h-4 w-4" />
+                            {!notification.isRead && (
+                              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-campus-600" />
+                            )}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-start justify-between gap-2">
+                              <span className="line-clamp-1 text-sm font-bold text-slate-900">{notification.title}</span>
+                              <span className="shrink-0 text-[10px] text-slate-400">{relativeTime(notification.createdAt)}</span>
+                            </span>
+                            <span className="mt-1 line-clamp-2 block text-xs leading-5 text-slate-600">{notification.message}</span>
+                          </span>
+                        </button>
+                      );
+                    }) : (
+                      <div className="px-5 py-10 text-center">
+                        <Bell className="mx-auto h-8 w-8 text-slate-300" />
+                        <p className="mt-2 text-sm font-semibold text-slate-700">You’re all caught up</p>
+                        <p className="mt-1 text-xs text-slate-500">New activity will appear here.</p>
+                      </div>
+                    )}
+                  </div>
+                  <Link
+                    href="/notifications"
+                    onClick={() => setNotificationDropdownOpen(false)}
+                    className="block border-t border-slate-100 px-4 py-3 text-center text-sm font-bold text-campus-700 hover:bg-campus-50"
+                  >
+                    View all notifications
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* User Auth & Actions */}
           <div className="hidden md:flex items-center space-x-3">
@@ -261,6 +419,24 @@ export default function Navbar() {
                           Student Dashboard
                         </Link>
                       )}
+
+                      <Link
+                        href="/profile"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        <UserIcon className="w-4 h-4 text-campus-600" />
+                        Profile
+                      </Link>
+
+                      <Link
+                        href="/settings"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        <Settings className="w-4 h-4 text-slate-500" />
+                        Settings
+                      </Link>
 
                       <Link
                         href="/sell"
@@ -441,6 +617,22 @@ export default function Navbar() {
               </Link>
 
               <Link
+                href="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
+              >
+                <UserIcon className="w-4 h-4 text-campus-600" /> Profile
+              </Link>
+
+              <Link
+                href="/settings"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
+              >
+                <Settings className="w-4 h-4 text-slate-500" /> Settings
+              </Link>
+
+              <Link
                 href="/sell"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-campus-700 hover:bg-campus-50 font-medium"
@@ -542,6 +734,11 @@ export default function Navbar() {
               </Link>
             </div>
           )}
+        </div>
+      )}
+      {notificationToast && (
+        <div role="status" className="fixed right-4 top-20 z-[80] max-w-sm rounded-xl border border-campus-200 bg-campus-50 px-4 py-3 text-sm font-semibold text-campus-900 shadow-lg">
+          {notificationToast}
         </div>
       )}
     </header>

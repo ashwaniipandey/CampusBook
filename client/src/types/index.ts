@@ -18,6 +18,8 @@ export interface User {
   university: University | string;
   studentId?: string;
   department?: string;
+  course?: string;
+  semester?: string;
   yearOfStudy?: number;
   phone?: string;
   avatar?: string;
@@ -196,9 +198,9 @@ export interface Review {
 
 export interface Notification {
   _id: string;
-  recipient: string;
+  recipient?: string;
   sender?: User | string;
-  type: 'order' | 'exchange_request' | 'donation_request' | 'message' | 'book_status' | 'wishlist_alert' | 'system';
+  type: 'order' | 'exchange_request' | 'donation_request' | 'message' | 'review' | 'book_status' | 'wishlist_alert' | 'system';
   title: string;
   message: string;
   link?: string;
@@ -206,6 +208,34 @@ export interface Notification {
   isRead: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface NotificationListResponse {
+  status: string;
+  notifications: Notification[];
+  unreadCount: number;
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface StudentDashboard {
+  booksListed: number;
+  booksSold: number;
+  booksPurchased: number;
+  activeExchanges: number;
+  donationsMade: number;
+  donationsReceived: number;
+  totalMoneySaved: number;
+  pendingRequests: number;
+  unreadMessages: number;
+  recentActivity: {
+    type: string;
+    text: string;
+    link: string;
+    createdAt: string;
+  }[];
+  recommended: Book[];
 }
 
 export interface FiltersMeta {

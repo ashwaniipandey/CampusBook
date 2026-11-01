@@ -12,7 +12,7 @@ import {
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
-import { ChatMessage } from '@/types';
+import { ChatMessage, Notification } from '@/types';
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
 
@@ -21,8 +21,14 @@ interface SocketContextValue {
   connectionStatus: ConnectionStatus;
   onlineUserIds: Set<string>;
   totalUnread: number;
+  notifications: Notification[];
+  unreadNotificationCount: number;
   setActiveConversationId: (conversationId: string | null) => void;
   refreshUnreadCount: () => Promise<void>;
+  refreshNotifications: () => Promise<void>;
+  markNotificationRead: (notificationId: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
+  deleteNotification: (notificationId: string) => Promise<void>;
   markConversationRead: (conversationId: string) => Promise<void>;
 }
 
@@ -46,7 +52,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [unreadByConversation, setUnreadByConversation] = useState<Record<string, number>>({});
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const notificationsRef = useRef<Notification[]>([]);
   const activeConversationId = useRef<string | null>(null);
+
+  notificationsRef.current = notifications;
 
   const refreshUnreadCount = useCallback(async () => {
     if (!user) {
@@ -69,6 +80,51 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
+  const refreshNotifications = useCallback(async () => {
+    if (!user) {
+      setNotifications([]);
+      setUnreadNotificationCount(0);
+      return;
+    }
+
+    const [listResponse, countResponse] = await Promise.all([
+      api.getNotifications({ limit: 8 }),
+      api.getUnreadNotificationCount(),
+    ]);
+    notificationsRef.current = listResponse.notifications || [];
+    setNotifications(listResponse.notifications || []);
+    setUnreadNotificationCount(countResponse.unreadCount || 0);
+  }, [user]);
+
+  const markNotificationRead = useCallback(async (notificationId: string) => {
+    await api.markNotificationRead(notificationId);
+    const wasUnread = notificationsRef.current.find((item) => item._id === notificationId && !item.isRead);
+    notificationsRef.current = notificationsRef.current.map((notification) => (
+      notification._id === notificationId ? { ...notification, isRead: true } : notification
+    ));
+    setNotifications((previous) => previous.map((notification) => (
+      notification._id === notificationId ? { ...notification, isRead: true } : notification
+    )));
+    if (wasUnread) setUnreadNotificationCount((count) => Math.max(0, count - 1));
+  }, []);
+
+  const markAllNotificationsRead = useCallback(async () => {
+    await api.markAllNotificationsRead();
+    notificationsRef.current = notificationsRef.current.map((notification) => ({ ...notification, isRead: true }));
+    setNotifications((previous) => previous.map((notification) => ({ ...notification, isRead: true })));
+    setUnreadNotificationCount(0);
+  }, []);
+
+  const deleteNotification = useCallback(async (notificationId: string) => {
+    await api.deleteNotification(notificationId);
+    const notification = notificationsRef.current.find((item) => item._id === notificationId);
+    notificationsRef.current = notificationsRef.current.filter((item) => item._id !== notificationId);
+    setNotifications((previous) => previous.filter((item) => item._id !== notificationId));
+    if (notification && !notification.isRead) {
+      setUnreadNotificationCount((count) => Math.max(0, count - 1));
+    }
+  }, []);
+
   const markConversationRead = useCallback(async (conversationId: string) => {
     await api.markConversationRead(conversationId);
     setUnreadByConversation((previous) => {
@@ -89,10 +145,18 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       setConnectionStatus('disconnected');
       setOnlineUserIds(new Set());
       setUnreadByConversation({});
+      notificationsRef.current = [];
+      setNotifications([]);
+      setUnreadNotificationCount(0);
       return;
     }
 
     void refreshUnreadCount();
+    void refreshNotifications().catch((error) => {
+      console.error(
+        error instanceof Error ? `Unable to load notifications: ${error.message}` : error
+      );
+    });
     setConnectionStatus('connecting');
     const connection = io(socketUrl, { withCredentials: true });
     setSocket(connection);
@@ -127,12 +191,24 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         [conversationId]: (previous[conversationId] || 0) + 1,
       }));
     };
+    const handleNotification = (notification: Notification) => {
+      const existing = notificationsRef.current.find((item) => item._id === notification._id);
+      notificationsRef.current = [
+        notification,
+        ...notificationsRef.current.filter((item) => item._id !== notification._id),
+      ].slice(0, 8);
+      setNotifications(notificationsRef.current);
+      if (!existing || existing.isRead) {
+        setUnreadNotificationCount((count) => count + 1);
+      }
+    };
 
     connection.on('connect', handleConnect);
     connection.on('disconnect', handleDisconnect);
     connection.on('connect_error', handleConnectError);
     connection.on('presence_update', handlePresence);
     connection.on('receive_message', handleMessage);
+    connection.on('notification', handleNotification);
 
     return () => {
       connection.off('connect', handleConnect);
@@ -140,12 +216,13 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       connection.off('connect_error', handleConnectError);
       connection.off('presence_update', handlePresence);
       connection.off('receive_message', handleMessage);
+      connection.off('notification', handleNotification);
       connection.disconnect();
       setSocket(null);
       setConnectionStatus('disconnected');
       setOnlineUserIds(new Set());
     };
-  }, [authLoading, user, refreshUnreadCount]);
+  }, [authLoading, user, refreshUnreadCount, refreshNotifications]);
 
   const value = useMemo<SocketContextValue>(
     () => ({
@@ -153,8 +230,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       connectionStatus,
       onlineUserIds,
       totalUnread: Object.values(unreadByConversation).reduce((total, count) => total + count, 0),
+      notifications,
+      unreadNotificationCount,
       setActiveConversationId,
       refreshUnreadCount,
+      refreshNotifications,
+      markNotificationRead,
+      markAllNotificationsRead,
+      deleteNotification,
       markConversationRead,
     }),
     [
@@ -162,8 +245,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       connectionStatus,
       onlineUserIds,
       unreadByConversation,
+      notifications,
+      unreadNotificationCount,
       setActiveConversationId,
       refreshUnreadCount,
+      refreshNotifications,
+      markNotificationRead,
+      markAllNotificationsRead,
+      deleteNotification,
       markConversationRead,
     ]
   );

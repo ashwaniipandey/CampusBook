@@ -41,6 +41,7 @@ interface AuthContextType {
   resendOtp: (email?: string) => Promise<{ success: boolean; error?: string; message?: string }>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<{ success: boolean; error?: string; user?: User }>;
+  uploadAvatar: (file: File) => Promise<{ success: boolean; error?: string; user?: User }>;
   changePassword: (data: { currentPassword: string; newPassword: string }) => Promise<{ success: boolean; error?: string }>;
   refreshUser: () => Promise<void>;
   redirectByRole: (userToRoute?: User | null) => void;
@@ -402,6 +403,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const uploadAvatar = async (file: File) => {
+    try {
+      const res = await api.uploadAvatar(file);
+      setUser(res.user);
+      return { success: true, user: res.user };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  };
+
   // Change password handler
   const changePassword = async (data: { currentPassword: string; newPassword: string }) => {
     try {
@@ -443,6 +454,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resendOtp,
         logout,
         updateProfile,
+        uploadAvatar,
         changePassword,
         refreshUser,
         redirectByRole,
