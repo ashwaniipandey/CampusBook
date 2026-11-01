@@ -44,7 +44,7 @@ export const createBookSchema = z
     sellingPrice: z.coerce
       .number({ invalid_type_error: 'Selling price must be a number' })
       .min(0, 'Selling price cannot be negative'),
-    listingType: z.enum(['sell', 'sale', 'exchange', 'donate', 'donation'], {
+    listingType: z.enum(['sell', 'exchange', 'donate'], {
       errorMap: () => ({
         message: 'Listing type must be sell, exchange, or donate',
       }),
@@ -60,19 +60,18 @@ export const createBookSchema = z
     publicationYear: z.coerce.number().optional(),
   })
   .superRefine((data, ctx) => {
-    const isDonation = ['donate', 'donation'].includes(data.listingType);
+    const isNonSaleListing = data.listingType !== 'sell';
 
-    // Rule: if donation, selling price must be 0
-    if (isDonation && data.sellingPrice > 0) {
+    if (isNonSaleListing && data.sellingPrice > 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['sellingPrice'],
-        message: 'Selling price must be 0 for donation listings',
+        message: 'Selling price must be 0 for exchange and donation listings',
       });
     }
 
     // Rule: sellingPrice cannot exceed originalPrice
-    if (!isDonation && data.sellingPrice > data.originalPrice) {
+    if (!isNonSaleListing && data.sellingPrice > data.originalPrice) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['sellingPrice'],
@@ -107,7 +106,7 @@ export const updateBookSchema = z
     condition: z.enum(['New', 'Like New', 'Good', 'Fair', 'Poor']).optional(),
     originalPrice: z.coerce.number().min(0).optional(),
     sellingPrice: z.coerce.number().min(0).optional(),
-    listingType: z.enum(['sell', 'sale', 'exchange', 'donate', 'donation']).optional(),
+    listingType: z.enum(['sell', 'exchange', 'donate']).optional(),
     description: z.string().trim().min(10).max(2500).optional(),
     exchangePreferences: z.string().trim().max(500).optional(),
     edition: z.string().trim().optional(),
@@ -119,18 +118,18 @@ export const updateBookSchema = z
     removeImages: z.any().optional(),
   })
   .superRefine((data, ctx) => {
-    const isDonation = data.listingType && ['donate', 'donation'].includes(data.listingType);
+    const isNonSaleListing = data.listingType !== undefined && data.listingType !== 'sell';
 
-    if (isDonation && data.sellingPrice !== undefined && data.sellingPrice > 0) {
+    if (isNonSaleListing && data.sellingPrice !== undefined && data.sellingPrice > 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['sellingPrice'],
-        message: 'Selling price must be 0 for donation listings',
+        message: 'Selling price must be 0 for exchange and donation listings',
       });
     }
 
     if (
-      !isDonation &&
+      !isNonSaleListing &&
       data.sellingPrice !== undefined &&
       data.originalPrice !== undefined &&
       data.sellingPrice > data.originalPrice
@@ -173,4 +172,3 @@ export const validateUpdateBook = (req, res, next) => {
   req.body = { ...req.body, ...result.data };
   next();
 };
-

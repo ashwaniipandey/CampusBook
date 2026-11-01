@@ -81,10 +81,10 @@ export const getAllBooks = async (req, res, next) => {
     // 5. Listing Type Filter (sell/exchange/donate)
     if (req.query.listingType) {
       const lt = String(req.query.listingType).trim().toLowerCase();
-      if (['sell', 'sale'].includes(lt)) {
-        andClauses.push({ listingType: { $in: ['sell', 'sale'] } });
-      } else if (['donate', 'donation'].includes(lt)) {
-        andClauses.push({ listingType: { $in: ['donate', 'donation'] } });
+      if (lt === 'sell') {
+        andClauses.push({ listingType: 'sell' });
+      } else if (lt === 'donate') {
+        andClauses.push({ listingType: 'donate' });
       } else if (lt === 'exchange') {
         andClauses.push({ listingType: 'exchange' });
       }
@@ -145,7 +145,7 @@ export const getAllBooks = async (req, res, next) => {
           sortOption = { sellingPrice: -1, price: -1, createdAt: -1 };
           break;
         case 'popular':
-          sortOption = { viewsCount: -1, createdAt: -1 };
+          sortOption = { views: -1, createdAt: -1 };
           break;
         case 'newest':
         default:
@@ -247,8 +247,8 @@ export const getFiltersMeta = async (req, res, next) => {
       donate: 0,
     };
     listingTypeCountsRaw.forEach((item) => {
-      if (['sell', 'sale'].includes(item._id)) listingTypeCounts.sell += item.count;
-      else if (['donate', 'donation'].includes(item._id)) listingTypeCounts.donate += item.count;
+      if (item._id === 'sell') listingTypeCounts.sell += item.count;
+      else if (item._id === 'donate') listingTypeCounts.donate += item.count;
       else if (item._id === 'exchange') listingTypeCounts.exchange += item.count;
     });
 
@@ -357,8 +357,8 @@ export const createBook = async (req, res, next) => {
     }
 
     // Determine prices based on listing type
-    const isDonation = ['donate', 'donation'].includes(listingType);
-    const finalSellingPrice = isDonation ? 0 : Number(sellingPrice || 0);
+    const isSellListing = listingType === 'sell';
+    const finalSellingPrice = isSellListing ? Number(sellingPrice || 0) : 0;
     const finalOriginalPrice = Number(originalPrice || 0);
 
     const newBook = await Book.create({
@@ -456,8 +456,8 @@ export const getBookById = async (req, res, next) => {
     }
 
     // Atomically increment views count
-    await Book.findByIdAndUpdate(req.params.id, { $inc: { viewsCount: 1 } });
-    book.viewsCount = (book.viewsCount || 0) + 1;
+    await Book.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+    book.views = (book.views || 0) + 1;
 
     // Check if the current logged-in user has wishlisted this book
     let isWishlisted = false;
@@ -525,7 +525,7 @@ export const getSimilarBooks = async (req, res, next) => {
 
     let similarBooks = await Book.find(matchFilter)
       .limit(6)
-      .sort({ viewsCount: -1, createdAt: -1 })
+      .sort({ views: -1, createdAt: -1 })
       .populate('category', 'name slug icon')
       .populate('university', 'name code domain city state')
       .populate('seller', 'name avatar rating totalRatings isVerified');
@@ -657,7 +657,7 @@ export const updateBook = async (req, res, next) => {
     });
 
     // Ensure price sync
-    if (['donate', 'donation'].includes(book.listingType)) {
+    if (book.listingType !== 'sell') {
       book.sellingPrice = 0;
       book.price = 0;
     } else if (req.body.sellingPrice !== undefined) {

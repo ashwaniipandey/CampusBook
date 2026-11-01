@@ -79,7 +79,7 @@ const bookSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Listing type is required'],
       enum: {
-        values: ['sell', 'sale', 'exchange', 'donate', 'donation'],
+        values: ['sell', 'exchange', 'donate'],
         message: '{VALUE} is not a valid listing type',
       },
       default: 'sell',
@@ -94,12 +94,12 @@ const bookSchema = new mongoose.Schema(
       min: [0, 'Price cannot be negative'],
       validate: {
         validator: function (val) {
-          if (['sale', 'sell'].includes(this.listingType)) {
+          if (this.listingType === 'sell') {
             return typeof val === 'number' && val >= 0;
           }
           return true;
         },
-        message: 'Price is required for sale listings',
+        message: 'Price is required for sell listings',
       },
       default: 0,
     },
@@ -143,7 +143,7 @@ const bookSchema = new mongoose.Schema(
       },
       default: 'pending',
     },
-    viewsCount: {
+    views: {
       type: Number,
       default: 0,
     },
@@ -166,8 +166,8 @@ bookSchema.pre('save', function (next) {
     this.sellingPrice = this.price;
   }
 
-  // If donation, price is 0
-  if (['donate', 'donation'].includes(this.listingType)) {
+  // Non-sale listings do not have a selling price.
+  if (this.listingType !== 'sell') {
     this.price = 0;
     this.sellingPrice = 0;
   }
@@ -194,7 +194,7 @@ bookSchema.index({ createdAt: -1 });
 bookSchema.index({ status: 1, createdAt: -1 });
 bookSchema.index({ status: 1, sellingPrice: 1 });
 bookSchema.index({ status: 1, price: 1 });
-bookSchema.index({ status: 1, viewsCount: -1 });
+bookSchema.index({ status: 1, views: -1 });
 bookSchema.index({ status: 1, condition: 1 });
 bookSchema.index({ status: 1, listingType: 1 });
 bookSchema.index({ status: 1, category: 1 });

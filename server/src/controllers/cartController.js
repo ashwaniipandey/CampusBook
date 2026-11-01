@@ -87,7 +87,7 @@ export const addToCart = async (req, res, next) => {
     }
 
     // Rule 3: Only books with listingType 'sell'
-    if (book.listingType !== 'sell' && book.listingType !== 'sale') {
+    if (book.listingType !== 'sell') {
       return next(new AppError('Only books listed for sale can be added to the cart', 400));
     }
 
@@ -207,4 +207,3 @@ export const clearCart = async (req, res, next) => {
     next(error);
   }
 };
-

@@ -382,7 +382,7 @@ const seedDatabase = async () => {
         university: uniMap['MIT'],
         seller: students[1]._id, // Emily (MIT)
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 65,
         originalPrice: 135,
         description: 'Hardcover 4th edition. No writing or highlighting. Used for 6.006 at MIT. Perfect condition with clean spine.',
@@ -401,7 +401,7 @@ const seedDatabase = async () => {
         university: uniMap['STANFORD'],
         seller: students[0]._id, // Alex (Stanford)
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 25,
         originalPrice: 55,
         description: 'Classic software engineering book. Mild shelf wear on corner, pages are clean and crisp. Must-read for any dev.',
@@ -440,7 +440,7 @@ const seedDatabase = async () => {
         university: uniMap['STANFORD'],
         seller: students[0]._id, // Alex
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 55,
         originalPrice: 140,
         description: 'Used for CS107/CS110 at Stanford. Essential for understanding machine architecture, assembly, memory hierarchy, and caching.',
@@ -459,7 +459,7 @@ const seedDatabase = async () => {
         university: uniMap['UCB'],
         seller: students[2]._id,
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 70,
         originalPrice: 160,
         description: 'Standard AI textbook written by UC Berkeley and Google directors. Comprehensive coverage of search, ML, logic, and NLP.',
@@ -478,7 +478,7 @@ const seedDatabase = async () => {
         university: uniMap['MIT'],
         seller: students[1]._id,
         condition: 'Good',
-        listingType: 'donation',
+        listingType: 'donate',
         price: 0,
         originalPrice: 60,
         description: 'Donating my Gang of Four design patterns book to any junior student interested in software architecture and object-oriented design.',
@@ -497,7 +497,7 @@ const seedDatabase = async () => {
         university: uniMap['UW'],
         seller: students[4]._id, // David (UW)
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 45,
         originalPrice: 110,
         description: '8th edition with up-to-date HTTP/3 and modern socket programming. Clean copy, no torn pages.',
@@ -516,7 +516,7 @@ const seedDatabase = async () => {
         university: uniMap['STANFORD'],
         seller: students[6]._id, // Liam (Stanford)
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 35,
         originalPrice: 150,
         description: 'Covers single variable and multivariable calculus. Essential for Math 51/52. Has minor pencil notes on chapter 4 problems.',
@@ -555,7 +555,7 @@ const seedDatabase = async () => {
         university: uniMap['MIT'],
         seller: students[7]._id, // Ava (MIT)
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 40,
         originalPrice: 90,
         description: 'Used for MIT 6.041/6.431. Explains sample spaces, conditioning, random variables, and Poisson processes brilliantly.',
@@ -574,7 +574,7 @@ const seedDatabase = async () => {
         university: uniMap['UCB'],
         seller: students[2]._id,
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 50,
         originalPrice: 130,
         description: 'Covers graph theory, logic, proofs, induction, and combinatorics. Clean condition.',
@@ -593,7 +593,7 @@ const seedDatabase = async () => {
         university: uniMap['STANFORD'],
         seller: students[6]._id,
         condition: 'New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 45,
         originalPrice: 85,
         description: 'Unopened copy. Covers parametric and non-parametric inference, hypothesis testing, and machine learning connections.',
@@ -612,7 +612,7 @@ const seedDatabase = async () => {
         university: uniMap['MIT'],
         seller: students[7]._id, // Ava (MIT)
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 55,
         originalPrice: 175,
         description: 'Comprehensive calculus-based physics: mechanics, thermodynamics, electromagnetism, and modern physics. Excellent problem sets.',
@@ -651,7 +651,7 @@ const seedDatabase = async () => {
         university: uniMap['UCB'],
         seller: students[8]._id, // Noah (UCB)
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 45,
         originalPrice: 105,
         description: 'Lagrangian and Hamiltonian mechanics clearly explained with worked examples. Binding is sturdy.',
@@ -670,7 +670,7 @@ const seedDatabase = async () => {
         university: uniMap['HARVARD'],
         seller: students[3]._id, // Sophia (Harvard)
         condition: 'Good',
-        listingType: 'donation',
+        listingType: 'donate',
         price: 0,
         originalPrice: 75,
         description: 'Free to any physics sophomore needing Schroeder for statistical mechanics. Handover at Harvard Yard.',
@@ -689,7 +689,7 @@ const seedDatabase = async () => {
         university: uniMap['HARVARD'],
         seller: students[3]._id,
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 80,
         originalPrice: 220,
         description: 'The definitive pre-med biology bible. Full color with unbent pages. Comes with online access study charts.',
@@ -708,7 +708,7 @@ const seedDatabase = async () => {
         university: uniMap['STANFORD'],
         seller: students[0]._id,
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 75,
         originalPrice: 195,
         description: '7th edition with updated COVID/immunology sections. Heavy hardcover, in very good condition.',
@@ -727,7 +727,7 @@ const seedDatabase = async () => {
         university: uniMap['HARVARD'],
         seller: students[3]._id,
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 65,
         originalPrice: 180,
         description: 'Essential for biochemistry, MCAT prep, and cellular biology courses. Light yellow highlighter in 2 chapters.',
@@ -766,7 +766,7 @@ const seedDatabase = async () => {
         university: uniMap['UCB'],
         seller: students[8]._id, // Noah (UCB)
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 50,
         originalPrice: 190,
         description: 'Passed Chem 3A with this book! Mechanism diagrams and summary reaction maps included. Some corner wear.',
@@ -785,7 +785,7 @@ const seedDatabase = async () => {
         university: uniMap['HARVARD'],
         seller: students[3]._id,
         condition: 'Like New',
-        listingType: 'donation',
+        listingType: 'donate',
         price: 0,
         originalPrice: 45,
         description: 'Life-saving workbook for orgo mechanisms and resonance. Donating to someone taking organic chemistry this term.',
@@ -804,7 +804,7 @@ const seedDatabase = async () => {
         university: uniMap['UCB'],
         seller: students[8]._id,
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 60,
         originalPrice: 140,
         description: 'The heavyweight P-Chem text. Rigorous quantum and statistical thermodynamics treatments.',
@@ -823,7 +823,7 @@ const seedDatabase = async () => {
         university: uniMap['STANFORD'],
         seller: students[6]._id,
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 40,
         originalPrice: 120,
         description: 'Symmetry, group theory, and organometallic chemistry well explained. Clean pages without markings.',
@@ -842,7 +842,7 @@ const seedDatabase = async () => {
         university: uniMap['HARVARD'],
         seller: students[3]._id,
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 55,
         originalPrice: 180,
         description: 'Ec10 textbook by Mankiw at Harvard. Crisp condition, used only for one semester.',
@@ -861,7 +861,7 @@ const seedDatabase = async () => {
         university: uniMap['UCB'],
         seller: students[2]._id,
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 70,
         originalPrice: 165,
         description: 'The classic graduate-level microeconomics reference. Hardcover, durable condition.',
@@ -900,7 +900,7 @@ const seedDatabase = async () => {
         university: uniMap['UTEXAS'],
         seller: students[5]._id, // Chloe (UT Austin)
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 60,
         originalPrice: 175,
         description: 'Used in McCombs BBA core finance course. Capital budgeting, valuation, and M&A chapters in pristine state.',
@@ -919,7 +919,7 @@ const seedDatabase = async () => {
         university: uniMap['UTEXAS'],
         seller: students[5]._id,
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 50,
         originalPrice: 140,
         description: 'The global standard marketing book. Covers digital marketing, customer insights, and branding strategies.',
@@ -938,7 +938,7 @@ const seedDatabase = async () => {
         university: uniMap['STANFORD'],
         seller: students[0]._id,
         condition: 'Good',
-        listingType: 'donation',
+        listingType: 'donate',
         price: 0,
         originalPrice: 30,
         description: 'Free to any student working on a startup idea or enrolled in entrepreneurship courses.',
@@ -957,7 +957,7 @@ const seedDatabase = async () => {
         university: uniMap['UTEXAS'],
         seller: students[5]._id,
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 45,
         originalPrice: 135,
         description: 'Covers linear programming, forecasting, inventory models, and supply chain logistics.',
@@ -976,7 +976,7 @@ const seedDatabase = async () => {
         university: uniMap['HARVARD'],
         seller: students[3]._id,
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 85,
         originalPrice: 250,
         description: '2-Volume set in mint condition. The ultimate clinical internal medicine reference for medical students.',
@@ -995,7 +995,7 @@ const seedDatabase = async () => {
         university: uniMap['HARVARD'],
         seller: students[3]._id,
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 65,
         originalPrice: 145,
         description: 'Clear physiology mechanisms with clinical correlations. Ideal for Step 1 review and medical coursework.',
@@ -1014,7 +1014,7 @@ const seedDatabase = async () => {
         university: uniMap['UW'],
         seller: students[4]._id,
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 55,
         originalPrice: 110,
         description: 'Iconic hand-painted anatomical plates. No markings on diagrams, perfect for lab dissections.',
@@ -1053,7 +1053,7 @@ const seedDatabase = async () => {
         university: uniMap['UW'],
         seller: students[4]._id,
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 45,
         originalPrice: 150,
         description: 'Covers particle equilibrium, rigid body kinetics, and 3D moments. Includes selected solutions guide.',
@@ -1072,7 +1072,7 @@ const seedDatabase = async () => {
         university: uniMap['UW'],
         seller: students[4]._id,
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 50,
         originalPrice: 160,
         description: 'Clear explanations of Rankine cycles, entropy, exergy, and refrigeration. Clean copy.',
@@ -1091,7 +1091,7 @@ const seedDatabase = async () => {
         university: uniMap['MIT'],
         seller: students[1]._id,
         condition: 'Good',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 60,
         originalPrice: 170,
         description: 'Covers gear design, bearings, fatigue analysis, and fastener mechanics. Essential for senior capstone design.',
@@ -1110,7 +1110,7 @@ const seedDatabase = async () => {
         university: uniMap['HARVARD'],
         seller: students[9]._id, // Hannah (Harvard)
         condition: 'Like New',
-        listingType: 'sale',
+        listingType: 'sell',
         price: 15,
         originalPrice: 35,
         description: 'Nobel laureate Daniel Kahneman on heuristics, cognitive biases, System 1 and System 2 thinking.',
@@ -1129,7 +1129,7 @@ const seedDatabase = async () => {
         university: uniMap['HARVARD'],
         seller: students[9]._id,
         condition: 'Good',
-        listingType: 'donation',
+        listingType: 'donate',
         price: 0,
         originalPrice: 30,
         description: 'Classic companion text for Harvard\'s famous Justice course. Giving away freely to any curious freshman.',
@@ -1138,7 +1138,30 @@ const seedDatabase = async () => {
       },
     ];
 
-    const createdBooks = await Book.insertMany(booksData);
+    const booksWithRealisticPrices = booksData.map((book) => {
+      const listingType = book.listingType;
+      const originalPrice = (30 + Math.floor(Math.random() * 121)) * 10;
+      const minimumSellingPrice = Math.ceil((originalPrice * 0.4) / 10) * 10;
+      const maximumSellingPrice = Math.floor((originalPrice * 0.75) / 10) * 10;
+      const roundedSellingPrice =
+        Math.round((originalPrice * (0.4 + Math.random() * 0.35)) / 10) * 10;
+      const sellingPrice = listingType === 'sell'
+        ? Math.min(maximumSellingPrice, Math.max(minimumSellingPrice, roundedSellingPrice))
+        : 0;
+
+      return {
+        ...book,
+        listingType,
+        originalPrice,
+        sellingPrice,
+        price: sellingPrice,
+        views: Math.floor(Math.random() * 250),
+        status: 'approved',
+        isApproved: true,
+      };
+    });
+
+    const createdBooks = await Book.insertMany(booksWithRealisticPrices);
     console.log(`✅ ${createdBooks.length} realistic books created.`);
 
     // 6. Optional: Create a sample Wishlist item, Order, and Notification for testing realism
@@ -1157,7 +1180,7 @@ const seedDatabase = async () => {
       buyer: students[6]._id, // Liam
       seller: students[0]._id, // Alex
       book: createdBooks[1]._id, // Clean Code
-      amount: 25,
+      amount: createdBooks[1].sellingPrice,
       paymentMethod: 'handover',
       paymentStatus: 'completed',
       deliveryMethod: 'campus_pickup',
@@ -1199,4 +1222,3 @@ const seedDatabase = async () => {
 };
 
 seedDatabase();
-
