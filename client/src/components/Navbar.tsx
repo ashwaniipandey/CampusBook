@@ -11,6 +11,7 @@ import {
   Heart,
   ShoppingCart,
   ClipboardList,
+  MessageCircle,
   Menu,
   X,
   BadgeCheck,
@@ -22,9 +23,11 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useSocket } from '@/context/SocketContext';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout, cartCount } = useAuth();
+  const { totalUnread } = useSocket();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -117,6 +120,21 @@ export default function Navbar() {
               >
                 <ClipboardList className="w-4 h-4 text-campus-600" />
                 Orders
+              </Link>
+            )}
+            {isAuthenticated && (
+              <Link
+                href="/messages"
+                aria-label={`Messages, ${totalUnread} unread`}
+                className="relative px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
+              >
+                <MessageCircle className="w-4 h-4 text-campus-600" />
+                Messages
+                {totalUnread > 0 && (
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-campus-600 px-1 text-[9px] font-bold text-white">
+                    {totalUnread > 99 ? '99+' : totalUnread}
+                  </span>
+                )}
               </Link>
             )}
           </nav>
@@ -278,6 +296,22 @@ export default function Navbar() {
                       >
                         <ClipboardList className="w-4 h-4 text-campus-600" />
                         Orders
+                      </Link>
+
+                      <Link
+                        href="/messages"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center justify-between gap-2 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <MessageCircle className="w-4 h-4 text-campus-600" />
+                          Messages
+                        </span>
+                        {totalUnread > 0 && (
+                          <span className="rounded-full bg-campus-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                            {totalUnread > 99 ? '99+' : totalUnread}
+                          </span>
+                        )}
                       </Link>
 
                       <Link
@@ -447,6 +481,21 @@ export default function Navbar() {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
               >
                 <ClipboardList className="w-4 h-4 text-campus-600" /> Orders
+              </Link>
+
+              <Link
+                href="/messages"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
+              >
+                <span className="flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-campus-600" /> Messages
+                </span>
+                {totalUnread > 0 && (
+                  <span className="rounded-full bg-campus-600 px-2 py-0.5 text-xs font-bold text-white">
+                    {totalUnread > 99 ? '99+' : totalUnread}
+                  </span>
+                )}
               </Link>
 
               <Link

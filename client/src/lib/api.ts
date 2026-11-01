@@ -13,6 +13,8 @@ import {
   ExchangeRequest,
   DonationRequest,
   RequestStatus,
+  Conversation,
+  ChatMessage,
 } from '@/types';
 
 const API_BASE_URL =
@@ -383,6 +385,60 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     }),
+
+  // Conversations and chat messages
+  getConversations: (query = '') => {
+    const search = query.trim()
+      ? `?q=${encodeURIComponent(query.trim())}`
+      : '';
+    return request<{
+      status: string;
+      results: number;
+      conversations: Conversation[];
+    }>(`/conversations${search}`, { method: 'GET' });
+  },
+
+  createConversation: (data: { userId: string; bookId?: string }) =>
+    request<{ status: string; conversation: Conversation }>('/conversations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getConversationMessages: (id: string, page = 1, limit = 30) =>
+    request<{
+      status: string;
+      results: number;
+      page: number;
+      limit: number;
+      hasMore: boolean;
+      messages: ChatMessage[];
+    }>(`/conversations/${id}/messages?page=${page}&limit=${limit}`, {
+      method: 'GET',
+    }),
+
+  sendConversationMessage: (id: string, text: string) =>
+    request<{ status: string; message: string; sentMessage: ChatMessage }>(
+      `/conversations/${id}/messages`,
+      { method: 'POST', body: JSON.stringify({ text }) }
+    ),
+
+  sendConversationImage: (id: string, image: File, text = '') => {
+    const formData = new FormData();
+    formData.append('image', image);
+    if (text.trim()) formData.append('text', text.trim());
+    return request<{ status: string; message: string; sentMessage: ChatMessage }>(
+      `/conversations/${id}/image`,
+      { method: 'POST', body: formData }
+    );
+  },
+
+  markConversationRead: (id: string) =>
+    request<{
+      status: string;
+      message: string;
+      conversationId: string;
+      unreadCount: number;
+    }>(`/conversations/${id}/read`, { method: 'PATCH' }),
 
   // Reviews
   createReview: (data: { orderId: string; rating: number; comment?: string }) =>

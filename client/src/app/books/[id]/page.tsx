@@ -11,6 +11,7 @@ import {
   Heart,
   LoaderCircle,
   MapPin,
+  MessageCircle,
   Share2,
   ShoppingCart,
   Star,
@@ -102,6 +103,7 @@ export default function BookDetailPage() {
   const [offeredBookId, setOfferedBookId] = useState('');
   const [requestMessage, setRequestMessage] = useState('');
   const [submittingRequest, setSubmittingRequest] = useState(false);
+  const [openingConversation, setOpeningConversation] = useState(false);
 
   const seller = book && typeof book.seller !== 'string' ? (book.seller as User) : null;
   const sellerId = typeof book?.seller === 'string' ? book.seller : seller?._id;
@@ -283,6 +285,19 @@ export default function BookDetailPage() {
       showToast(error instanceof Error ? error.message : 'Unable to send the donation request.', 'error');
     } finally {
       setSubmittingRequest(false);
+    }
+  };
+
+  const chatWithSeller = async () => {
+    if (!book || !sellerId || isOwner || !requireLogin() || openingConversation) return;
+    setOpeningConversation(true);
+    try {
+      const response = await api.createConversation({ userId: sellerId, bookId: book._id });
+      router.push(`/messages/${response.conversation._id}`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to open a conversation with the seller.', 'error');
+    } finally {
+      setOpeningConversation(false);
     }
   };
 
@@ -522,6 +537,17 @@ export default function BookDetailPage() {
                       className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-50"
                     >
                       Request Donation
+                    </button>
+                  )}
+                  {sellerId && !isOwner && (
+                    <button
+                      type="button"
+                      onClick={() => void chatWithSeller()}
+                      disabled={authLoading || openingConversation}
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-700 hover:border-campus-400 hover:bg-campus-50 hover:text-campus-800 disabled:opacity-50"
+                    >
+                      {openingConversation ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
+                      {openingConversation ? 'Opening chat…' : 'Chat with Seller'}
                     </button>
                   )}
                 </div>

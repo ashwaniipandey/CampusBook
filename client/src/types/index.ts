@@ -26,6 +26,7 @@ export interface User {
   totalRatings?: number;
   isVerified: boolean;
   status: 'active' | 'suspended' | 'pending';
+  lastSeen?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -136,6 +137,34 @@ export interface DonationRequest {
   status: RequestStatus;
   message?: string;
   reason?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Conversation {
+  _id: string;
+  participants: User[];
+  otherParticipant: User;
+  book?: Pick<Book, '_id' | 'title' | 'images'> | null;
+  relatedBook?: Pick<Book, '_id' | 'title' | 'images'> | null;
+  lastMessage: string;
+  lastMessageAt?: string;
+  unreadCount: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ChatMessage {
+  _id: string;
+  conversation: string;
+  sender: User | string;
+  recipient?: User | string;
+  text: string;
+  content?: string;
+  image?: string;
+  isRead?: boolean;
+  readBy?: string[];
+  readAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

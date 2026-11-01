@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BookOpen, CheckCircle2, LoaderCircle, X } from 'lucide-react';
+import { BookOpen, CheckCircle2, LoaderCircle, MessageCircle, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import {
@@ -89,6 +89,7 @@ export default function RequestDashboard({ kind }: { kind: RequestKind }) {
   const [toast, setToast] = useState<Toast | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [messagingRequestId, setMessagingRequestId] = useState<string | null>(null);
   const label = kind === 'exchange' ? 'Exchange' : 'Donation';
 
   const showToast = useCallback((message: string, type: Toast['type'] = 'success') => {
@@ -167,6 +168,20 @@ export default function RequestDashboard({ kind }: { kind: RequestKind }) {
       );
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const messageRequestParty = async (request: DashboardRequest, otherPerson: User | string) => {
+    const userId = typeof otherPerson === 'string' ? otherPerson : otherPerson._id;
+    if (!userId || !request.book?._id || messagingRequestId) return;
+    setMessagingRequestId(request._id);
+    try {
+      const response = await api.createConversation({ userId, bookId: request.book._id });
+      router.push(`/messages/${response.conversation._id}`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to open this conversation.', 'error');
+    } finally {
+      setMessagingRequestId(null);
     }
   };
 
@@ -318,8 +333,20 @@ export default function RequestDashboard({ kind }: { kind: RequestKind }) {
                     )}
                   </div>
 
-                  {(canRespond || canCancel || canComplete) && (
-                    <div className="flex flex-wrap gap-2 border-t border-slate-100 px-4 py-4 sm:px-5">
+                  <div className="flex flex-wrap gap-2 border-t border-slate-100 px-4 py-4 sm:px-5">
+                    {otherPerson && request.book?._id && (
+                      <button
+                        type="button"
+                        disabled={messagingRequestId === request._id}
+                        onClick={() => void messageRequestParty(request, otherPerson)}
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 hover:border-campus-300 hover:bg-campus-50 hover:text-campus-800 disabled:opacity-50"
+                      >
+                        {messagingRequestId === request._id
+                          ? <LoaderCircle className="h-4 w-4 animate-spin" />
+                          : <MessageCircle className="h-4 w-4" />}
+                        Message
+                      </button>
+                    )}
                       {canRespond && (
                         <>
                           <button type="button" disabled={updatingId === request._id} onClick={() => setPendingAction({ request, status: 'accepted' })} className="inline-flex items-center gap-2 rounded-xl bg-campus-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-50">
@@ -340,8 +367,7 @@ export default function RequestDashboard({ kind }: { kind: RequestKind }) {
                           <CheckCircle2 className="h-4 w-4" /> Mark Completed
                         </button>
                       )}
-                    </div>
-                  )}
+                  </div>
                 </article>
               );
             })}

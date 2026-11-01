@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   LoaderCircle,
   MapPin,
+  MessageCircle,
   MessageSquare,
   Star,
   X,
@@ -65,6 +66,7 @@ export default function OrdersPage() {
   const [reviews, setReviews] = useState<Record<string, ReviewState>>({});
   const [reviewForms, setReviewForms] = useState<Record<string, ReviewState>>({});
   const [submittingReviewId, setSubmittingReviewId] = useState<string | null>(null);
+  const [messagingOrderId, setMessagingOrderId] = useState<string | null>(null);
 
   const showToast = useCallback((message: string, type: Toast['type'] = 'success') => {
     setToast({ message, type });
@@ -172,6 +174,20 @@ export default function OrdersPage() {
       showToast(message, 'error');
     } finally {
       setSubmittingReviewId(null);
+    }
+  };
+
+  const messageOrderParty = async (order: Order, otherParty: User | string) => {
+    const userId = typeof otherParty === 'string' ? otherParty : otherParty._id;
+    if (!userId || !order.book?._id || messagingOrderId) return;
+    setMessagingOrderId(order._id);
+    try {
+      const response = await api.createConversation({ userId, bookId: order.book._id });
+      router.push(`/messages/${response.conversation._id}`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to open this conversation.', 'error');
+    } finally {
+      setMessagingOrderId(null);
     }
   };
 
@@ -332,6 +348,19 @@ export default function OrdersPage() {
                       <Link href={bookHref} className="text-xs font-bold text-campus-700 hover:text-campus-900">
                         View book
                       </Link>
+                      {otherParty && book?._id && (
+                        <button
+                          type="button"
+                          disabled={messagingOrderId === order._id}
+                          onClick={() => void messageOrderParty(order, otherParty)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:border-campus-300 hover:bg-campus-50 hover:text-campus-800 disabled:opacity-50"
+                        >
+                          {messagingOrderId === order._id
+                            ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                            : <MessageCircle className="h-3.5 w-3.5" />}
+                          Message
+                        </button>
+                      )}
                     </div>
                   </div>
 

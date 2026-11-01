@@ -3,6 +3,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { AuthProvider } from '@/context/AuthContext';
+import { SocketProvider } from '@/context/SocketContext';
 
 export const metadata: Metadata = {
   title: 'CampusBook | University Student Textbook Marketplace & Exchange',
@@ -20,12 +21,13 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased selection:bg-campus-100 selection:text-campus-900">
         <AuthProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <SocketProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </SocketProvider>
         </AuthProvider>
       </body>
     </html>
   );
 }
-
