@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
@@ -19,7 +20,8 @@ import {
 } from 'lucide-react';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, redirectByRole } = useAuth();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -39,7 +41,14 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setServerError(null);
     const result = await login(data.email.trim(), data.password);
-    if (!result.success) {
+    if (result.success) {
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      if (redirect?.startsWith('/') && !redirect.startsWith('//')) {
+        router.replace(redirect);
+      } else {
+        redirectByRole(result.user);
+      }
+    } else {
       setServerError(result.error || 'Invalid email or password');
     }
   };

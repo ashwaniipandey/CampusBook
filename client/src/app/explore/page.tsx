@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { Book, University, Category, FiltersMeta, BookCondition, ListingType } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 import {
   Search,
   Filter,
@@ -41,6 +42,14 @@ const CONDITIONS: { value: BookCondition; label: string }[] = [
 function ExploreContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const {
+    user,
+    loading: authLoading,
+    wishlistBookIds,
+    wishlistLoading,
+    wishlistError,
+    setWishlistItem,
+  } = useAuth();
 
   // Read URL search params
   const initialQ = searchParams.get('q') || '';
@@ -81,8 +90,17 @@ function ExploreContent() {
   const [universities, setUniversities] = useState<University[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  // Local wishlist state (UI only for now)
-  const [wishlist, setWishlist] = useState<Record<string, boolean>>({});
+  const [pendingWishlist, setPendingWishlist] = useState<Record<string, boolean>>({});
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    window.setTimeout(() => setToast(null), 3500);
+  }, []);
+
+  useEffect(() => {
+    if (wishlistError) showToast(wishlistError, 'error');
+  }, [wishlistError, showToast]);
 
   // 1. Fetch metadata & universities on mount
   useEffect(() => {
@@ -363,10 +381,26 @@ function ExploreContent() {
     Boolean(semesterInput),
   ].filter(Boolean).length;
 
-  const toggleWishlist = (e: React.MouseEvent, bookId: string) => {
+  const toggleWishlist = async (e: React.MouseEvent, book: Book) => {
     e.preventDefault();
     e.stopPropagation();
-    setWishlist((prev) => ({ ...prev, [bookId]: !prev[bookId] }));
+    if (authLoading) return;
+    if (!user) {
+      const returnUrl = `${window.location.pathname}${window.location.search}`;
+      router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+
+    const wishlisted = wishlistBookIds.includes(book._id);
+    setPendingWishlist((previous) => ({ ...previous, [book._id]: true }));
+    try {
+      await setWishlistItem(book._id, !wishlisted, book);
+      showToast(wishlisted ? 'Removed from your wishlist.' : 'Added to your wishlist.');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to update your wishlist.', 'error');
+    } finally {
+      setPendingWishlist((previous) => ({ ...previous, [book._id]: false }));
+    }
   };
 
   // Reusable Filter Sidebar Component
@@ -615,6 +649,21 @@ function ExploreContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {toast && (
+        <div
+          role="status"
+          className={`fixed right-4 top-20 z-[70] flex max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg ${
+            toast.type === 'error'
+              ? 'border-rose-200 bg-rose-50 text-rose-800'
+              : 'border-campus-200 bg-campus-50 text-campus-800'
+          }`}
+        >
+          <span>{toast.message}</span>
+          <button type="button" aria-label="Dismiss notification" onClick={() => setToast(null)}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       {/* Breadcrumb & Title */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-xs font-semibold text-campus-700 uppercase tracking-wider mb-1">
@@ -890,7 +939,7 @@ function ExploreContent() {
                 const catName =
                   typeof book.category === 'object' && book.category ? book.category.name : '';
 
-                const isWishlisted = Boolean(wishlist[book._id]);
+                const isWishlisted = wishlistBookIds.includes(book._id);
 
                 // Discount calculation
                 const orig = Number(book.originalPrice || 0);
@@ -929,9 +978,12 @@ function ExploreContent() {
                         {/* Wishlist Heart Icon */}
                         <button
                           type="button"
-                          onClick={(e) => toggleWishlist(e, book._id)}
-                          className="absolute top-3 right-3 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-xs backdrop-blur-xs transition text-slate-400 hover:text-rose-500"
-                          title="Save to wishlist"
+                          onClick={(e) => toggleWishlist(e, book)}
+                          disabled={authLoading || wishlistLoading || pendingWishlist[book._id]}
+                          aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                          aria-pressed={isWishlisted}
+                          className="absolute top-3 right-3 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-xs backdrop-blur-xs transition text-slate-400 hover:text-rose-500 disabled:opacity-50"
+                          title={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
                         >
                           <Heart
                             className={`w-4 h-4 transition ${
@@ -1091,4 +1143,3 @@ export default function ExplorePage() {
     </Suspense>
   );
 }
-

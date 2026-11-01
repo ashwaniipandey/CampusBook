@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -68,7 +68,14 @@ function BookCard({ book }: { book: Book }) {
 export default function BookDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const {
+    user,
+    loading: authLoading,
+    wishlistBookIds,
+    wishlistLoading,
+    wishlistError,
+    setWishlistItem,
+  } = useAuth();
   const bookId = typeof params?.id === 'string' ? params.id : '';
 
   const [book, setBook] = useState<Book | null>(null);
@@ -76,7 +83,6 @@ export default function BookDetailPage() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
-  const [wishlisted, setWishlisted] = useState(false);
   const [reviewsOpen, setReviewsOpen] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -93,6 +99,7 @@ export default function BookDetailPage() {
   const isOwner = Boolean(user && sellerId === user._id);
   const isSold = book?.status === 'sold';
   const canPurchase = Boolean(book && book.listingType === 'sell' && !isOwner && !isSold);
+  const wishlisted = Boolean(book && wishlistBookIds.includes(book._id));
   const images = useMemo(
     () => (book?.images || []).map(getImageUrl).filter((image) => Boolean(image)),
     [book]
@@ -106,10 +113,14 @@ export default function BookDetailPage() {
     : 0;
   const isNotFound = Boolean(errorMessage && /not found|does not exist/i.test(errorMessage));
 
-  const showToast = (message: string, type: Toast['type'] = 'success') => {
+  const showToast = useCallback((message: string, type: Toast['type'] = 'success') => {
     setToast({ message, type });
     window.setTimeout(() => setToast(null), 3500);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (wishlistError) showToast(wishlistError, 'error');
+  }, [wishlistError, showToast]);
 
   useEffect(() => {
     if (!bookId) return;
@@ -125,7 +136,6 @@ export default function BookDetailPage() {
           return;
         }
         setBook(response.book);
-        setWishlisted(Boolean(response.isWishlisted ?? response.book.isWishlisted));
 
         try {
           const similarResponse = await api.getSimilarBooks(bookId);
@@ -162,17 +172,10 @@ export default function BookDetailPage() {
   const toggleWishlist = async () => {
     if (!book || !requireLogin()) return;
     const previousValue = wishlisted;
-    setWishlisted(!previousValue);
     try {
-      if (previousValue) {
-        await api.removeFromWishlist(book._id);
-        showToast('Removed from your wishlist.');
-      } else {
-        await api.addToWishlist(book._id);
-        showToast('Added to your wishlist.');
-      }
+      await setWishlistItem(book._id, !previousValue, book);
+      showToast(previousValue ? 'Removed from your wishlist.' : 'Added to your wishlist.');
     } catch (error) {
-      setWishlisted(previousValue);
       showToast(error instanceof Error ? error.message : 'Unable to update your wishlist.', 'error');
     }
   };
@@ -269,7 +272,7 @@ export default function BookDetailPage() {
               <button
                 type="button"
                 onClick={toggleWishlist}
-                disabled={authLoading}
+                disabled={authLoading || wishlistLoading}
                 aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                 aria-pressed={wishlisted}
                 className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:border-rose-200 hover:text-rose-600 disabled:opacity-50"

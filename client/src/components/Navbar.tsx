@@ -8,6 +8,7 @@ import {
   ArrowLeftRight,
   HeartHandshake,
   PlusCircle,
+  Heart,
   Menu,
   X,
   BadgeCheck,
@@ -96,6 +97,15 @@ export default function Navbar() {
               >
                 <BookOpen className="w-4 h-4 text-campus-600" />
                 My Books
+              </Link>
+            )}
+            {isAuthenticated && (
+              <Link
+                href="/wishlist"
+                className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
+              >
+                <Heart className="w-4 h-4 text-rose-500" />
+                Wishlist
               </Link>
             )}
           </nav>
@@ -229,6 +239,15 @@ export default function Navbar() {
                         My Books
                       </Link>
 
+                      <Link
+                        href="/wishlist"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        <Heart className="w-4 h-4 text-rose-500" />
+                        Wishlist
+                      </Link>
+
                       {!user.isVerified && user.role !== 'admin' && (
                         <Link
                           href="/verify-otp"
@@ -351,6 +370,14 @@ export default function Navbar() {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
               >
                 <BookOpen className="w-4 h-4 text-campus-600" /> My Books
+              </Link>
+
+              <Link
+                href="/wishlist"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
+              >
+                <Heart className="w-4 h-4 text-rose-500" /> Wishlist
               </Link>
 
               <button

@@ -1,14 +1,20 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User } from '@/types';
+import { Book, User } from '@/types';
 import api from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
+  wishlistBooks: Book[];
+  wishlistBookIds: string[];
+  wishlistLoading: boolean;
+  wishlistError: string | null;
+  refreshWishlist: () => Promise<void>;
+  setWishlistItem: (bookId: string, wishlisted: boolean, book?: Book) => Promise<void>;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: User }>;
   register: (data: {
     name: string;
@@ -34,7 +40,107 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [wishlistBooks, setWishlistBooks] = useState<Book[]>([]);
+  const [wishlistBookIds, setWishlistBookIds] = useState<string[]>([]);
+  const [wishlistLoading, setWishlistLoading] = useState<boolean>(false);
+  const [wishlistError, setWishlistError] = useState<string | null>(null);
+  const wishlistBooksRef = useRef<Book[]>([]);
+  const wishlistBookIdsRef = useRef<string[]>([]);
+  const loadedWishlistUserRef = useRef<string | null>(null);
+  const currentUserIdRef = useRef<string | null>(null);
+  currentUserIdRef.current = user?._id || null;
   const router = useRouter();
+
+  const replaceWishlist = useCallback((books: Book[]) => {
+    wishlistBooksRef.current = books;
+    wishlistBookIdsRef.current = books.map((book) => book._id);
+    setWishlistBooks(books);
+    setWishlistBookIds(wishlistBookIdsRef.current);
+  }, []);
+
+  const refreshWishlist = useCallback(async () => {
+    const userId = user?._id;
+    if (!userId) return;
+
+    loadedWishlistUserRef.current = userId;
+    setWishlistLoading(true);
+    setWishlistError(null);
+    try {
+      const response = await api.getWishlist();
+      if (currentUserIdRef.current === userId) {
+        replaceWishlist(response.books || []);
+      }
+    } catch (error) {
+      if (currentUserIdRef.current === userId) {
+        setWishlistError(error instanceof Error ? error.message : 'Unable to load your wishlist.');
+      }
+    } finally {
+      if (currentUserIdRef.current === userId) setWishlistLoading(false);
+    }
+  }, [user?._id, replaceWishlist]);
+
+  useEffect(() => {
+    const userId = user?._id;
+    if (!userId) {
+      loadedWishlistUserRef.current = null;
+      replaceWishlist([]);
+      setWishlistLoading(false);
+      setWishlistError(null);
+      return;
+    }
+
+    if (loadedWishlistUserRef.current === userId) return;
+    replaceWishlist([]);
+    void refreshWishlist();
+  }, [user?._id, replaceWishlist, refreshWishlist]);
+
+  const setWishlistItem = async (bookId: string, wishlisted: boolean, book?: Book) => {
+    if (!user) throw new Error('Please sign in to update your wishlist.');
+
+    const wasWishlisted = wishlistBookIdsRef.current.includes(bookId);
+    if (wasWishlisted === wishlisted) return;
+    const previousBook = wishlistBooksRef.current.find((item) => item._id === bookId);
+
+    const updateMembership = (ids: string[], included: boolean) => (
+      included ? (ids.includes(bookId) ? ids : [...ids, bookId]) : ids.filter((id) => id !== bookId)
+    );
+    wishlistBookIdsRef.current = updateMembership(wishlistBookIdsRef.current, wishlisted);
+    setWishlistBookIds(wishlistBookIdsRef.current);
+    if (wishlisted && book && !previousBook) {
+      wishlistBooksRef.current = [...wishlistBooksRef.current, book];
+      setWishlistBooks(wishlistBooksRef.current);
+    } else if (!wishlisted) {
+      wishlistBooksRef.current = wishlistBooksRef.current.filter((item) => item._id !== bookId);
+      setWishlistBooks(wishlistBooksRef.current);
+    }
+
+    try {
+      if (wishlisted) {
+        const response = await api.addToWishlist(bookId);
+        setWishlistError(null);
+        const savedBook = response.book || book;
+        if (savedBook && currentUserIdRef.current === user._id) {
+          const exists = wishlistBooksRef.current.some((item) => item._id === bookId);
+          wishlistBooksRef.current = exists
+            ? wishlistBooksRef.current.map((item) => item._id === bookId ? savedBook : item)
+            : [...wishlistBooksRef.current, savedBook];
+          setWishlistBooks(wishlistBooksRef.current);
+        }
+      } else {
+        await api.removeFromWishlist(bookId);
+        setWishlistError(null);
+      }
+    } catch (error) {
+      if (currentUserIdRef.current === user._id) {
+        wishlistBookIdsRef.current = updateMembership(wishlistBookIdsRef.current, wasWishlisted);
+        setWishlistBookIds(wishlistBookIdsRef.current);
+        wishlistBooksRef.current = wishlistBooksRef.current.filter((item) => item._id !== bookId);
+        if (previousBook) wishlistBooksRef.current = [...wishlistBooksRef.current, previousBook];
+        setWishlistBooks(wishlistBooksRef.current);
+      }
+      throw error;
+    }
+  };
 
   // Helper to redirect based on user role
   const redirectByRole = (userToRoute?: User | null) => {
@@ -77,7 +183,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await api.login({ email, password });
       if (res.user) {
         setUser(res.user);
-        redirectByRole(res.user);
         return { success: true, user: res.user };
       }
       return { success: false, error: 'Login failed: no user data returned' };
@@ -183,6 +288,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         loading,
         isAuthenticated: !!user,
+        wishlistBooks,
+        wishlistBookIds,
+        wishlistLoading,
+        wishlistError,
+        refreshWishlist,
+        setWishlistItem,
         login,
         register,
         verifyOtp,
@@ -208,4 +319,3 @@ export const useAuth = () => {
 };
 
 export default AuthContext;
-
