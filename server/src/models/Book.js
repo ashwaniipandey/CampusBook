@@ -151,6 +151,12 @@ const bookSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    rejectionReason: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'Rejection reason cannot exceed 500 characters'],
+      default: '',
+    },
   },
   {
     timestamps: true,

@@ -37,6 +37,12 @@ export const protect = async (req, res, next) => {
       );
     }
 
+    if (currentUser.isBlocked) {
+      return next(
+        new AppError('Your account has been blocked by an administrator. Please contact campus support.', 403)
+      );
+    }
+
     // 4. Check if account is suspended
     if (currentUser.status === 'suspended') {
       return next(
@@ -123,4 +129,3 @@ export const optionalAuth = async (req, res, next) => {
 };
 
 export default { protect, authorize, requireVerified, optionalAuth };
-

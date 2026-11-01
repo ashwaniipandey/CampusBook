@@ -269,6 +269,12 @@ export const login = async (req, res, next) => {
       return next(new AppError('Invalid email or password', 401));
     }
 
+    if (user.isBlocked) {
+      return next(
+        new AppError('Your account has been blocked by an administrator. Please contact campus support.', 403)
+      );
+    }
+
     if (user.status === 'suspended') {
       return next(
         new AppError('Your account has been suspended. Please contact campus admin.', 403)
@@ -494,4 +500,3 @@ export default {
   forgotPassword,
   resetPassword,
 };
-

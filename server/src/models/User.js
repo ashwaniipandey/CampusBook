@@ -93,6 +93,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
     lastSeen: {
       type: Date,
       default: null,
@@ -130,6 +134,9 @@ const userSchema = new mongoose.Schema(
 // Indexes (email is indexed via unique: true)
 userSchema.index({ university: 1, role: 1 });
 userSchema.index({ status: 1 });
+userSchema.index({ role: 1, createdAt: -1 });
+userSchema.index({ createdAt: -1 });
+userSchema.index({ isBlocked: 1, role: 1 });
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
