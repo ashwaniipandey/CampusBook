@@ -3,12 +3,12 @@ import dotenv from 'dotenv';
 import { Server as SocketIOServer } from 'socket.io';
 import app from './app.js';
 import connectDB from './config/db.js';
+import { configureChatSockets } from './sockets/chatSocket.js';
 
 // Load environment variables
 dotenv.config();
 
 const PORT = process.env.PORT || 5001;
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -16,20 +16,13 @@ const server = http.createServer(app);
 // Setup Socket.io
 const io = new SocketIOServer(server, {
   cors: {
-    origin: CLIENT_URL,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST'],
     credentials: true,
   },
 });
 
-// Socket.io connection handler
-io.on('connection', (socket) => {
-  console.log(`Socket client connected: ${socket.id}`);
-
-  socket.on('disconnect', () => {
-    console.log(`Socket client disconnected: ${socket.id}`);
-  });
-});
+configureChatSockets(io);
 
 // Attach io instance to app for use in route controllers
 app.set('io', io);
@@ -69,4 +62,3 @@ process.on('uncaughtException', (err) => {
 startServer();
 
 export { server, io };
-

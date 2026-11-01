@@ -83,6 +83,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    lastSeen: {
+      type: Date,
+      default: null,
+    },
     status: {
       type: String,
       enum: {

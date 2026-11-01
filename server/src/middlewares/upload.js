@@ -32,6 +32,15 @@ const upload = multer({
   fileFilter,
 });
 
+const singleImageUpload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 1,
+  },
+  fileFilter,
+});
+
 // Accept images under 'images' (plural) or 'image' (singular) form fields
 const uploadHandler = upload.fields([
   { name: 'images', maxCount: 5 },
@@ -71,4 +80,23 @@ export const uploadBookImages = (req, res, next) => {
   });
 };
 
-export default { uploadBookImages };
+export const uploadMessageImage = (req, res, next) => {
+  singleImageUpload.single('image')(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return next(new AppError('Image too large: The image must be less than 5MB.', 400));
+        }
+        if (err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE') {
+          return next(new AppError('Upload one image at a time.', 400));
+        }
+        return next(new AppError(`Upload error: ${err.message}`, 400));
+      }
+      return next(err);
+    }
+
+    next();
+  });
+};
+
+export default { uploadBookImages, uploadMessageImage };

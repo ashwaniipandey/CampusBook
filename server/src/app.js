@@ -17,6 +17,7 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import exchangeRoutes from './routes/exchangeRoutes.js';
 import donationRoutes from './routes/donationRoutes.js';
+import conversationRoutes from './routes/conversationRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -102,6 +103,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/exchanges', exchangeRoutes);
 app.use('/api/donations', donationRoutes);
+app.use('/api/conversations', conversationRoutes);
 
 // Root welcome endpoint
 app.get('/', (req, res) => {
