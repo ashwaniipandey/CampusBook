@@ -74,6 +74,12 @@ export const addToCart = async (req, res, next) => {
       return next(new AppError('Book listing not found', 404));
     }
 
+    if (book.listingType !== 'sell') {
+      return next(
+        new AppError('Use the exchange or donation request for this book', 400)
+      );
+    }
+
     // Rule 1: Cannot add your own book
     if (book.seller.toString() === req.user._id.toString()) {
       return next(new AppError('You cannot add your own book to the cart', 400));
@@ -84,11 +90,6 @@ export const addToCart = async (req, res, next) => {
       ['approved', 'available'].includes(book.status) || book.isApproved === true;
     if (!isApproved || book.status === 'sold') {
       return next(new AppError('This book is not available for purchase', 400));
-    }
-
-    // Rule 3: Only books with listingType 'sell'
-    if (book.listingType !== 'sell') {
-      return next(new AppError('Only books listed for sale can be added to the cart', 400));
     }
 
     let cart = await Cart.findOne({ user: req.user._id });

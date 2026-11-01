@@ -19,10 +19,15 @@ const donationRequestSchema = new mongoose.Schema(
     },
     reason: {
       type: String,
-      required: [true, 'Please explain why you need this book'],
       trim: true,
-      minlength: [10, 'Reason must be at least 10 characters long'],
       maxlength: [1000, 'Reason cannot exceed 1000 characters'],
+      default: '',
+    },
+    message: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'Message cannot exceed 1000 characters'],
+      default: '',
     },
     studentProof: {
       type: String,
@@ -33,7 +38,7 @@ const donationRequestSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Donation request status is required'],
       enum: {
-        values: ['pending', 'approved', 'rejected', 'fulfilled', 'cancelled'],
+        values: ['pending', 'accepted', 'rejected', 'cancelled', 'completed'],
         message: '{VALUE} is not a valid status',
       },
       default: 'pending',
@@ -64,4 +69,3 @@ donationRequestSchema.index({ createdAt: -1 });
 const DonationRequest = mongoose.model('DonationRequest', donationRequestSchema);
 
 export default DonationRequest;
-

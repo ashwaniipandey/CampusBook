@@ -42,6 +42,12 @@ export const createOrder = async (req, res, next) => {
         return next(new AppError('No valid books found in your shopping cart', 400));
       }
 
+      if (validItems.some((item) => item.book.listingType !== 'sell')) {
+        return next(
+          new AppError('Use the exchange or donation request for this book', 400)
+        );
+      }
+
       const createdOrders = [];
 
       for (const item of validItems) {
@@ -130,6 +136,12 @@ export const createOrder = async (req, res, next) => {
     const book = await Book.findById(bookId);
     if (!book) {
       return next(new AppError('Book listing not found', 404));
+    }
+
+    if (book.listingType !== 'sell') {
+      return next(
+        new AppError('Use the exchange or donation request for this book', 400)
+      );
     }
 
     // Rule 1: Cannot buy your own book
@@ -396,4 +408,3 @@ export const updateOrderStatus = async (req, res, next) => {
     next(error);
   }
 };
-

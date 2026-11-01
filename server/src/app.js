@@ -15,6 +15,8 @@ import cartRoutes from './routes/cartRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import exchangeRoutes from './routes/exchangeRoutes.js';
+import donationRoutes from './routes/donationRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -98,6 +100,8 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/exchanges', exchangeRoutes);
+app.use('/api/donations', donationRoutes);
 
 // Root welcome endpoint
 app.get('/', (req, res) => {
@@ -115,4 +119,3 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 export default app;
-
