@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import SiteChrome from '@/components/SiteChrome';
 import { AuthProvider } from '@/context/AuthContext';
 import { SocketProvider } from '@/context/SocketContext';
 
@@ -22,9 +21,7 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased selection:bg-campus-100 selection:text-campus-900">
         <AuthProvider>
           <SocketProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
+            <SiteChrome>{children}</SiteChrome>
           </SocketProvider>
         </AuthProvider>
       </body>

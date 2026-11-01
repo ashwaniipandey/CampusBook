@@ -28,6 +28,7 @@ export interface User {
   totalRatings?: number;
   isVerified: boolean;
   status: 'active' | 'suspended' | 'pending';
+  isBlocked?: boolean;
   lastSeen?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -91,6 +92,7 @@ export interface Book {
   status: BookStatus;
   views?: number;
   isApproved?: boolean;
+  rejectionReason?: string;
   isWishlisted?: boolean;
   createdAt?: string;
   updatedAt?: string;

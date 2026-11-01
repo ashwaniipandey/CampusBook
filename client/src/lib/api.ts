@@ -23,6 +23,15 @@ import {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 
+function queryString(params: Record<string, string | number | undefined>) {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') search.set(key, String(value));
+  });
+  const value = search.toString();
+  return value ? `?${value}` : '';
+}
+
 /**
  * Universal fetch wrapper ensuring httpOnly cookies are included
  * Handles JSON and FormData payloads transparently
@@ -492,6 +501,151 @@ export const api = {
       `/notifications/${id}`,
       { method: 'DELETE' }
     ),
+
+  // Admin analytics and moderation
+  getAdminStats: () =>
+    request<{
+      status: string;
+      totalStudents: number;
+      totalBooks: number;
+      pendingApprovals: number;
+      totalOrders: number;
+      totalExchanges: number;
+      totalDonations: number;
+      completedOrders: number;
+      totalRevenueValue: number;
+      growth: { students: number; books: number; orders: number };
+    }>('/admin/stats', { method: 'GET' }),
+
+  getAdminActivity: (months = 6) =>
+    request<{
+      status: string;
+      months: { month: string; newUsers: number; newBooks: number; orders: number }[];
+    }>(`/admin/analytics/activity?months=${months}`, { method: 'GET' }),
+
+  getAdminCategoryAnalytics: () =>
+    request<{
+      status: string;
+      totalBooks: number;
+      categories: { categoryId: string | null; name: string; count: number; percentage: number }[];
+    }>('/admin/analytics/categories', { method: 'GET' }),
+
+  getAdminUniversityAnalytics: () =>
+    request<{
+      status: string;
+      topByUsers: { universityId: string; university: string; count: number }[];
+      topByBooks: { universityId: string; university: string; count: number }[];
+    }>('/admin/analytics/universities', { method: 'GET' }),
+
+  getAdminRecent: () =>
+    request<{
+      status: string;
+      signups: (User & { createdAt: string })[];
+      pendingBooks: (Book & { seller: User; createdAt: string })[];
+      orders: (Order & { createdAt: string })[];
+    }>('/admin/recent', { method: 'GET' }),
+
+  approveAdminBook: (id: string) =>
+    request<{ status: string; message: string; book: Book }>(`/admin/books/${id}/approve`, { method: 'PATCH' }),
+
+  rejectAdminBook: (id: string, reason?: string) =>
+    request<{ status: string; message: string; book: Book }>(`/admin/books/${id}/reject`, {
+      method: 'PATCH',
+      body: JSON.stringify(reason ? { reason } : {}),
+    }),
+
+  getAdminUsers: (params: { page?: number; limit?: number; q?: string; role?: string; status?: string } = {}) =>
+    request<{ status: string; results: User[]; total: number; page: number; limit: number; totalPages: number }>(
+      `/admin/users${queryString(params)}`,
+      { method: 'GET' }
+    ),
+
+  setAdminUserBlocked: (id: string, blocked: boolean) =>
+    request<{ status: string; message: string; user: User }>(
+      `/admin/users/${id}/${blocked ? 'block' : 'unblock'}`,
+      { method: 'PATCH' }
+    ),
+
+  verifyAdminUser: (id: string) =>
+    request<{ status: string; message: string; user: User }>(`/admin/users/${id}/verify`, { method: 'PATCH' }),
+
+  getAdminBooks: (params: { page?: number; limit?: number; q?: string; status?: string } = {}) =>
+    request<{ status: string; results: Book[]; total: number; page: number; limit: number; totalPages: number }>(
+      `/admin/books${queryString(params)}`,
+      { method: 'GET' }
+    ),
+
+  deleteAdminBook: (id: string) =>
+    request<{ status: string; message: string; bookId: string }>(`/admin/books/${id}`, { method: 'DELETE' }),
+
+  getAdminOrders: (params: { page?: number; limit?: number; q?: string; status?: string } = {}) =>
+    request<{ status: string; results: Order[]; total: number; page: number; limit: number; totalPages: number }>(
+      `/admin/orders${queryString(params)}`,
+      { method: 'GET' }
+    ),
+
+  getAdminExchanges: (params: { page?: number; limit?: number; q?: string; status?: string } = {}) =>
+    request<{ status: string; results: ExchangeRequest[]; total: number; page: number; limit: number; totalPages: number }>(
+      `/admin/exchanges${queryString(params)}`,
+      { method: 'GET' }
+    ),
+
+  getAdminDonations: (params: { page?: number; limit?: number; q?: string; status?: string } = {}) =>
+    request<{ status: string; results: DonationRequest[]; total: number; page: number; limit: number; totalPages: number }>(
+      `/admin/donations${queryString(params)}`,
+      { method: 'GET' }
+    ),
+
+  getAdminCategories: () =>
+    request<{ status: string; results: number; categories: Category[] }>('/admin/categories', { method: 'GET' }),
+
+  createAdminCategory: (data: Partial<Category>) =>
+    request<{ status: string; message: string; category: Category }>('/admin/categories', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateAdminCategory: (id: string, data: Partial<Category>) =>
+    request<{ status: string; message: string; category: Category }>(`/admin/categories/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deleteAdminCategory: (id: string) =>
+    request<{ status: string; message: string }>(`/admin/categories/${id}`, { method: 'DELETE' }),
+
+  getAdminUniversities: () =>
+    request<{ status: string; results: number; universities: University[] }>('/admin/universities', { method: 'GET' }),
+
+  createAdminUniversity: (data: Partial<University>) =>
+    request<{ status: string; message: string; university: University }>('/admin/universities', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateAdminUniversity: (id: string, data: Partial<University>) =>
+    request<{ status: string; message: string; university: University }>(`/admin/universities/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deleteAdminUniversity: (id: string) =>
+    request<{ status: string; message: string }>(`/admin/universities/${id}`, { method: 'DELETE' }),
+
+  downloadAdminCsv: async (kind: 'users' | 'orders') => {
+    const response = await fetch(`${API_BASE_URL}/admin/export/${kind}`, { credentials: 'include' });
+    if (!response.ok) {
+      let message = `Request failed with status ${response.status}`;
+      try {
+        const body = await response.json();
+        if (typeof body.message === 'string') message = body.message;
+      } catch {
+        // Keep the HTTP status message when the server does not return JSON.
+      }
+      throw new Error(message);
+    }
+    return response.blob();
+  },
 
   // Reviews
   createReview: (data: { orderId: string; rating: number; comment?: string }) =>
