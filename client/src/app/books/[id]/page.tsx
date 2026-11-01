@@ -1,662 +1,583 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import api from '@/lib/api';
-import { Book, User, University, Category, BookImage } from '@/types';
-import { useAuth } from '@/context/AuthContext';
 import {
   ArrowLeft,
   BookOpen,
+  CheckCircle2,
   GraduationCap,
   Heart,
-  Share2,
-  CheckCircle2,
-  AlertCircle,
-  Eye,
-  Calendar,
-  Tag,
-  ShieldCheck,
-  MessageSquare,
-  Sparkles,
+  LoaderCircle,
   MapPin,
-  Check,
-  Building,
-  Hash,
-  Layers,
-  Clock,
-  ArrowLeftRight,
-  HeartHandshake,
-  DollarSign,
+  Share2,
+  ShoppingCart,
+  Star,
+  X,
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import api from '@/lib/api';
+import { Book, BookImage, Category, Review, University, User } from '@/types';
+
+type Toast = { message: string; type: 'success' | 'error' };
+
+function getName(value: University | Category | string | undefined, fallback = 'Not provided') {
+  if (!value) return fallback;
+  return typeof value === 'string' ? value : value.name;
+}
+
+function getImageUrl(image: string | BookImage) {
+  return typeof image === 'string' ? image : image.url;
+}
+
+function getReviewerName(review: Review) {
+  return typeof review.reviewer === 'string' ? 'Campus student' : review.reviewer.name;
+}
+
+function BookCard({ book }: { book: Book }) {
+  const image = book.images?.[0];
+  const price = book.listingType === 'donate' ? 'Free' : `$${Number(book.sellingPrice ?? book.price ?? 0).toFixed(2)}`;
+
+  return (
+    <Link
+      href={`/books/${book._id}`}
+      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-campus-300 hover:shadow-lg"
+    >
+      <div className="aspect-[4/3] bg-slate-100">
+        {image ? (
+          <img src={getImageUrl(image)} alt={book.title} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
+        ) : (
+          <div className="flex h-full items-center justify-center text-slate-300">
+            <BookOpen className="h-12 w-12" />
+          </div>
+        )}
+      </div>
+      <div className="space-y-2 p-4">
+        <h3 className="line-clamp-2 min-h-10 text-sm font-bold text-slate-900 group-hover:text-campus-700">{book.title}</h3>
+        <p className="truncate text-xs text-slate-500">{book.author}</p>
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-extrabold text-campus-700">{price}</span>
+          <span className="rounded-full bg-campus-50 px-2.5 py-1 text-[10px] font-semibold text-campus-700">{book.condition}</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 export default function BookDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user: currentUser } = useAuth();
-
+  const { user, loading: authLoading } = useAuth();
   const bookId = typeof params?.id === 'string' ? params.id : '';
 
   const [book, setBook] = useState<Book | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [similarBooks, setSimilarBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [activeImage, setActiveImage] = useState(0);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsLoaded, setReviewsLoaded] = useState(false);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [meetingLocation, setMeetingLocation] = useState('');
+  const [orderNotes, setOrderNotes] = useState('');
+  const [submittingOrder, setSubmittingOrder] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
 
-  // Active preview image index
-  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
-  const [copiedLink, setCopiedLink] = useState<boolean>(false);
-  const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
-  const [contactNotice, setContactNotice] = useState<string | null>(null);
+  const seller = book && typeof book.seller !== 'string' ? (book.seller as User) : null;
+  const sellerId = typeof book?.seller === 'string' ? book.seller : seller?._id;
+  const isOwner = Boolean(user && sellerId === user._id);
+  const isSold = book?.status === 'sold';
+  const canPurchase = Boolean(book && book.listingType === 'sell' && !isOwner && !isSold);
+  const images = useMemo(
+    () => (book?.images || []).map(getImageUrl).filter((image) => Boolean(image)),
+    [book]
+  );
+  const categoryName = getName(book?.category, 'Not provided');
+  const universityName = getName(book?.university, 'Not provided');
+  const sellingPrice = Number(book?.sellingPrice ?? book?.price ?? 0);
+  const originalPrice = Number(book?.originalPrice || 0);
+  const discount = originalPrice > sellingPrice && originalPrice > 0
+    ? Math.round(((originalPrice - sellingPrice) / originalPrice) * 100)
+    : 0;
+  const isNotFound = Boolean(errorMessage && /not found|does not exist/i.test(errorMessage));
+
+  const showToast = (message: string, type: Toast['type'] = 'success') => {
+    setToast({ message, type });
+    window.setTimeout(() => setToast(null), 3500);
+  };
 
   useEffect(() => {
     if (!bookId) return;
-
-    let isMounted = true;
+    let active = true;
     setLoading(true);
-    setErrorMsg(null);
+    setErrorMessage(null);
 
-    api
-      .getBookById(bookId)
-      .then((res) => {
-        if (!isMounted) return;
-        if (res && res.book) {
-          setBook(res.book);
-        } else {
-          setErrorMsg('Listing not found');
+    api.getBookById(bookId)
+      .then(async (response) => {
+        if (!active) return;
+        if (!response.book) {
+          setErrorMessage('Book listing not found');
+          return;
+        }
+        setBook(response.book);
+        setWishlisted(Boolean(response.isWishlisted ?? response.book.isWishlisted));
+
+        try {
+          const similarResponse = await api.getSimilarBooks(bookId);
+          if (active) setSimilarBooks((similarResponse.books || []).slice(0, 6));
+        } catch (error) {
+          if (active) {
+            showToast(error instanceof Error ? error.message : 'Unable to load similar books.', 'error');
+          }
         }
       })
-      .catch((err: any) => {
-        if (!isMounted) return;
-        console.error('Error fetching book detail:', err);
-        setErrorMsg(
-          err.message || 'Unable to load book details. Please try again later.'
-        );
+      .catch((error: unknown) => {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : 'Unable to load this book.';
+        setErrorMessage(message);
+        showToast(message, 'error');
       })
       .finally(() => {
-        if (isMounted) setLoading(false);
+        if (active) setLoading(false);
       });
 
     return () => {
-      isMounted = false;
+      active = false;
     };
   }, [bookId]);
 
-  // Copy shareable link
-  const handleShare = () => {
-    if (typeof window !== 'undefined') {
-      navigator.clipboard.writeText(window.location.href);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
+  const requireLogin = () => {
+    if (authLoading) return false;
+    if (user) return true;
+    const returnUrl = `${window.location.pathname}${window.location.search}`;
+    router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
+    return false;
+  };
+
+  const toggleWishlist = async () => {
+    if (!book || !requireLogin()) return;
+    const previousValue = wishlisted;
+    setWishlisted(!previousValue);
+    try {
+      if (previousValue) {
+        await api.removeFromWishlist(book._id);
+        showToast('Removed from your wishlist.');
+      } else {
+        await api.addToWishlist(book._id);
+        showToast('Added to your wishlist.');
+      }
+    } catch (error) {
+      setWishlisted(previousValue);
+      showToast(error instanceof Error ? error.message : 'Unable to update your wishlist.', 'error');
     }
   };
 
-  const handleContactClick = () => {
-    if (!book) return;
-    const seller = typeof book.seller === 'object' && book.seller ? (book.seller as User) : null;
-    const email = seller?.email || 'the seller';
-    setContactNotice(
-      `Direct messaging will be available in Phase 6. You can reach out directly to ${seller?.name || 'the seller'} via campus email: ${email}`
-    );
-    setTimeout(() => setContactNotice(null), 6000);
+  const addToCart = async () => {
+    if (!book || !requireLogin()) return;
+    setAddingToCart(true);
+    try {
+      const response = await api.addToCart(book._id);
+      showToast(response.message || 'Added to your cart.');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to add this book to your cart.', 'error');
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
-  // Extract images
-  const images: string[] = [];
-  if (book && Array.isArray(book.images)) {
-    book.images.forEach((img: string | BookImage) => {
-      if (typeof img === 'string' && img.trim()) {
-        images.push(img);
-      } else if (img && typeof img === 'object' && img.url) {
-        images.push(img.url);
-      }
-    });
-  }
+  const submitOrder = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!book || !requireLogin()) return;
+    setSubmittingOrder(true);
+    try {
+      await api.createOrder({
+        bookId: book._id,
+        meetingLocation: meetingLocation.trim(),
+        notes: orderNotes.trim(),
+      });
+      router.push('/orders');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to place your order.', 'error');
+      setSubmittingOrder(false);
+    }
+  };
 
-  // Type guards for populated fields
-  const seller = book && typeof book.seller === 'object' && book.seller ? (book.seller as User) : null;
-  const university = book && typeof book.university === 'object' && book.university ? (book.university as University) : null;
-  const category = book && typeof book.category === 'object' && book.category ? (book.category as Category) : null;
+  const toggleReviews = async () => {
+    const opening = !reviewsOpen;
+    setReviewsOpen(opening);
+    if (!opening || reviewsLoaded || !sellerId) return;
+    setReviewsLoading(true);
+    try {
+      const response = await api.getSellerReviews(sellerId);
+      setReviews(response.reviews || []);
+      setReviewsLoaded(true);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to load seller reviews.', 'error');
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
 
-  const isOwner = Boolean(
-    currentUser &&
-      book &&
-      ((typeof book.seller === 'string' && book.seller === currentUser._id) ||
-        (seller && seller._id === currentUser._id))
-  );
-
-  // Price calculations
-  const originalPrice = book ? Number(book.originalPrice || 0) : 0;
-  const sellingPrice = book ? Number(book.sellingPrice ?? book.price ?? 0) : 0;
-  const savings = originalPrice > 0 && sellingPrice < originalPrice ? originalPrice - sellingPrice : 0;
-  const discountPercent = originalPrice > 0 && savings > 0 ? Math.round((savings / originalPrice) * 100) : 0;
-
-  // Condition description helper
-  const getConditionDescription = (cond: string) => {
-    switch (cond) {
-      case 'New':
-        return 'Brand new, unread, pristine condition with no markings or spine wear.';
-      case 'Like New':
-        return 'Appears brand new with virtually no signs of wear, flawless pages and cover.';
-      case 'Good':
-        return 'Clean copy with minor shelf wear or light notes/highlighting. Completely intact.';
-      case 'Fair':
-        return 'Readable and sturdy with noticeable wear, cover scuffs, or frequent highlighting.';
-      case 'Poor':
-        return 'Heavy wear, bent corners or binding wear, but all essential course pages are readable.';
-      default:
-        return 'Carefully inspected student copy.';
+  const shareBook = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      showToast('Link copied to clipboard.');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to copy the link.', 'error');
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Navigation Top Bar */}
+    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10">
+      {toast && (
+        <div
+          role="status"
+          className={`fixed right-4 top-20 z-[70] flex max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg ${
+            toast.type === 'error'
+              ? 'border-rose-200 bg-rose-50 text-rose-800'
+              : 'border-campus-200 bg-campus-50 text-campus-800'
+          }`}
+        >
+          <span>{toast.message}</span>
+          <button type="button" aria-label="Dismiss notification" onClick={() => setToast(null)}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex items-center justify-between">
-          <Link
-            href="/explore"
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-campus-600 transition group"
-          >
-            <span className="p-1.5 rounded-xl bg-white border border-slate-200 group-hover:border-campus-300 group-hover:bg-campus-50 transition shadow-xs">
-              <ArrowLeft className="w-4 h-4 text-slate-600 group-hover:text-campus-600" />
-            </span>
-            <span>Back to Marketplace</span>
+          <Link href="/explore" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-campus-700">
+            <ArrowLeft className="h-4 w-4" />
+            Back to marketplace
           </Link>
-
           {book && (
-            <div className="flex items-center gap-2">
+            <div className="flex gap-2">
               <button
                 type="button"
-                onClick={handleShare}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-xs font-semibold text-slate-700 shadow-xs transition cursor-pointer"
-                title="Share link"
+                onClick={shareBook}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-campus-300"
               >
-                {copiedLink ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-600">Copied Link!</span>
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Share</span>
-                  </>
-                )}
+                <Share2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Share</span>
               </button>
-
               <button
                 type="button"
-                onClick={() => setIsWishlisted(!isWishlisted)}
-                className="p-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-500 shadow-xs transition cursor-pointer"
-                title="Save to wishlist"
+                onClick={toggleWishlist}
+                disabled={authLoading}
+                aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                aria-pressed={wishlisted}
+                className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:border-rose-200 hover:text-rose-600 disabled:opacity-50"
               >
-                <Heart
-                  className={`w-4 h-4 transition ${
-                    isWishlisted ? 'fill-rose-500 text-rose-500' : 'text-slate-400 hover:text-rose-500'
-                  }`}
-                />
+                <Heart className={`h-5 w-5 ${wishlisted ? 'fill-rose-500 text-rose-500' : ''}`} />
               </button>
             </div>
           )}
         </div>
 
-        {/* Loading State Skeleton */}
         {loading && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-pulse">
-            <div className="lg:col-span-5 space-y-4">
-              <div className="aspect-4/3 sm:aspect-square bg-slate-200 rounded-3xl" />
-              <div className="grid grid-cols-4 gap-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="aspect-square bg-slate-200 rounded-xl" />
-                ))}
+          <div className="grid animate-pulse gap-8 lg:grid-cols-2">
+            <div className="space-y-3">
+              <div className="aspect-[4/3] rounded-3xl bg-slate-200" />
+              <div className="grid grid-cols-4 gap-3">
+                {[0, 1, 2, 3].map((item) => <div key={item} className="aspect-square rounded-xl bg-slate-200" />)}
               </div>
             </div>
-            <div className="lg:col-span-7 space-y-6">
-              <div className="space-y-3">
-                <div className="h-4 bg-slate-200 rounded-md w-24" />
-                <div className="h-8 bg-slate-200 rounded-xl w-4/5" />
-                <div className="h-4 bg-slate-200 rounded-md w-1/2" />
-              </div>
-              <div className="h-24 bg-slate-200 rounded-2xl" />
-              <div className="h-32 bg-slate-200 rounded-2xl" />
-              <div className="h-28 bg-slate-200 rounded-2xl" />
+            <div className="space-y-4">
+              <div className="h-5 w-1/4 rounded bg-slate-200" />
+              <div className="h-10 w-3/4 rounded bg-slate-200" />
+              <div className="h-32 rounded-2xl bg-slate-200" />
+              <div className="h-48 rounded-2xl bg-slate-200" />
             </div>
           </div>
         )}
 
-        {/* Error / Not Found State */}
-        {!loading && errorMsg && (
-          <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-xs max-w-lg mx-auto my-12 space-y-5">
-            <div className="w-16 h-16 rounded-3xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
-              <AlertCircle className="w-8 h-8" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">Book Not Found</h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
-                {errorMsg}
-              </p>
-            </div>
-            <div className="pt-2">
-              <Link
-                href="/explore"
-                className="inline-flex items-center gap-2 bg-campus-600 hover:bg-campus-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Browse Other Books
-              </Link>
-            </div>
-          </div>
+        {!loading && errorMessage && (
+          <section className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+            <BookOpen className="mx-auto mb-4 h-10 w-10 text-slate-300" />
+            <h1 className="text-2xl font-bold text-slate-900">{isNotFound ? 'Book not found' : 'Unable to load this book'}</h1>
+            <p className="mt-2 text-sm text-slate-600">{errorMessage}</p>
+            <Link href="/explore" className="mt-6 inline-flex rounded-xl bg-campus-600 px-5 py-3 text-sm font-bold text-white hover:bg-campus-700">
+              Browse books
+            </Link>
+          </section>
         )}
 
-        {/* Main Book Detail View */}
         {!loading && book && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Column: Image Gallery & Safety Assurance */}
-            <div className="lg:col-span-5 space-y-5">
-              {/* Main Image Container */}
-              <div className="relative bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs">
-                <div className="aspect-4/3 sm:aspect-square relative bg-slate-100 flex items-center justify-center overflow-hidden">
-                  {images.length > 0 ? (
-                    <img
-                      src={images[activeImageIndex] || images[0]}
-                      alt={book.title}
-                      className="w-full h-full object-contain p-4 transition-all duration-300"
-                    />
+          <>
+            <section className="grid items-start gap-8 lg:grid-cols-2">
+              <div className="space-y-4">
+                <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-white">
+                  {images.length ? (
+                    <img src={images[activeImage] || images[0]} alt={book.title} className="h-full w-full object-contain p-4" />
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-slate-400 p-8 text-center">
-                      <BookOpen className="w-16 h-16 text-slate-300 mb-2" />
-                      <p className="text-sm font-semibold">No cover image available</p>
-                      <p className="text-xs text-slate-400 mt-1">
-                        Seller listed this book without photos
-                      </p>
+                    <div className="text-center text-slate-300">
+                      <BookOpen className="mx-auto h-16 w-16" />
+                      <p className="mt-2 text-sm text-slate-500">No photos available</p>
                     </div>
                   )}
-
-                  {/* Condition Badge on Cover */}
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-white/95 backdrop-blur-xs text-slate-800 text-xs font-black px-3 py-1 rounded-xl shadow-xs border border-slate-200">
-                      {book.condition}
-                    </span>
+                  <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-slate-800 shadow">
+                    {book.condition}
                   </div>
-
-                  {/* Status Indicator */}
-                  {book.status && (
-                    <div className="absolute top-4 right-4">
-                      <span
-                        className={`text-[11px] font-bold px-2.5 py-1 rounded-xl uppercase tracking-wider backdrop-blur-xs ${
-                          book.status === 'sold'
-                            ? 'bg-slate-900 text-white'
-                            : book.status === 'pending'
-                            ? 'bg-amber-100/90 text-amber-800 border border-amber-200'
-                            : 'bg-emerald-600 text-white shadow-xs'
-                        }`}
-                      >
-                        {book.status === 'approved' || book.status === 'available'
-                          ? 'Available'
-                          : book.status}
-                      </span>
-                    </div>
+                  {book.listingType === 'donate' && (
+                    <div className="absolute right-4 top-4 rounded-full bg-campus-600 px-3 py-1.5 text-xs font-extrabold text-white">FREE</div>
+                  )}
+                  {isSold && (
+                    <div className="absolute bottom-4 right-4 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-bold text-white">SOLD</div>
                   )}
                 </div>
-
-                {/* Thumbnails if > 1 image */}
                 {images.length > 1 && (
-                  <div className="p-3 bg-slate-50/70 border-t border-slate-100 flex items-center gap-2 overflow-x-auto">
-                    {images.map((imgUrl, idx) => (
+                  <div className="flex gap-3 overflow-x-auto pb-1">
+                    {images.map((image, index) => (
                       <button
-                        key={idx}
+                        key={`${image}-${index}`}
                         type="button"
-                        onClick={() => setActiveImageIndex(idx)}
-                        className={`relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition cursor-pointer ${
-                          activeImageIndex === idx
-                            ? 'border-campus-600 ring-2 ring-campus-200'
-                            : 'border-slate-200 opacity-70 hover:opacity-100'
-                        }`}
+                        onClick={() => setActiveImage(index)}
+                        aria-label={`View photo ${index + 1}`}
+                        aria-pressed={activeImage === index}
+                        className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 ${activeImage === index ? 'border-campus-600 ring-2 ring-campus-100' : 'border-slate-200'}`}
                       >
-                        <img
-                          src={imgUrl}
-                          alt={`${book.title} - photo ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={image} alt="" className="h-full w-full object-cover" />
                       </button>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Campus Trust & Safety Notice */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-3">
-                <div className="flex items-center gap-2 text-campus-700 font-bold text-xs uppercase tracking-wider">
-                  <ShieldCheck className="w-4 h-4 text-campus-600" />
-                  <span>Campus Safety Assurance</span>
+              <div className="space-y-6">
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full bg-campus-50 px-3 py-1 text-xs font-bold text-campus-800">{categoryName}</span>
+                  {book.subject && <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{book.subject}</span>}
+                  {book.course && <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{book.course}</span>}
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Always meet in high-traffic campus locations (Library, Student Center, Campus
-                  Coffee Shop) to inspect books and complete payments safely.
-                </p>
-                <div className="pt-1 flex items-center gap-3 text-[11px] text-slate-500 font-medium">
-                  <span className="flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-campus-600" />
-                    Verified Campus
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-campus-600" />
-                    Peer-to-Peer
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-campus-600" />
-                    Zero Commission
-                  </span>
+                <div>
+                  <h1 className="text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl">{book.title}</h1>
+                  <p className="mt-2 text-base text-slate-600">By <span className="font-semibold text-slate-900">{book.author}</span></p>
                 </div>
-              </div>
-            </div>
 
-            {/* Right Column: Listing Information & Details */}
-            <div className="lg:col-span-7 space-y-6">
-              {/* Category, Subject & Course Badges */}
-              <div className="flex flex-wrap items-center gap-2">
-                {category && (
-                  <span className="text-xs font-bold uppercase tracking-wider text-campus-700 bg-campus-50 border border-campus-200/60 px-3 py-1 rounded-xl">
-                    {category.name}
-                  </span>
-                )}
-                {book.course && (
-                  <span className="text-xs font-bold text-slate-800 bg-slate-100 border border-slate-200 px-3 py-1 rounded-xl">
-                    Course: {book.course}
-                  </span>
-                )}
-                {book.semester && (
-                  <span className="text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-xl">
-                    {book.semester}
-                  </span>
-                )}
-              </div>
+                <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
+                  <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+                    {book.listingType === 'donate' ? (
+                      <>
+                        <span className="text-3xl font-black text-campus-700">Free</span>
+                        <span className="mb-1 rounded-full bg-campus-50 px-3 py-1 text-xs font-bold text-campus-700">Donation</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-3xl font-black text-slate-950">${sellingPrice.toFixed(2)}</span>
+                        {originalPrice > sellingPrice && (
+                          <span className="mb-1 text-lg text-slate-400 line-through">${originalPrice.toFixed(2)}</span>
+                        )}
+                        {discount > 0 && <span className="mb-1 rounded-full bg-campus-50 px-3 py-1 text-xs font-bold text-campus-800">{discount}% off</span>}
+                      </>
+                    )}
+                  </div>
+                  <p className="mt-2 text-sm text-slate-500">
+                    {isSold ? 'This listing has been sold.' : isOwner ? 'This is your listing.' : book.listingType === 'exchange' ? 'Exchange listing' : 'Arrange a safe campus handoff with the seller.'}
+                  </p>
 
-              {/* Book Title & Author */}
-              <div className="space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
-                  {book.title}
-                </h1>
-                <p className="text-sm sm:text-base text-slate-600 font-medium">
-                  By <span className="text-slate-900 font-semibold">{book.author}</span>
-                  {book.edition ? ` • ${book.edition}` : ''}
-                </p>
-              </div>
-
-              {/* Price & Listing Type Box */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  {book.listingType === 'donate' ? (
-                    <div>
-                      <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-black px-3.5 py-1.5 rounded-xl">
-                        <HeartHandshake className="w-4 h-4 text-emerald-600" />
-                        <span>FREE DONATION</span>
+                  {canPurchase ? (
+                    <div className="mt-5 space-y-3">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={addToCart}
+                          disabled={addingToCart || authLoading}
+                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-campus-600 px-4 py-3 text-sm font-bold text-campus-700 hover:bg-campus-50 disabled:opacity-50"
+                        >
+                          {addingToCart ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
+                          {addingToCart ? 'Adding…' : 'Add to Cart'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => requireLogin() && setOrderModalOpen(true)}
+                          disabled={authLoading}
+                          className="rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-50"
+                        >
+                          Buy Now
+                        </button>
                       </div>
-                      <p className="text-xs text-slate-500 mt-1.5">
-                        This book is offered 100% free of charge to any student who needs it.
-                      </p>
-                    </div>
-                  ) : book.listingType === 'exchange' ? (
-                    <div>
-                      <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-black px-3.5 py-1.5 rounded-xl">
-                        <ArrowLeftRight className="w-4 h-4 text-amber-600" />
-                        <span>BOOK EXCHANGE / SWAP</span>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-400">
+                          Request Exchange · Phase 6
+                        </button>
+                        <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-400">
+                          Request Donation · Phase 6
+                        </button>
                       </div>
-                      <p className="text-xs text-slate-500 mt-1.5">
-                        Seller is looking to swap this book for other course materials.
-                      </p>
                     </div>
                   ) : (
-                    <div>
-                      <div className="flex items-baseline gap-3">
-                        <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                          ${sellingPrice.toFixed(2)}
-                        </span>
-                        {originalPrice > 0 && originalPrice > sellingPrice && (
-                          <span className="text-base sm:text-lg text-slate-400 line-through">
-                            ${originalPrice.toFixed(2)}
-                          </span>
-                        )}
-                        {discountPercent > 0 && (
-                          <span className="text-xs font-black text-campus-700 bg-campus-100 px-2.5 py-1 rounded-lg">
-                            {discountPercent}% OFF
-                          </span>
-                        )}
+                    <div className="mt-5 space-y-3">
+                      <p className="text-sm font-semibold text-slate-500">
+                        {isSold ? 'Purchase unavailable · This book is sold' : isOwner ? 'Purchase unavailable · This is your listing' : book.listingType === 'exchange' ? 'Purchase unavailable · Exchange listing' : 'Purchase unavailable · Free donation'}
+                      </p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-400">
+                          Request Exchange · Phase 6
+                        </button>
+                        <button type="button" disabled className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-400">
+                          Request Donation · Phase 6
+                        </button>
                       </div>
-                      {savings > 0 && (
-                        <p className="text-xs text-emerald-600 font-bold mt-1">
-                          You save ${savings.toFixed(2)} compared to campus bookstore retail!
-                        </p>
-                      )}
                     </div>
                   )}
-
-                  {/* Actions: Owner Manage vs Student Contact */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    {isOwner ? (
-                      <Link
-                        href="/my-books"
-                        className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold shadow-sm transition"
-                      >
-                        <Layers className="w-4 h-4" />
-                        <span>Manage My Listing</span>
-                      </Link>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleContactClick}
-                        className="inline-flex items-center justify-center gap-2 bg-campus-600 hover:bg-campus-700 text-white px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold shadow-sm hover:shadow transition cursor-pointer"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                        <span>Contact Seller</span>
-                      </button>
-                    )}
-                  </div>
                 </div>
 
-                {/* Contact Notice Alert */}
-                {contactNotice && (
-                  <div className="p-3.5 rounded-2xl bg-campus-50 border border-campus-200 text-campus-900 text-xs font-medium flex items-start gap-2.5">
-                    <Sparkles className="w-4 h-4 text-campus-600 shrink-0 mt-0.5" />
-                    <span>{contactNotice}</span>
+                <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
+                  <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500">Book details</h2>
+                  <dl className="divide-y divide-slate-100">
+                    {[
+                      ['Category', categoryName],
+                      ['Subject', book.subject],
+                      ['Course', book.course],
+                      ['Semester', book.semester],
+                      ['University', universityName],
+                      ['ISBN', book.isbn],
+                    ].map(([label, value]) => (
+                      <div key={label} className="grid grid-cols-3 gap-3 py-3 text-sm">
+                        <dt className="font-medium text-slate-500">{label}</dt>
+                        <dd className="col-span-2 break-words font-semibold text-slate-800">{value || 'Not provided'}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+
+                {book.description && (
+                  <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
+                    <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-500">Description</h2>
+                    <p className="whitespace-pre-line text-sm leading-6 text-slate-700">{book.description}</p>
                   </div>
                 )}
               </div>
+            </section>
 
-              {/* Condition Details Card */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Book Condition
-                  </h3>
-                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 border border-slate-200">
-                    {book.condition}
-                  </span>
-                </div>
-                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-                  {getConditionDescription(book.condition)}
-                </p>
-              </div>
-
-              {/* Academic & Book Details Table */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Book Specifications & Details
-                </h3>
-
-                <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-2xs">
-                  <table className="w-full text-left text-xs sm:text-sm">
-                    <tbody className="divide-y divide-slate-100">
-                      <tr className="hover:bg-slate-50/50">
-                        <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70 w-1/3">Condition</td>
-                        <td className="py-2.5 px-4 text-slate-800 font-semibold">{book.condition}</td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50">
-                        <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Listing Type</td>
-                        <td className="py-2.5 px-4 text-slate-800 font-medium capitalize">{book.listingType}</td>
-                      </tr>
-                      {category && (
-                        <tr className="hover:bg-slate-50/50">
-                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Category</td>
-                          <td className="py-2.5 px-4 text-slate-800 font-medium">{category.name}</td>
-                        </tr>
-                      )}
-                      {university && (
-                        <tr className="hover:bg-slate-50/50">
-                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">University Campus</td>
-                          <td className="py-2.5 px-4 text-slate-800 font-medium">{university.name}</td>
-                        </tr>
-                      )}
-                      {book.course && (
-                        <tr className="hover:bg-slate-50/50">
-                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Course Code</td>
-                          <td className="py-2.5 px-4 text-slate-800 font-semibold text-campus-700">{book.course}</td>
-                        </tr>
-                      )}
-                      {book.subject && (
-                        <tr className="hover:bg-slate-50/50">
-                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Subject</td>
-                          <td className="py-2.5 px-4 text-slate-800 font-medium">{book.subject}</td>
-                        </tr>
-                      )}
-                      {book.semester && (
-                        <tr className="hover:bg-slate-50/50">
-                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Semester</td>
-                          <td className="py-2.5 px-4 text-slate-800 font-medium">{book.semester}</td>
-                        </tr>
-                      )}
-                      {book.isbn && (
-                        <tr className="hover:bg-slate-50/50">
-                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">ISBN</td>
-                          <td className="py-2.5 px-4 text-slate-800 font-mono font-medium">{book.isbn}</td>
-                        </tr>
-                      )}
-                      {book.edition && (
-                        <tr className="hover:bg-slate-50/50">
-                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Edition</td>
-                          <td className="py-2.5 px-4 text-slate-800 font-medium">{book.edition}</td>
-                        </tr>
-                      )}
-                      {(book.publisher || book.publicationYear) && (
-                        <tr className="hover:bg-slate-50/50">
-                          <td className="py-2.5 px-4 font-semibold text-slate-500 bg-slate-50/70">Publisher / Year</td>
-                          <td className="py-2.5 px-4 text-slate-800 font-medium">
-                            {book.publisher || 'N/A'}{book.publicationYear ? ` (${book.publicationYear})` : ''}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Description Section */}
-              {book.description && (
-                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Seller's Notes & Description
-                  </h3>
-                  <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-                    {book.description}
-                  </div>
-                </div>
-              )}
-
-              {/* Exchange Preferences (if exchange listing) */}
-              {book.listingType === 'exchange' && book.exchangePreferences && (
-                <div className="bg-amber-50/80 border border-amber-200 rounded-3xl p-6 shadow-xs space-y-2">
-                  <div className="flex items-center gap-2 text-amber-900 font-bold text-xs uppercase tracking-wider">
-                    <ArrowLeftRight className="w-4 h-4 text-amber-700" />
-                    <span>Looking to Exchange For</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-amber-900/90 leading-relaxed">
-                    {book.exchangePreferences}
-                  </p>
-                </div>
-              )}
-
-              {/* Seller Information Card */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Listed By
-                </h3>
-
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    {seller?.avatar ? (
-                      <img
-                        src={seller.avatar}
-                        alt={seller.name}
-                        className="w-12 h-12 rounded-2xl object-cover border border-slate-200"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-campus-100 text-campus-700 font-black text-base flex items-center justify-center border border-campus-200">
-                        {seller?.name ? seller.name.charAt(0).toUpperCase() : 'S'}
-                      </div>
-                    )}
-
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-slate-900 text-sm">
-                          {seller?.name || 'Campus Student'}
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  {seller?.avatar ? (
+                    <img src={seller.avatar} alt="" className="h-14 w-14 rounded-2xl object-cover" />
+                  ) : (
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-campus-50 text-xl font-bold text-campus-700">
+                      {seller?.name?.slice(0, 1).toUpperCase() || 'S'}
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="font-bold text-slate-900">{seller?.name || 'Campus seller'}</h2>
+                      {seller?.isVerified && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-campus-50 px-2 py-1 text-[11px] font-semibold text-campus-700">
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Verified
                         </span>
-                        {seller?.isVerified && (
-                          <span
-                            title="Verified Campus Student"
-                            className="inline-flex text-campus-600"
-                          >
-                            <CheckCircle2 className="w-4 h-4 fill-campus-50 text-campus-600" />
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
-                        {seller?.department && <span>{seller.department}</span>}
-                        {seller?.yearOfStudy && (
-                          <span>• Year {seller.yearOfStudy}</span>
-                        )}
-                        {!seller?.department && !seller?.yearOfStudy && (
-                          <span>Student Member</span>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  </div>
-
-                  {/* Seller Rating Badge */}
-                  <div className="text-right">
-                    <div className="inline-flex items-center gap-1 text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-xl">
-                      <span>★</span>
-                      <span>{seller?.rating ? seller.rating.toFixed(1) : '5.0'}</span>
-                    </div>
-                    <span className="block text-[10px] text-slate-400 mt-1">
-                      {seller?.totalRatings ? `${seller.totalRatings} ratings` : 'Campus Verified'}
-                    </span>
+                    <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
+                      <GraduationCap className="h-4 w-4" /> {universityName}
+                    </p>
                   </div>
                 </div>
+                <div className="sm:text-right">
+                  <p className="inline-flex items-center gap-1 font-bold text-amber-600">
+                    <Star className="h-4 w-4 fill-current" /> {Number(seller?.rating ?? 0).toFixed(1)}
+                  </p>
+                  <p className="text-xs text-slate-500">{seller?.totalRatings ?? 0} reviews</p>
+                </div>
               </div>
+              {sellerId && (
+                <button type="button" onClick={toggleReviews} className="mt-5 text-sm font-bold text-campus-700 hover:text-campus-900">
+                  {reviewsOpen ? 'Hide reviews' : 'View reviews'}
+                </button>
+              )}
+              {reviewsOpen && (
+                <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+                  {reviewsLoading ? (
+                    <p className="text-sm text-slate-500">Loading reviews…</p>
+                  ) : reviews.length ? (
+                    reviews.slice(0, 5).map((review) => (
+                      <article key={review._id} className="rounded-2xl bg-slate-50 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-sm font-bold text-slate-800">{getReviewerName(review)}</p>
+                          <div className="flex items-center gap-1 text-xs font-bold text-amber-600">
+                            <Star className="h-3.5 w-3.5 fill-current" /> {review.rating}/5
+                          </div>
+                        </div>
+                        {review.comment && <p className="mt-2 text-sm leading-5 text-slate-600">{review.comment}</p>}
+                        {review.createdAt && <p className="mt-2 text-xs text-slate-400">{new Date(review.createdAt).toLocaleDateString()}</p>}
+                      </article>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-500">No reviews yet.</p>
+                  )}
+                </div>
+              )}
+            </section>
 
-              {/* Listing Meta Footer */}
-              <div className="flex items-center justify-between text-[11px] text-slate-400 px-2 pt-2">
-                <span className="flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5 text-slate-400" />
-                  {book.viewsCount || 1} views
-                </span>
-
-                {book.createdAt && (
-                  <span className="flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    Listed on {new Date(book.createdAt).toLocaleDateString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+            {similarBooks.length > 0 && (
+              <section className="space-y-4">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Similar books</h2>
+                  <p className="mt-1 text-sm text-slate-500">More books you might be interested in.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+                  {similarBooks.map((similarBook) => <BookCard key={similarBook._id} book={similarBook} />)}
+                </div>
+              </section>
+            )}
+          </>
         )}
       </div>
-    </div>
+
+      {orderModalOpen && book && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !submittingOrder) setOrderModalOpen(false);
+        }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="order-dialog-title" className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="order-dialog-title" className="text-xl font-extrabold text-slate-900">Arrange your purchase</h2>
+                <p className="mt-1 text-sm text-slate-500">Choose a campus meeting point and add any notes.</p>
+              </div>
+              <button type="button" aria-label="Close dialog" disabled={submittingOrder} onClick={() => setOrderModalOpen(false)} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={submitOrder} className="mt-5 space-y-4">
+              <label className="block text-sm font-semibold text-slate-700">
+                Meeting location
+                <span className="relative mt-1.5 block">
+                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <input
+                    value={meetingLocation}
+                    onChange={(event) => setMeetingLocation(event.target.value)}
+                    maxLength={200}
+                    placeholder="e.g. Main library entrance"
+                    className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-3 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100"
+                  />
+                </span>
+              </label>
+              <label className="block text-sm font-semibold text-slate-700">
+                Notes <span className="font-normal text-slate-400">(optional)</span>
+                <textarea
+                  value={orderNotes}
+                  onChange={(event) => setOrderNotes(event.target.value)}
+                  maxLength={500}
+                  rows={3}
+                  placeholder="Add a note for the seller"
+                  className="mt-1.5 w-full resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100"
+                />
+              </label>
+              <button type="submit" disabled={submittingOrder} className="flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-60">
+                {submittingOrder && <LoaderCircle className="h-4 w-4 animate-spin" />}
+                {submittingOrder ? 'Placing order…' : `Place order · $${sellingPrice.toFixed(2)}`}
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
+    </main>
   );
 }
-
