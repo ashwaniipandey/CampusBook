@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Book from '../models/Book.js';
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
+import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
@@ -11,7 +12,7 @@ const populateConversation = (query) =>
   query
     .populate({
       path: 'participants',
-      select: 'name avatar university isVerified',
+      select: 'name avatar university isVerified lastSeen',
       populate: { path: 'university', select: 'name code domain city state' },
     })
     .populate('book', 'title images')
@@ -281,12 +282,49 @@ export const uploadConversationImage = async (req, res, next) => {
       req.file.buffer,
       'campusbook/messages'
     );
-    const { message } = await saveConversationMessage({
+    const { message, recipientId } = await saveConversationMessage({
       conversationId: req.conversation._id,
       senderId: req.user._id,
       text,
       image: uploadedImage.url,
     });
+    const io = req.app.get('io');
+    if (io) {
+      const senderId = req.user._id.toString();
+      const recipientRoom = `user:${recipientId}`;
+      const messageData = message.toObject();
+      io.to(`user:${senderId}`).to(recipientRoom).emit('receive_message', messageData);
+
+      const recipientIsOnline = Boolean(io.sockets.adapter.rooms.get(recipientRoom)?.size);
+      if (recipientIsOnline) {
+        io.to(recipientRoom).emit('new_message_notification', {
+          conversationId: req.conversation._id,
+          messageId: message._id,
+          senderId,
+          senderName: req.user.name,
+          text: message.text || 'Image',
+          createdAt: message.createdAt,
+        });
+      } else {
+        try {
+          await Notification.create({
+            recipient: recipientId,
+            sender: req.user._id,
+            type: 'message',
+            title: `New message from ${req.user.name}`,
+            message: message.text || 'You received an image.',
+            link: `/messages/${req.conversation._id}`,
+            data: {
+              conversationId: req.conversation._id,
+              messageId: message._id,
+              senderId,
+            },
+          });
+        } catch (error) {
+          console.error(`Unable to create offline image-message notification: ${error.message}`);
+        }
+      }
+    }
     res.status(201).json({
       status: 'success',
       message: 'Image message sent',
