@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
 import universityRoutes from './routes/universityRoutes.js';
@@ -35,6 +36,7 @@ import {
 import { validateAllowedQuery } from './validations/requestValidation.js';
 import { getAllowedClientOrigins } from './utils/clientOrigins.js';
 import { AppError } from './middlewares/errorHandler.js';
+import openApiSpecification from './docs/openapi.js';
 
 // Load environment variables
 dotenv.config();
@@ -135,6 +137,13 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/smart', smartRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/public', publicRoutes);
+
+if (
+  process.env.NODE_ENV !== 'production' ||
+  process.env.ENABLE_DOCS === 'true'
+) {
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiSpecification));
+}
 
 app.use('/api', notFoundHandler);
 

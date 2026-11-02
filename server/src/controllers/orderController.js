@@ -201,12 +201,12 @@ export const createOrder = async (req, res, next) => {
       io: req.app.get('io'),
     });
 
-    await populateOrder(order);
+    const populatedOrder = await populateOrder(Order.findById(order._id));
 
     res.status(201).json({
       status: 'success',
       message: 'Order placed successfully',
-      order,
+      order: populatedOrder,
     });
   } catch (error) {
     next(error);
@@ -404,12 +404,12 @@ export const updateOrderStatus = async (req, res, next) => {
       return next(new AppError(`Invalid status transition to '${newStatus}'`, 400));
     }
 
-    await populateOrder(order);
+    const populatedOrder = await populateOrder(Order.findById(order._id));
 
     res.status(200).json({
       status: 'success',
       message: `Order status updated to ${newStatus}`,
-      order,
+      order: populatedOrder,
     });
   } catch (error) {
     next(error);
