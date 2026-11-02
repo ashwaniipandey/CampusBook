@@ -6,6 +6,7 @@ import Wishlist from '../models/Wishlist.js';
 import UserBookView from '../models/UserBookView.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { uploadToCloudinary, deleteFromCloudinary } from '../config/cloudinary.js';
+import { getReviewStatsForSeller } from '../utils/reviewStats.js';
 
 /**
  * Get all approved books with search, multi-filters, sorting, and pagination
@@ -543,8 +544,7 @@ export const getBookById = async (req, res, next) => {
     const bookObj = book.toObject();
     bookObj.isWishlisted = isWishlisted;
     if (bookObj.seller && typeof bookObj.seller === 'object') {
-      bookObj.seller.rating = bookObj.seller.rating ?? 5.0;
-      bookObj.seller.totalRatings = bookObj.seller.totalRatings ?? 0;
+      Object.assign(bookObj.seller, await getReviewStatsForSeller(bookObj.seller._id));
     }
 
     res.status(200).json({

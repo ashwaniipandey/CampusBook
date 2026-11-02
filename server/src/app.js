@@ -23,6 +23,7 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import smartRoutes from './routes/smartRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
+import publicRoutes from './routes/publicRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -114,6 +115,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/smart', smartRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/public', publicRoutes);
 
 // Root welcome endpoint
 app.get('/', (req, res) => {

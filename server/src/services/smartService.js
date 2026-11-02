@@ -8,6 +8,7 @@ import {
   Wishlist,
 } from '../models/index.js';
 import { AppError } from '../middlewares/errorHandler.js';
+import { getReviewStatsBySeller } from '../utils/reviewStats.js';
 
 const APPROVED_STATUSES = ['approved', 'available'];
 const COMPLETED_ORDER_STATUSES = ['completed'];
@@ -305,10 +306,20 @@ export const getExchangeMatches = async (user) => {
     }
   }
 
-  return matches.sort((left, right) =>
+  const sortedMatches = matches.sort((left, right) =>
     Number(right.matchType === 'mutual') - Number(left.matchType === 'mutual') ||
     right.matchScore - left.matchScore
   );
+  const reviewStats = await getReviewStatsBySeller(
+    sortedMatches.map((match) => match.otherUser._id)
+  );
+  return sortedMatches.map((match) => ({
+    ...match,
+    otherUser: {
+      ...match.otherUser,
+      ...(reviewStats.get(String(match.otherUser._id)) || { rating: 0, totalRatings: 0 }),
+    },
+  }));
 };
 
 const CONDITION_MULTIPLIERS = {

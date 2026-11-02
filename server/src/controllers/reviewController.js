@@ -4,6 +4,7 @@ import Order from '../models/Order.js';
 import User from '../models/User.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { createNotification } from '../utils/notifications.js';
+import { getReviewStatsForSeller } from '../utils/reviewStats.js';
 
 /**
  * Submit a review for a completed order
@@ -45,24 +46,8 @@ export const createReview = async (req, res, next) => {
     });
 
     // Update seller's average rating and total ratings on User model
-    const stats = await Review.aggregate([
-      { $match: { seller: new mongoose.Types.ObjectId(order.seller) } },
-      {
-        $group: {
-          _id: '$seller',
-          avgRating: { $avg: '$rating' },
-          totalRatings: { $sum: 1 },
-        },
-      },
-    ]);
-
-    if (stats.length > 0) {
-      const avg = Math.round(stats[0].avgRating * 10) / 10;
-      await User.findByIdAndUpdate(order.seller, {
-        rating: avg,
-        totalRatings: stats[0].totalRatings,
-      });
-    }
+    const stats = await getReviewStatsForSeller(order.seller);
+    await User.findByIdAndUpdate(order.seller, stats);
 
     // Notify seller
     await createNotification({
@@ -114,6 +99,7 @@ export const getSellerReviews = async (req, res, next) => {
       .sort({ createdAt: -1 })
       .populate('reviewer', 'name avatar isVerified department yearOfStudy')
       .populate('order', 'orderNumber createdAt');
+    const stats = await getReviewStatsForSeller(id);
 
     res.status(200).json({
       status: 'success',
@@ -121,8 +107,7 @@ export const getSellerReviews = async (req, res, next) => {
         _id: seller._id,
         name: seller.name,
         avatar: seller.avatar,
-        rating: seller.rating,
-        totalRatings: seller.totalRatings,
+        ...stats,
         isVerified: seller.isVerified,
         department: seller.department,
       },
