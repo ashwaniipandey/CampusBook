@@ -3,6 +3,7 @@ import Book from '../models/Book.js';
 import University from '../models/University.js';
 import Category from '../models/Category.js';
 import Wishlist from '../models/Wishlist.js';
+import UserBookView from '../models/UserBookView.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { uploadToCloudinary, deleteFromCloudinary } from '../config/cloudinary.js';
 
@@ -16,21 +17,18 @@ export const getAllBooks = async (req, res, next) => {
     const approvedStatuses = ['approved', 'available'];
     const andClauses = [{ status: { $in: approvedStatuses } }];
 
-    // 1. Search Query (q): case-insensitive on title, author, isbn, subject
-    if (req.query.q && typeof req.query.q === 'string') {
-      const q = req.query.q.trim();
-      if (q) {
-        const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(safeQ, 'i');
-        andClauses.push({
-          $or: [
-            { title: regex },
-            { author: regex },
-            { isbn: regex },
-            { subject: regex },
-          ],
-        });
-      }
+    const rawQuery = req.query.q;
+    if (rawQuery !== undefined && (typeof rawQuery !== 'string' || rawQuery.length > 120)) {
+      return next(new AppError('Search query must be a string of 120 characters or fewer.', 400));
+    }
+    const q = typeof rawQuery === 'string' ? rawQuery.trim() : '';
+    const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const queryRegex = q ? new RegExp(safeQ, 'i') : null;
+    if (queryRegex) {
+      andClauses.push({
+        $or: ['title', 'author', 'isbn', 'subject', 'course', 'publisher']
+          .map((field) => ({ [field]: queryRegex })),
+      });
     }
 
     // 2. Category Filter (supports single ID, multiple comma-separated IDs, or array)
@@ -54,8 +52,40 @@ export const getAllBooks = async (req, res, next) => {
     // 3. University Filter
     if (req.query.university) {
       const uniId = String(req.query.university).trim();
-      if (mongoose.Types.ObjectId.isValid(uniId)) {
-        andClauses.push({ university: uniId });
+      if (!mongoose.Types.ObjectId.isValid(uniId)) {
+        return next(new AppError('university must be a valid university ID.', 400));
+      }
+      andClauses.push({ university: new mongoose.Types.ObjectId(uniId) });
+    }
+
+    if (req.query.scope !== undefined) {
+      if (!['mine', 'all'].includes(req.query.scope)) {
+        return next(new AppError('scope must be either mine or all.', 400));
+      }
+      if (req.query.scope === 'mine') {
+        if (!req.user) {
+          return next(new AppError('Log in to filter books by your university.', 401));
+        }
+        const userUniversity = req.user.university?._id || req.user.university;
+        if (!userUniversity) {
+          return next(new AppError('Your account does not have a university assigned.', 400));
+        }
+        andClauses.push({ university: userUniversity._id || userUniversity });
+      }
+    }
+
+    if (req.query.universityName !== undefined) {
+      if (typeof req.query.universityName !== 'string' || req.query.universityName.trim().length > 150) {
+        return next(new AppError('universityName must be a string of 150 characters or fewer.', 400));
+      }
+      const universityName = req.query.universityName.trim();
+      if (universityName) {
+        const nameRegex = new RegExp(
+          universityName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+          'i'
+        );
+        const universities = await University.find({ name: nameRegex }).select('_id').lean();
+        andClauses.push({ university: { $in: universities.map((university) => university._id) } });
       }
     }
 
@@ -99,12 +129,18 @@ export const getAllBooks = async (req, res, next) => {
       }
     }
 
-    // 7. Course Filter (case-insensitive substring)
-    if (req.query.course && typeof req.query.course === 'string') {
-      const crs = req.query.course.trim();
-      if (crs) {
-        const safeCrs = crs.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        andClauses.push({ course: new RegExp(safeCrs, 'i') });
+    // 7. Text filters (case-insensitive substring)
+    for (const field of ['course', 'edition', 'publisher']) {
+      const value = req.query[field];
+      if (value !== undefined) {
+        if (typeof value !== 'string' || value.length > (field === 'publisher' ? 150 : 100)) {
+          return next(new AppError(`${field} must be a valid string.`, 400));
+        }
+        const trimmedValue = value.trim();
+        if (trimmedValue) {
+          const safeValue = trimmedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          andClauses.push({ [field]: new RegExp(safeValue, 'i') });
+        }
       }
     }
 
@@ -138,6 +174,12 @@ export const getAllBooks = async (req, res, next) => {
     let sortOption = { createdAt: -1 };
     if (req.query.sort) {
       switch (req.query.sort) {
+        case 'relevance':
+          if (!queryRegex) {
+            return next(new AppError('sort=relevance requires a non-empty q search query.', 400));
+          }
+          sortOption = null;
+          break;
         case 'price_asc':
           sortOption = { sellingPrice: 1, price: 1, createdAt: -1 };
           break;
@@ -148,9 +190,10 @@ export const getAllBooks = async (req, res, next) => {
           sortOption = { views: -1, createdAt: -1 };
           break;
         case 'newest':
-        default:
           sortOption = { createdAt: -1 };
           break;
+        default:
+          sortOption = { createdAt: -1 };
       }
     }
 
@@ -159,15 +202,34 @@ export const getAllBooks = async (req, res, next) => {
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 12));
     const skip = (page - 1) * limit;
 
-    const [total, books] = await Promise.all([
-      Book.countDocuments(filterQuery),
-      Book.find(filterQuery)
-        .sort(sortOption)
-        .skip(skip)
-        .limit(limit)
-        .populate('category', 'name slug icon')
-        .populate('university', 'name code domain city state')
-        .populate('seller', 'name avatar isVerified department yearOfStudy rating'),
+    const total = await Book.countDocuments(filterQuery);
+    const bookQuery = sortOption
+      ? Book.find(filterQuery).sort(sortOption).skip(skip).limit(limit)
+      : Book.aggregate([
+          { $match: filterQuery },
+          {
+            $addFields: {
+              relevanceScore: {
+                $add: [
+                  { $cond: [{ $regexMatch: { input: { $ifNull: ['$title', ''] }, regex: safeQ, options: 'i' } }, 32, 0] },
+                  { $cond: [{ $regexMatch: { input: { $ifNull: ['$author', ''] }, regex: safeQ, options: 'i' } }, 16, 0] },
+                  { $cond: [{ $regexMatch: { input: { $ifNull: ['$isbn', ''] }, regex: safeQ, options: 'i' } }, 8, 0] },
+                  { $cond: [{ $regexMatch: { input: { $ifNull: ['$subject', ''] }, regex: safeQ, options: 'i' } }, 4, 0] },
+                  { $cond: [{ $regexMatch: { input: { $ifNull: ['$course', ''] }, regex: safeQ, options: 'i' } }, 2, 0] },
+                  { $cond: [{ $regexMatch: { input: { $ifNull: ['$publisher', ''] }, regex: safeQ, options: 'i' } }, 1, 0] },
+                ],
+              },
+            },
+          },
+          { $sort: { relevanceScore: -1, createdAt: -1 } },
+          { $skip: skip },
+          { $limit: limit },
+        ]);
+    let books = await bookQuery;
+    books = await Book.populate(books, [
+      { path: 'category', select: 'name slug icon' },
+      { path: 'university', select: 'name code domain city state' },
+      { path: 'seller', select: 'name avatar isVerified department yearOfStudy rating' },
     ]);
 
     const totalPages = Math.ceil(total / limit) || 1;
@@ -455,7 +517,17 @@ export const getBookById = async (req, res, next) => {
     }
 
     // Atomically increment views count
-    await Book.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+    const viewUpdates = [Book.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } })];
+    if (req.user && !isOwner && isPublic) {
+      viewUpdates.push(
+        UserBookView.findOneAndUpdate(
+          { user: req.user._id, book: book._id },
+          { $set: { lastViewedAt: new Date() } },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        )
+      );
+    }
+    await Promise.all(viewUpdates);
     book.views = (book.views || 0) + 1;
 
     // Check if the current logged-in user has wishlisted this book

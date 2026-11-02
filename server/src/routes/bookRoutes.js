@@ -10,6 +10,7 @@ import {
   deleteBook,
   markSold,
 } from '../controllers/bookController.js';
+import { getBookSuggestions } from '../controllers/searchController.js';
 import { protect, optionalAuth } from '../middlewares/auth.js';
 import { uploadBookImages } from '../middlewares/upload.js';
 import {
@@ -24,7 +25,14 @@ const router = express.Router();
  * @desc    Get all approved books with search, multi-filters, sorting, and pagination
  * @access  Public
  */
-router.get('/', getAllBooks);
+router.get('/', optionalAuth, getAllBooks);
+
+/**
+ * @route   GET /api/books/suggestions?q=
+ * @desc    Get autocomplete suggestions from approved book listings
+ * @access  Public
+ */
+router.get('/suggestions', getBookSuggestions);
 
 /**
  * @route   GET /api/books/my

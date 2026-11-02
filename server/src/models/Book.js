@@ -205,6 +205,10 @@ bookSchema.index({ status: 1, condition: 1 });
 bookSchema.index({ status: 1, listingType: 1 });
 bookSchema.index({ status: 1, category: 1 });
 bookSchema.index({ status: 1, university: 1 });
+bookSchema.index({ status: 1, isbn: 1 });
+bookSchema.index({ status: 1, edition: 1 });
+bookSchema.index({ status: 1, publisher: 1 });
+bookSchema.index({ status: 1, course: 1, semester: 1 });
 
 const Book = mongoose.model('Book', bookSchema);
 

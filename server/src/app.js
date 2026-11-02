@@ -21,6 +21,8 @@ import conversationRoutes from './routes/conversationRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import smartRoutes from './routes/smartRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -110,6 +112,8 @@ app.use('/api/conversations', conversationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/smart', smartRoutes);
+app.use('/api/search', searchRoutes);
 
 // Root welcome endpoint
 app.get('/', (req, res) => {

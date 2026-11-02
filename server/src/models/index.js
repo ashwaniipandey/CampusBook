@@ -11,6 +11,8 @@ import Wishlist from './Wishlist.js';
 import Notification from './Notification.js';
 import Cart from './Cart.js';
 import Review from './Review.js';
+import UserBookView from './UserBookView.js';
+import SearchHistory from './SearchHistory.js';
 
 export {
   University,
@@ -26,6 +28,8 @@ export {
   Notification,
   Cart,
   Review,
+  UserBookView,
+  SearchHistory,
 };
 
 export default {
@@ -42,4 +46,6 @@ export default {
   Notification,
   Cart,
   Review,
+  UserBookView,
+  SearchHistory,
 };
