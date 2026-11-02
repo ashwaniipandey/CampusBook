@@ -3,24 +3,28 @@ import User from '../models/User.js';
 import University from '../models/University.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { sendOtpEmail } from '../utils/emailService.js';
+import { getJwtSecret } from '../config/jwt.js';
+
+const authCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  path: '/',
+});
 
 /**
  * Generate JWT and send response with httpOnly cookie
  */
 export const sendTokenResponse = (user, statusCode, res, message = 'Success') => {
-  const jwtSecret = process.env.JWT_SECRET || 'campusbook_jwt_secret_dev_key_2026_xyz';
   const token = jwt.sign(
     { id: user._id, role: user.role },
-    jwtSecret,
+    getJwtSecret(),
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
 
   const cookieOptions = {
+    ...authCookieOptions(),
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    path: '/',
   };
 
   res.cookie('token', token, cookieOptions);
@@ -28,8 +32,7 @@ export const sendTokenResponse = (user, statusCode, res, message = 'Success') =>
   res.status(statusCode).json({
     status: 'success',
     message,
-    token,
-    user,
+    user: typeof user.toJSON === 'function' ? user.toJSON() : user,
   });
 };
 
@@ -54,12 +57,6 @@ export const register = async (req, res, next) => {
     if (!name || !email || !password || !universityId) {
       return next(
         new AppError('Please provide name, email, password, and university', 400)
-      );
-    }
-
-    if (password.length < 6) {
-      return next(
-        new AppError('Password must be at least 6 characters long', 400)
       );
     }
 
@@ -157,31 +154,27 @@ export const verifyOtp = async (req, res, next) => {
       .populate('university');
 
     if (!user) {
-      return next(new AppError('User not found', 404));
+      return next(new AppError('Invalid or expired verification code.', 400));
     }
 
     if (user.isVerified) {
-      return res.status(200).json({
-        status: 'success',
-        message: 'Your account is already verified as a student!',
-        user,
-      });
+      return next(new AppError('Invalid or expired verification code.', 400));
     }
 
     if (!user.verificationOtp || !user.verificationOtpExpires) {
       return next(
-        new AppError('No verification code found. Please request a new one.', 400)
+        new AppError('Invalid or expired verification code.', 400)
       );
     }
 
     if (Date.now() > user.verificationOtpExpires.getTime()) {
       return next(
-        new AppError('Verification code has expired. Please request a new code.', 400)
+        new AppError('Invalid or expired verification code.', 400)
       );
     }
 
     if (user.verificationOtp !== otp.trim()) {
-      return next(new AppError('Invalid verification code. Please check and try again.', 400));
+      return next(new AppError('Invalid or expired verification code.', 400));
     }
 
     // Mark student as verified
@@ -214,32 +207,27 @@ export const resendOtp = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email: userEmail.toLowerCase().trim() });
-    if (!user) {
-      return next(new AppError('User with this email not found', 404));
+    if (user && !user.isVerified) {
+      const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.verificationOtp = newOtp;
+      user.verificationOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save({ validateBeforeSave: false });
+
+      try {
+        await sendOtpEmail({
+          to: user.email,
+          otp: newOtp,
+          type: 'verification',
+          userName: user.name,
+        });
+      } catch (error) {
+        console.error('Verification email delivery failed:', error.message);
+      }
     }
-
-    if (user.isVerified) {
-      return res.status(200).json({
-        status: 'success',
-        message: 'Account is already verified.',
-      });
-    }
-
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.verificationOtp = newOtp;
-    user.verificationOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
-    await user.save({ validateBeforeSave: false });
-
-    await sendOtpEmail({
-      to: user.email,
-      otp: newOtp,
-      type: 'verification',
-      userName: user.name,
-    });
 
     res.status(200).json({
       status: 'success',
-      message: 'New verification OTP generated. Please check server console.',
+      message: 'If an unverified account exists, a verification code will be sent.',
     });
   } catch (error) {
     next(error);
@@ -293,11 +281,8 @@ export const login = async (req, res, next) => {
  */
 export const logout = (req, res) => {
   res.cookie('token', 'none', {
+    ...authCookieOptions(),
     expires: new Date(Date.now() + 5 * 1000),
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    path: '/',
   });
 
   res.status(200).json({
@@ -418,16 +403,20 @@ export const forgotPassword = async (req, res, next) => {
     user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
     await user.save({ validateBeforeSave: false });
 
-    await sendOtpEmail({
-      to: user.email,
-      otp: resetOtp,
-      type: 'password_reset',
-      userName: user.name,
-    });
+    try {
+      await sendOtpEmail({
+        to: user.email,
+        otp: resetOtp,
+        type: 'password_reset',
+        userName: user.name,
+      });
+    } catch (error) {
+      console.error('Password reset email delivery failed:', error.message);
+    }
 
     res.status(200).json({
       status: 'success',
-      message: 'Password reset code dispatched. Please check your console/inbox.',
+      message: 'If an account with that email exists, a password reset code was sent.',
     });
   } catch (error) {
     next(error);
@@ -461,19 +450,19 @@ export const resetPassword = async (req, res, next) => {
       .populate('university');
 
     if (!user) {
-      return next(new AppError('Invalid or expired reset request', 400));
+      return next(new AppError('Invalid or expired reset request.', 400));
     }
 
     if (!user.resetPasswordOtp || !user.resetPasswordExpires) {
-      return next(new AppError('No reset request found for this account', 400));
+      return next(new AppError('Invalid or expired reset request.', 400));
     }
 
     if (Date.now() > user.resetPasswordExpires.getTime()) {
-      return next(new AppError('Reset code has expired. Please request a new one', 400));
+      return next(new AppError('Invalid or expired reset request.', 400));
     }
 
     if (user.resetPasswordOtp !== otp.trim()) {
-      return next(new AppError('Invalid reset code. Please check and try again.', 400));
+      return next(new AppError('Invalid or expired reset request.', 400));
     }
 
     // Set new password

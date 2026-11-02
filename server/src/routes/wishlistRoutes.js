@@ -5,11 +5,14 @@ import {
   removeFromWishlist,
 } from '../controllers/wishlistController.js';
 import { protect } from '../middlewares/auth.js';
+import { validateObjectIdParam } from '../middlewares/requestSecurity.js';
+import { validateAllowedQuery } from '../validations/requestValidation.js';
 
 const router = express.Router();
+router.param('bookId', validateObjectIdParam);
 
 // All wishlist routes require authentication
-router.use(protect);
+router.use(validateAllowedQuery(), protect);
 
 /**
  * @route   GET /api/wishlist
@@ -33,4 +36,3 @@ router.post('/:bookId', addToWishlist);
 router.delete('/:bookId', removeFromWishlist);
 
 export default router;
-

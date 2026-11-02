@@ -6,11 +6,14 @@ import {
   clearCart,
 } from '../controllers/cartController.js';
 import { protect } from '../middlewares/auth.js';
+import { validateObjectIdParam } from '../middlewares/requestSecurity.js';
+import { validateAllowedQuery } from '../validations/requestValidation.js';
 
 const router = express.Router();
+router.param('bookId', validateObjectIdParam);
 
 // All cart routes require authentication
-router.use(protect);
+router.use(validateAllowedQuery(), protect);
 
 /**
  * @route   GET /api/cart
@@ -41,4 +44,3 @@ router.delete('/:bookId', removeFromCart);
 router.delete('/', clearCart);
 
 export default router;
-

@@ -1,5 +1,6 @@
 import express from 'express';
 import Category from '../models/Category.js';
+import { validateAllowedQuery } from '../validations/requestValidation.js';
 
 const router = express.Router();
 
@@ -8,7 +9,7 @@ const router = express.Router();
  * GET /api/categories
  * Access: Public
  */
-router.get('/', async (req, res, next) => {
+router.get('/', validateAllowedQuery(), async (req, res, next) => {
   try {
     const categories = await Category.find({ isActive: true })
       .select('name slug description icon')
@@ -25,4 +26,3 @@ router.get('/', async (req, res, next) => {
 });
 
 export default router;
-

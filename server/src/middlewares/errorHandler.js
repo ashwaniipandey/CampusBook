@@ -16,41 +16,39 @@ export class AppError extends Error {
  * 404 Not Found Middleware
  */
 export const notFoundHandler = (req, res, next) => {
-  next(new AppError(`Cannot find ${req.method} ${req.originalUrl} on this server`, 404));
+  next(new AppError('The requested route was not found.', 404));
 };
 
 /**
  * Global Central Error Handling Middleware
  */
 export const errorHandler = (err, req, res, next) => {
-  let error = { ...err };
-  error.message = err.message;
-  error.name = err.name;
-  error.statusCode = err.statusCode || 500;
-  error.status = err.status || 'error';
+  const candidateStatusCode = Number(err.statusCode ?? err.status);
+  const statusCode = Number.isInteger(candidateStatusCode) &&
+    candidateStatusCode >= 400 && candidateStatusCode <= 599
+    ? candidateStatusCode
+    : 500;
+  let error = {
+    message: err.message,
+    name: err.name,
+    statusCode,
+    status: statusCode < 500 ? 'fail' : 'error',
+  };
 
-  // Handle Mongoose Bad ObjectId (CastError)
   if (err.name === 'CastError') {
-    const message = `Invalid ${err.path}: ${err.value}`;
-    error = new AppError(message, 400);
+    error = new AppError(`Invalid ${err.path}.`, 400);
   }
 
-  // Handle Mongoose Duplicate Key Error (E11000)
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue || {})[0] || 'field';
-    const value = err.keyValue ? err.keyValue[field] : '';
-    const message = `Duplicate value '${value}' for field '${field}'. Please use another value.`;
-    error = new AppError(message, 409);
+    error = new AppError(`A record with this ${field} already exists.`, 409);
   }
 
-  // Handle Mongoose Validation Error
   if (err.name === 'ValidationError') {
     const errors = Object.values(err.errors || {}).map((el) => el.message);
-    const message = `Validation error: ${errors.join('. ')}`;
-    error = new AppError(message, 400);
+    error = new AppError(`Validation error: ${errors.join('. ')}`, 400);
   }
 
-  // Handle JWT Errors
   if (err.name === 'JsonWebTokenError') {
     error = new AppError('Invalid authentication token. Please log in again.', 401);
   }
@@ -58,17 +56,30 @@ export const errorHandler = (err, req, res, next) => {
     error = new AppError('Your authentication token has expired. Please log in again.', 401);
   }
 
-  const isDev = process.env.NODE_ENV !== 'production';
+  if (err.type === 'entity.too.large') {
+    error = new AppError('Request body exceeds the 1 MB limit.', 413);
+  } else if (err instanceof SyntaxError && 'body' in err) {
+    error = new AppError('Request body contains invalid JSON.', 400);
+  }
 
-  res.status(error.statusCode || 500).json({
+  const isProduction = process.env.NODE_ENV === 'production';
+  const responseStatusCode = error.statusCode >= 500 ? 500 : error.statusCode;
+  const message = isProduction && responseStatusCode === 500
+    ? 'An unexpected error occurred.'
+    : error.message || 'Internal Server Error';
+
+  if (!isProduction) {
+    console.error(`${req.method} ${req.path}: ${err.name || 'Error'}`);
+  }
+
+  res.status(responseStatusCode).json({
     status: error.status || 'error',
-    message: error.message || 'Internal Server Error',
-    ...(isDev && {
-      error: err,
+    message,
+    ...(!isProduction && {
+      error: error.name,
       stack: err.stack,
     }),
   });
 };
 
 export default errorHandler;
-

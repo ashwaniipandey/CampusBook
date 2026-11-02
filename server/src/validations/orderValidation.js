@@ -25,6 +25,7 @@ export const createOrderSchema = z
       .optional()
       .default(''),
   })
+  .strict()
   .refine((data) => data.bookId || data.fromCart, {
     message: 'Either bookId or fromCart must be provided',
     path: ['bookId'],
@@ -36,7 +37,7 @@ export const updateOrderStatusSchema = z.object({
       message: 'Status must be one of: confirmed, completed, cancelled',
     }),
   }),
-});
+}).strict();
 
 export const validateCreateOrder = (req, res, next) => {
   try {
@@ -65,4 +66,3 @@ export const validateUpdateOrderStatus = (req, res, next) => {
     next(error);
   }
 };
-

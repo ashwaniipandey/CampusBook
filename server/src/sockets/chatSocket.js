@@ -6,9 +6,34 @@ import User from '../models/User.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { saveConversationMessage } from '../services/conversationMessageService.js';
 import { createNotification } from '../utils/notifications.js';
+import { getJwtSecret } from '../config/jwt.js';
+import { stripHtmlFromText } from '../middlewares/requestSecurity.js';
 
 const personalRoom = (userId) => `user:${userId}`;
 const conversationRoom = (conversationId) => `conversation:${conversationId}`;
+const MESSAGE_RATE_WINDOW_MS = 15 * 60 * 1000;
+const MESSAGE_RATE_LIMIT = 30;
+const messageRateWindows = new Map();
+const messageRateCleanup = setInterval(() => {
+  const now = Date.now();
+  for (const [userId, window] of messageRateWindows) {
+    if (now - window.startedAt >= MESSAGE_RATE_WINDOW_MS) messageRateWindows.delete(userId);
+  }
+}, MESSAGE_RATE_WINDOW_MS);
+messageRateCleanup.unref();
+
+const enforceSocketMessageLimit = (userId) => {
+  const now = Date.now();
+  const window = messageRateWindows.get(userId);
+  if (!window || now - window.startedAt >= MESSAGE_RATE_WINDOW_MS) {
+    messageRateWindows.set(userId, { startedAt: now, count: 1 });
+    return;
+  }
+  if (window.count >= MESSAGE_RATE_LIMIT) {
+    throw new AppError('Too many messages sent. Please wait before sending more.', 429);
+  }
+  window.count += 1;
+};
 
 const getCookie = (cookieHeader, name) => {
   if (!cookieHeader) return null;
@@ -50,10 +75,9 @@ export const configureChatSockets = (io) => {
       const token = getCookie(socket.handshake.headers.cookie, 'token');
       if (!token) return next(new Error('Authentication required'));
 
-      const jwtSecret = process.env.JWT_SECRET || 'campusbook_jwt_secret_dev_key_2026_xyz';
-      const decoded = jwt.verify(token, jwtSecret);
-      const user = await User.findById(decoded.id).select('_id name status');
-      if (!user || user.status === 'suspended') {
+      const decoded = jwt.verify(token, getJwtSecret());
+      const user = await User.findById(decoded.id).select('_id name status isBlocked');
+      if (!user || user.status === 'suspended' || user.isBlocked) {
         return next(new Error('Authenticated user is unavailable'));
       }
 
@@ -122,11 +146,19 @@ export const configureChatSockets = (io) => {
 
     socket.on('send_message', async (payload = {}, acknowledge) => {
       try {
-        const { conversationId, text } = payload;
-        if (typeof text !== 'string' || !text.trim()) {
+        enforceSocketMessageLimit(userId);
+        if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+          throw new AppError('Message payload must be an object.', 400);
+        }
+        const { conversationId, text: rawText } = payload;
+        if (typeof rawText !== 'string') {
           throw new AppError('Message text is required', 400);
         }
-        if (text.trim().length > 2000) {
+        const text = stripHtmlFromText(rawText);
+        if (!text) {
+          throw new AppError('Message text is required', 400);
+        }
+        if (text.length > 2000) {
           throw new AppError('Message cannot exceed 2000 characters', 400);
         }
 

@@ -30,41 +30,44 @@ import {
   exportOrders,
 } from '../controllers/adminController.js';
 import { authorize, protect } from '../middlewares/auth.js';
+import { validateObjectIdParam } from '../middlewares/requestSecurity.js';
+import { validateAdminQuery, validateAllowedQuery } from '../validations/requestValidation.js';
 
 const router = express.Router();
+router.param('id', validateObjectIdParam);
 
 router.use(protect, authorize('admin'));
 
-router.get('/stats', getStats);
-router.get('/analytics/activity', getActivity);
-router.get('/analytics/categories', getAnalyticsCategories);
-router.get('/analytics/universities', getAnalyticsUniversities);
-router.get('/recent', getRecent);
+router.get('/stats', validateAllowedQuery(), getStats);
+router.get('/analytics/activity', validateAdminQuery('activity'), getActivity);
+router.get('/analytics/categories', validateAllowedQuery(), getAnalyticsCategories);
+router.get('/analytics/universities', validateAllowedQuery(), getAnalyticsUniversities);
+router.get('/recent', validateAllowedQuery(), getRecent);
 
-router.get('/users', getUsers);
-router.patch('/users/:id/block', blockUser);
-router.patch('/users/:id/unblock', unblockUser);
-router.patch('/users/:id/verify', verifyUser);
-router.get('/books', getBooks);
-router.patch('/books/:id/approve', approveBook);
-router.patch('/books/:id/reject', rejectBook);
-router.delete('/books/:id', removeBook);
-router.get('/orders', getOrders);
-router.get('/exchanges', getExchanges);
-router.get('/donations', getDonations);
-router.get('/categories', getCategories);
-router.post('/categories', createCategory);
-router.get('/categories/:id', getCategory);
-router.put('/categories/:id', updateCategory);
-router.patch('/categories/:id', updateCategory);
-router.delete('/categories/:id', removeCategory);
-router.get('/universities', getUniversities);
-router.post('/universities', createUniversity);
-router.get('/universities/:id', getUniversity);
-router.put('/universities/:id', updateUniversity);
-router.patch('/universities/:id', updateUniversity);
-router.delete('/universities/:id', removeUniversity);
-router.get('/export/users', exportUsers);
-router.get('/export/orders', exportOrders);
+router.get('/users', validateAdminQuery('users'), getUsers);
+router.patch('/users/:id/block', validateAllowedQuery(), blockUser);
+router.patch('/users/:id/unblock', validateAllowedQuery(), unblockUser);
+router.patch('/users/:id/verify', validateAllowedQuery(), verifyUser);
+router.get('/books', validateAdminQuery('books'), getBooks);
+router.patch('/books/:id/approve', validateAllowedQuery(), approveBook);
+router.patch('/books/:id/reject', validateAllowedQuery(), rejectBook);
+router.delete('/books/:id', validateAllowedQuery(), removeBook);
+router.get('/orders', validateAdminQuery('orders'), getOrders);
+router.get('/exchanges', validateAdminQuery('exchanges'), getExchanges);
+router.get('/donations', validateAdminQuery('donations'), getDonations);
+router.get('/categories', validateAllowedQuery(), getCategories);
+router.post('/categories', validateAllowedQuery(), createCategory);
+router.get('/categories/:id', validateAllowedQuery(), getCategory);
+router.put('/categories/:id', validateAllowedQuery(), updateCategory);
+router.patch('/categories/:id', validateAllowedQuery(), updateCategory);
+router.delete('/categories/:id', validateAllowedQuery(), removeCategory);
+router.get('/universities', validateAllowedQuery(), getUniversities);
+router.post('/universities', validateAllowedQuery(), createUniversity);
+router.get('/universities/:id', validateAllowedQuery(), getUniversity);
+router.put('/universities/:id', validateAllowedQuery(), updateUniversity);
+router.patch('/universities/:id', validateAllowedQuery(), updateUniversity);
+router.delete('/universities/:id', validateAllowedQuery(), removeUniversity);
+router.get('/export/users', validateAllowedQuery(), exportUsers);
+router.get('/export/orders', validateAllowedQuery(), exportOrders);
 
 export default router;

@@ -13,22 +13,25 @@ import {
 } from '../controllers/authController.js';
 import { protect, authorize } from '../middlewares/auth.js';
 import { authLimiter, sensitiveAuthLimiter } from '../middlewares/rateLimiter.js';
+import { validateAuthBody } from '../validations/authValidation.js';
+import { validateAllowedQuery } from '../validations/requestValidation.js';
 
 const router = express.Router();
+router.use(validateAllowedQuery());
 
 // Public routes with rate limiting
-router.post('/register', authLimiter, register);
-router.post('/login', sensitiveAuthLimiter, login);
-router.post('/verify-otp', authLimiter, verifyOtp);
-router.post('/resend-otp', sensitiveAuthLimiter, resendOtp);
-router.post('/forgot-password', sensitiveAuthLimiter, forgotPassword);
-router.post('/reset-password', sensitiveAuthLimiter, resetPassword);
+router.post('/register', authLimiter, validateAuthBody('register'), register);
+router.post('/login', sensitiveAuthLimiter, validateAuthBody('login'), login);
+router.post('/verify-otp', sensitiveAuthLimiter, validateAuthBody('verifyOtp'), verifyOtp);
+router.post('/resend-otp', sensitiveAuthLimiter, validateAuthBody('resendOtp'), resendOtp);
+router.post('/forgot-password', sensitiveAuthLimiter, validateAuthBody('forgotPassword'), forgotPassword);
+router.post('/reset-password', sensitiveAuthLimiter, validateAuthBody('resetPassword'), resetPassword);
 router.post('/logout', logout);
 
 // Authenticated user routes
 router.get('/me', protect, getMe);
-router.put('/profile', protect, updateProfile);
-router.put('/change-password', protect, sensitiveAuthLimiter, changePassword);
+router.put('/profile', protect, validateAuthBody('profile'), updateProfile);
+router.put('/change-password', protect, sensitiveAuthLimiter, validateAuthBody('changePassword'), changePassword);
 
 // Role middleware test route (Admin only)
 router.get('/admin-check', protect, authorize('admin'), (req, res) => {
@@ -40,4 +43,3 @@ router.get('/admin-check', protect, authorize('admin'), (req, res) => {
 });
 
 export default router;
-

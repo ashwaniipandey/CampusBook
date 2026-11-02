@@ -9,8 +9,11 @@ import {
   validateCreateOrder,
   validateUpdateOrderStatus,
 } from '../validations/orderValidation.js';
+import { validateAllowedQuery, validateOrderQuery } from '../validations/requestValidation.js';
+import { validateObjectIdParam } from '../middlewares/requestSecurity.js';
 
 const router = express.Router();
+router.param('id', validateObjectIdParam);
 
 // All order routes require authentication
 router.use(protect);
@@ -20,21 +23,20 @@ router.use(protect);
  * @desc    Create a new order (single book or checkout from cart)
  * @access  Private
  */
-router.post('/', validateCreateOrder, createOrder);
+router.post('/', validateAllowedQuery(), validateCreateOrder, createOrder);
 
 /**
  * @route   GET /api/orders
  * @desc    Get current user's orders (?role=buying|selling&status=...)
  * @access  Private
  */
-router.get('/', getOrders);
+router.get('/', validateOrderQuery, getOrders);
 
 /**
  * @route   PATCH /api/orders/:id/status
  * @desc    Update order status (confirm, complete, cancel)
  * @access  Private
  */
-router.patch('/:id/status', validateUpdateOrderStatus, updateOrderStatus);
+router.patch('/:id/status', validateAllowedQuery(), validateUpdateOrderStatus, updateOrderStatus);
 
 export default router;
-

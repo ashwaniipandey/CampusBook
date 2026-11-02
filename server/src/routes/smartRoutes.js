@@ -8,14 +8,15 @@ import {
   getTrending,
 } from '../controllers/smartController.js';
 import { protect } from '../middlewares/auth.js';
+import { validateAllowedQuery } from '../validations/requestValidation.js';
 
 const router = express.Router();
 
-router.get('/trending', getTrending);
-router.get('/price-suggestion', getPriceSuggestionData);
-router.get('/platform-impact', getPlatformImpactData);
-router.get('/exchange-matches', protect, getExchangeMatchesData);
-router.get('/recommendations', protect, getRecommendations);
-router.get('/savings', protect, getSavings);
+router.get('/trending', validateAllowedQuery(['limit']), getTrending);
+router.get('/price-suggestion', validateAllowedQuery(['category', 'originalPrice', 'condition', 'edition', 'title']), getPriceSuggestionData);
+router.get('/platform-impact', validateAllowedQuery(), getPlatformImpactData);
+router.get('/exchange-matches', validateAllowedQuery(), protect, getExchangeMatchesData);
+router.get('/recommendations', validateAllowedQuery(['limit']), protect, getRecommendations);
+router.get('/savings', validateAllowedQuery(), protect, getSavings);
 
 export default router;

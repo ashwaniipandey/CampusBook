@@ -10,20 +10,33 @@ import {
 } from '../controllers/conversationController.js';
 import { protect } from '../middlewares/auth.js';
 import { uploadMessageImage } from '../middlewares/upload.js';
+import { chatLimiter, uploadLimiter } from '../middlewares/rateLimiter.js';
+import { sanitizeRequestInputs, validateObjectIdParam } from '../middlewares/requestSecurity.js';
+import {
+  validateAllowedQuery,
+  validateBody,
+  validateConversationListQuery,
+  validatePagedQuery,
+} from '../validations/requestValidation.js';
 
 const router = express.Router();
+router.param('id', validateObjectIdParam);
 
 router.use(protect);
 
-router.post('/', createConversation);
-router.get('/', getConversations);
-router.get('/:id/messages', requireConversationParticipant, getConversationMessages);
-router.post('/:id/messages', requireConversationParticipant, sendMessage);
-router.patch('/:id/read', requireConversationParticipant, markConversationRead);
+router.post('/', validateAllowedQuery(), validateBody('conversation'), createConversation);
+router.get('/', validateConversationListQuery, getConversations);
+router.get('/:id/messages', validatePagedQuery(['page', 'limit']), requireConversationParticipant, getConversationMessages);
+router.post('/:id/messages', validateAllowedQuery(), chatLimiter, requireConversationParticipant, validateBody('message'), sendMessage);
+router.patch('/:id/read', validateAllowedQuery(), requireConversationParticipant, markConversationRead);
 router.post(
   '/:id/image',
+  validateAllowedQuery(),
+  uploadLimiter,
   requireConversationParticipant,
   uploadMessageImage,
+  sanitizeRequestInputs,
+  validateBody('imageMessage'),
   uploadConversationImage
 );
 

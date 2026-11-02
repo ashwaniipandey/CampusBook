@@ -221,6 +221,13 @@ export const createOrder = async (req, res, next) => {
 export const getOrders = async (req, res, next) => {
   try {
     const { role, status } = req.query;
+    const allowedStatuses = ['placed', 'confirmed', 'ready_for_pickup', 'completed', 'cancelled'];
+    if (role !== undefined && !['buying', 'selling'].includes(role)) {
+      return next(new AppError('role must be buying or selling', 400));
+    }
+    if (status !== undefined && !allowedStatuses.includes(status)) {
+      return next(new AppError(`status must be one of: ${allowedStatuses.join(', ')}`, 400));
+    }
 
     let filter = {};
 

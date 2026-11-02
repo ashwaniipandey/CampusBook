@@ -1,5 +1,6 @@
 import express from 'express';
 import University from '../models/University.js';
+import { validateAllowedQuery } from '../validations/requestValidation.js';
 
 const router = express.Router();
 
@@ -7,7 +8,7 @@ const router = express.Router();
  * Get all active universities
  * GET /api/universities
  */
-router.get('/', async (req, res, next) => {
+router.get('/', validateAllowedQuery(), async (req, res, next) => {
   try {
     const universities = await University.find({ isActive: true })
       .select('name code domain city state country campuses')
@@ -24,4 +25,3 @@ router.get('/', async (req, res, next) => {
 });
 
 export default router;
-

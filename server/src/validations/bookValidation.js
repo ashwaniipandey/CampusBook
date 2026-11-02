@@ -18,15 +18,15 @@ export const createBookSchema = z
       .trim()
       .min(2, 'Author must be at least 2 characters long')
       .max(120, 'Author cannot exceed 120 characters'),
-    isbn: z.string().trim().optional().default(''),
+    isbn: z.string().trim().max(32).optional().default(''),
     category: z
       .string({ required_error: 'Category is required' })
       .refine((val) => objectIdRegex.test(val), {
         message: 'Invalid Category ID format',
       }),
-    subject: z.string().trim().optional().default(''),
-    course: z.string().trim().optional().default(''),
-    semester: z.string().trim().optional().default(''),
+    subject: z.string().trim().max(120).optional().default(''),
+    course: z.string().trim().max(120).optional().default(''),
+    semester: z.string().trim().max(60).optional().default(''),
     university: z
       .string()
       .refine((val) => !val || objectIdRegex.test(val), {
@@ -55,10 +55,11 @@ export const createBookSchema = z
       .min(10, 'Description must be at least 10 characters long')
       .max(2500, 'Description cannot exceed 2500 characters'),
     exchangePreferences: z.string().trim().max(500).optional().default(''),
-    edition: z.string().trim().optional().default('1st Edition'),
-    publisher: z.string().trim().optional().default(''),
-    publicationYear: z.coerce.number().optional(),
+    edition: z.string().trim().max(80).optional().default('1st Edition'),
+    publisher: z.string().trim().max(150).optional().default(''),
+    publicationYear: z.coerce.number().int().min(0).max(2100).optional(),
   })
+  .strict()
   .superRefine((data, ctx) => {
     const isNonSaleListing = data.listingType !== 'sell';
 
@@ -87,16 +88,16 @@ export const updateBookSchema = z
   .object({
     title: z.string().trim().min(2).max(200).optional(),
     author: z.string().trim().min(2).max(120).optional(),
-    isbn: z.string().trim().optional(),
+    isbn: z.string().trim().max(32).optional(),
     category: z
       .string()
       .refine((val) => objectIdRegex.test(val), {
         message: 'Invalid Category ID format',
       })
       .optional(),
-    subject: z.string().trim().optional(),
-    course: z.string().trim().optional(),
-    semester: z.string().trim().optional(),
+    subject: z.string().trim().max(120).optional(),
+    course: z.string().trim().max(120).optional(),
+    semester: z.string().trim().max(60).optional(),
     university: z
       .string()
       .refine((val) => objectIdRegex.test(val), {
@@ -109,14 +110,18 @@ export const updateBookSchema = z
     listingType: z.enum(['sell', 'exchange', 'donate']).optional(),
     description: z.string().trim().min(10).max(2500).optional(),
     exchangePreferences: z.string().trim().max(500).optional(),
-    edition: z.string().trim().optional(),
-    publisher: z.string().trim().optional(),
-    publicationYear: z.coerce.number().optional(),
+    edition: z.string().trim().max(80).optional(),
+    publisher: z.string().trim().max(150).optional(),
+    publicationYear: z.coerce.number().int().min(0).max(2100).optional(),
     status: z
       .enum(['pending', 'available', 'approved', 'reserved', 'sold', 'exchanged', 'donated'])
       .optional(),
-    removeImages: z.any().optional(),
+    removeImages: z.union([
+      z.array(z.string().max(2048)).max(5),
+      z.string().max(12000),
+    ]).optional(),
   })
+  .strict()
   .superRefine((data, ctx) => {
     const isNonSaleListing = data.listingType !== undefined && data.listingType !== 'sell';
 

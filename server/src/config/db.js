@@ -15,7 +15,7 @@ export const connectDB = async () => {
     console.log(` MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`);
     return conn;
   } catch (error) {
-    console.error(` Error connecting to MongoDB: ${error.message}`);
+    console.error(`Error connecting to MongoDB: ${error.name || 'connection failure'}`);
     throw error;
   }
 };
@@ -39,8 +39,7 @@ mongoose.connection.on('disconnected', () => {
 });
 
 mongoose.connection.on('error', (err) => {
-  console.error(`MongoDB connection error: ${err.message}`);
+  console.error(`MongoDB connection error: ${err.name || 'connection failure'}`);
 });
 
 export default connectDB;
-

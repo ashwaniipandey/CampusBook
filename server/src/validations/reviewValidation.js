@@ -19,7 +19,7 @@ export const createReviewSchema = z.object({
     .max(1000, 'Comment cannot exceed 1000 characters')
     .optional()
     .default(''),
-});
+}).strict();
 
 export const validateCreateReview = (req, res, next) => {
   try {
@@ -34,4 +34,3 @@ export const validateCreateReview = (req, res, next) => {
     next(error);
   }
 };
-

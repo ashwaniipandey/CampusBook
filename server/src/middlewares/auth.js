@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { AppError } from './errorHandler.js';
+import { getJwtSecret } from '../config/jwt.js';
 
 /**
  * Middleware to protect routes and authenticate users
@@ -26,8 +27,7 @@ export const protect = async (req, res, next) => {
     }
 
     // 2. Verify token
-    const jwtSecret = process.env.JWT_SECRET || 'campusbook_jwt_secret_dev_key_2026_xyz';
-    const decoded = jwt.verify(token, jwtSecret);
+    const decoded = jwt.verify(token, getJwtSecret());
 
     // 3. Check if user still exists
     const currentUser = await User.findById(decoded.id).populate('university');
@@ -114,17 +114,27 @@ export const optionalAuth = async (req, res, next) => {
       return next();
     }
 
-    const jwtSecret = process.env.JWT_SECRET || 'campusbook_jwt_secret_dev_key_2026_xyz';
-    const decoded = jwt.verify(token, jwtSecret);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, getJwtSecret());
+    } catch (error) {
+      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+        return next();
+      }
+      return next(error);
+    }
 
     const currentUser = await User.findById(decoded.id).populate('university');
-    if (currentUser && currentUser.status !== 'suspended') {
-      req.user = currentUser;
+    if (currentUser?.isBlocked) {
+      return next(new AppError('Your account has been blocked by an administrator. Please contact campus support.', 403));
     }
+    if (currentUser?.status === 'suspended') {
+      return next(new AppError('Your account has been suspended. Please contact support.', 403));
+    }
+    if (currentUser) req.user = currentUser;
     next();
   } catch (error) {
-    // If token verification fails, simply continue unauthenticated
-    next();
+    next(error);
   }
 };
 

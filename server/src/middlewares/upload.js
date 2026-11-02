@@ -28,6 +28,9 @@ const upload = multer({
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB per file
     files: 5, // Maximum 5 files
+    fields: 30,
+    fieldSize: 10 * 1024,
+    parts: 35,
   },
   fileFilter,
 });
@@ -37,6 +40,9 @@ const singleImageUpload = multer({
   limits: {
     fileSize: 5 * 1024 * 1024,
     files: 1,
+    fields: 5,
+    fieldSize: 10 * 1024,
+    parts: 6,
   },
   fileFilter,
 });

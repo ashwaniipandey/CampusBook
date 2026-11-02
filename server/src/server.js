@@ -1,14 +1,17 @@
 import http from 'http';
 import dotenv from 'dotenv';
 import { Server as SocketIOServer } from 'socket.io';
+import mongoose from 'mongoose';
 import app from './app.js';
 import connectDB from './config/db.js';
 import { configureChatSockets } from './sockets/chatSocket.js';
+import { getAllowedClientOrigins } from './utils/clientOrigins.js';
+import { getJwtSecret } from './config/jwt.js';
 
 // Load environment variables
 dotenv.config();
 
-const PORT = process.env.PORT || 5001;
+const PORT = Number(process.env.PORT || 5001);
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -16,9 +19,13 @@ const server = http.createServer(app);
 // Setup Socket.io
 const io = new SocketIOServer(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: getAllowedClientOrigins(),
     methods: ['GET', 'POST'],
     credentials: true,
+  },
+  allowRequest: (request, callback) => {
+    const origin = request.headers.origin;
+    callback(null, !origin || getAllowedClientOrigins().includes(origin));
   },
 });
 
@@ -30,6 +37,13 @@ app.set('io', io);
 // Start server
 const startServer = async () => {
   try {
+    getJwtSecret();
+    if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+      throw new Error('PORT must be a valid TCP port.');
+    }
+    if (process.env.NODE_ENV === 'production' && !getAllowedClientOrigins().length) {
+      throw new Error('CLIENT_URL must contain at least one allowed origin in production.');
+    }
     // Connect to MongoDB
     await connectDB();
 
@@ -38,26 +52,43 @@ const startServer = async () => {
       console.log(`🏥 Health Check available at http://localhost:${PORT}/api/health`);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error.message);
+    const message = error.message.replace(
+      /mongodb(?:\+srv)?:\/\/[^\s"'<>]+/gi,
+      '[redacted MongoDB URI]'
+    );
+    console.error('❌ Failed to start server:', message);
     process.exit(1);
   }
 };
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('UNHANDLED REJECTION! 💥 Shutting down...');
-  console.error(err.name, err.message);
-  server.close(() => {
-    process.exit(1);
-  });
-});
+let isShuttingDown = false;
+const shutdown = async (reason, error) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  if (error) console.error(`${reason}: ${error.message}`);
+  else console.log(`${reason}: closing server gracefully.`);
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('UNCAUGHT EXCEPTION! 💥 Shutting down...');
-  console.error(err.name, err.message);
-  process.exit(1);
-});
+  const forceExit = setTimeout(() => {
+    console.error('Graceful shutdown timed out.');
+    process.exit(1);
+  }, 10000);
+  forceExit.unref();
+
+  try {
+    await new Promise((resolve) => io.close(resolve));
+    await mongoose.disconnect();
+    clearTimeout(forceExit);
+    process.exit(error ? 1 : 0);
+  } catch (shutdownError) {
+    console.error(`Shutdown failed: ${shutdownError.message}`);
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
+process.on('unhandledRejection', (error) => void shutdown('Unhandled rejection', error));
+process.on('uncaughtException', (error) => void shutdown('Uncaught exception', error));
 
 startServer();
 
