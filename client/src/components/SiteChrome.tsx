@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { MotionPage } from '@/components/MotionEffects';
 
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -11,7 +12,7 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
   return (
     <>
       {!isAdminRoute && <Navbar />}
-      <main className="flex-1">{children}</main>
+      <MotionPage pageKey={pathname}>{children}</MotionPage>
       {!isAdminRoute && <Footer />}
     </>
   );

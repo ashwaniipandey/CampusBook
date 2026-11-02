@@ -5,6 +5,7 @@ import AdminDataTable, { AdminTableColumn, AdminTableFilter } from '@/components
 import AdminToast, { AdminToastState } from '@/components/AdminToast';
 import api from '@/lib/api';
 import { Book, DonationRequest, ExchangeRequest, Order, User } from '@/types';
+import { formatPrice } from '@/lib/pricing';
 
 type RequestKind = 'orders' | 'exchanges' | 'donations';
 type AdminRequest = Order | ExchangeRequest | DonationRequest;
@@ -81,7 +82,7 @@ export default function AdminRequestTable({ kind }: { kind: RequestKind }) {
       { key: 'order', header: 'Order', render: (row) => 'orderNumber' in row ? <div><p className="font-bold text-slate-900">{row.orderNumber || row._id.slice(-8)}</p><p className="text-xs text-slate-500">{row.book?.title || 'Book listing'}</p></div> : null },
       { key: 'buyer', header: 'Buyer', render: (row) => 'buyer' in row ? personName(row.buyer) : null },
       { key: 'seller', header: 'Seller', render: (row) => 'seller' in row ? personName(row.seller) : null },
-      { key: 'amount', header: 'Amount', render: (row) => 'amount' in row ? `$${Number(row.amount ?? row.price ?? 0).toFixed(2)}` : null },
+      { key: 'amount', header: 'Amount', render: (row) => 'amount' in row ? formatPrice(Number(row.amount ?? row.price ?? 0)) : null },
       { key: 'status', header: 'Status', render: (row) => statusBadge(statusOf(row)) },
       { key: 'date', header: 'Date', render: (row) => row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '—' },
     ]

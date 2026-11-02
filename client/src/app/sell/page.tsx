@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import api from '@/lib/api';
+import { formatPrice } from '@/lib/pricing';
 import { University, Category, Book, BookCondition, ListingType, SmartPriceSuggestion } from '@/types';
 import {
   BookOpen,
@@ -368,7 +369,7 @@ function SellBookWizard() {
       if (formData.listingType === 'donate') {
         // Must be 0
         if (sell !== 0) {
-          errors.sellingPrice = 'Price must be $0 for donation listings.';
+          errors.sellingPrice = 'Price must be ₹0 for donation listings.';
         }
       } else {
         if (formData.sellingPrice === '' || isNaN(sell) || sell < 0) {
@@ -989,7 +990,7 @@ function SellBookWizard() {
                   {
                     type: 'donate' as ListingType,
                     title: 'Free Donation',
-                    desc: 'Give freely to a junior student in need ($0 cost).',
+                    desc: 'Give freely to a junior student in need (₹0 cost).',
                     badge: '100% Free Karma',
                   },
                 ].map((item) => (
@@ -1049,11 +1050,11 @@ function SellBookWizard() {
               {/* Original Price */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Original Retail Price ($) <span className="text-rose-500">*</span>
+                  Original Retail Price (₹) <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 font-bold text-sm">
-                    $
+                    ₹
                   </span>
                   <input
                     type="number"
@@ -1076,11 +1077,11 @@ function SellBookWizard() {
               {/* Selling Price */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Selling Price ($) <span className="text-rose-500">*</span>
+                  Selling Price (₹) <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 font-bold text-sm">
-                    $
+                    ₹
                   </span>
                   <input
                     type="number"
@@ -1098,7 +1099,7 @@ function SellBookWizard() {
                 </div>
                 {formData.listingType === 'donate' ? (
                   <p className="text-xs text-emerald-700 font-medium mt-1">
-                    Free donation mode sets price to $0.00 automatically.
+                    Free donation mode sets price to ₹0.00 automatically.
                   </p>
                 ) : (
                   stepErrors.sellingPrice && (
@@ -1123,9 +1124,9 @@ function SellBookWizard() {
                     ) : priceSuggestion ? (
                       <>
                         <p className="mt-2 text-2xl font-extrabold text-slate-900">
-                          ${priceSuggestion.suggested.toFixed(2)}
+                          {formatPrice(priceSuggestion.suggested)}
                           <span className="ml-2 text-xs font-medium text-slate-500">
-                            range ${priceSuggestion.min.toFixed(2)}–${priceSuggestion.max.toFixed(2)}
+                            range {formatPrice(priceSuggestion.min)}–{formatPrice(priceSuggestion.max)}
                           </span>
                         </p>
                         <p className="mt-1 text-xs text-slate-600">
@@ -1179,8 +1180,7 @@ function SellBookWizard() {
                         Number(formData.originalPrice)) *
                         100
                     )}
-                    % OFF (You save fellow students $
-                    {(Number(formData.originalPrice) - Number(formData.sellingPrice)).toFixed(2)})
+                    % OFF (You save fellow students {formatPrice(Number(formData.originalPrice) - Number(formData.sellingPrice))})
                   </span>
                 </div>
               )}
@@ -1270,11 +1270,11 @@ function SellBookWizard() {
                     ) : (
                       <div>
                         <div className="text-2xl font-black text-campus-700">
-                          ${Number(formData.sellingPrice || 0).toFixed(2)}
+                          {formatPrice(Number(formData.sellingPrice || 0))}
                         </div>
                         {Number(formData.originalPrice) > 0 && (
                           <div className="text-xs text-slate-400 line-through">
-                            ${Number(formData.originalPrice).toFixed(2)}
+                            {formatPrice(Number(formData.originalPrice))}
                           </div>
                         )}
                       </div>

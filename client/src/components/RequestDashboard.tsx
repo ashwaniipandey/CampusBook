@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { BookOpen, CheckCircle2, LoaderCircle, MessageCircle, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
+import { MotionDialog } from '@/components/MotionEffects';
 import {
   Book,
   BookImage,
@@ -376,10 +377,12 @@ export default function RequestDashboard({ kind }: { kind: RequestKind }) {
       </div>
 
       {pendingAction && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4" role="presentation" onMouseDown={(event) => {
-          if (event.target === event.currentTarget && !updatingId) setPendingAction(null);
-        }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="request-action-title" className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+        <MotionDialog
+          labelledBy="request-action-title"
+          onClose={() => setPendingAction(null)}
+          closeDisabled={Boolean(updatingId)}
+          panelClassName="max-w-sm p-6"
+        >
             <div className="flex items-start justify-between gap-4">
               <h2 id="request-action-title" className="text-lg font-extrabold text-slate-900">
                 {pendingAction.status === 'accepted' ? `Accept this ${label.toLowerCase()} request?`
@@ -401,8 +404,7 @@ export default function RequestDashboard({ kind }: { kind: RequestKind }) {
                 Confirm
               </button>
             </div>
-          </section>
-        </div>
+        </MotionDialog>
       )}
     </main>
   );

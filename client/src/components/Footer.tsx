@@ -28,23 +28,21 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-3">Marketplace</h4>
             <ul className="space-y-2 text-xs">
-              <li><Link href="#browse" className="hover:text-white transition">Buy Textbooks</Link></li>
-              <li><Link href="#list-book" className="hover:text-white transition">Sell Used Books</Link></li>
-              <li><Link href="#exchange" className="hover:text-white transition">Book Exchange</Link></li>
-              <li><Link href="#donations" className="hover:text-white transition">Free Donations</Link></li>
+              <li><Link href="/explore" className="hover:text-white transition">Explore Books</Link></li>
+              <li><Link href="/sell" className="hover:text-white transition">Sell a Book</Link></li>
+              <li><Link href="/explore?listingType=exchange" className="hover:text-white transition">Book Exchange</Link></li>
+              <li><Link href="/explore?listingType=donate" className="hover:text-white transition">Free Donations</Link></li>
             </ul>
           </div>
 
-          {/* Supported Campuses */}
+          {/* Student resources */}
           <div>
-            <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-3">Campuses</h4>
+            <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-3">Student resources</h4>
             <ul className="space-y-2 text-xs">
-              <li>Stanford University</li>
-              <li>Massachusetts Institute of Technology</li>
-              <li>UC Berkeley</li>
-              <li>Harvard University</li>
-              <li>University of Washington</li>
-              <li>UT Austin</li>
+              <li><Link href="/explore" className="hover:text-white transition">Browse categories</Link></li>
+              <li><Link href="/exchange-matches" className="hover:text-white transition">Exchange matches</Link></li>
+              <li><Link href="/messages" className="hover:text-white transition">Messages</Link></li>
+              <li><Link href="/dashboard" className="hover:text-white transition">Student dashboard</Link></li>
             </ul>
           </div>
 
@@ -52,10 +50,10 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-3">Safety & Trust</h4>
             <ul className="space-y-2 text-xs">
-              <li>Campus Handover Guidelines</li>
-              <li>Student Verification Policy</li>
-              <li>Fair Pricing Standards</li>
-              <li>Honor Code & Trust</li>
+              <li><Link href="/signup" className="hover:text-white transition">Student verification</Link></li>
+              <li><Link href="/explore" className="hover:text-white transition">Fair campus pricing</Link></li>
+              <li><Link href="/messages" className="hover:text-white transition">Arrange a safe handover</Link></li>
+              <li><Link href="/profile" className="hover:text-white transition">Your profile</Link></li>
             </ul>
           </div>
         </div>
@@ -72,4 +70,3 @@ export default function Footer() {
     </footer>
   );
 }
-

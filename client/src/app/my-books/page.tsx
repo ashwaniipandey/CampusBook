@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import api from '@/lib/api';
 import { Book, BookStatus } from '@/types';
+import { formatPrice, getBookPrice } from '@/lib/pricing';
+import { MotionDialog } from '@/components/MotionEffects';
 import {
   BookOpen,
   PlusCircle,
@@ -462,7 +464,7 @@ export default function MyBooksPage() {
                         <div className="text-right">
                           {book.listingType === 'donate' ? (
                             <span className="text-sm font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
-                              $0.00 FREE
+                              Free
                             </span>
                           ) : book.listingType === 'exchange' ? (
                             <span className="text-sm font-extrabold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">
@@ -471,11 +473,11 @@ export default function MyBooksPage() {
                           ) : (
                             <div className="flex items-baseline gap-1.5">
                               <span className="text-lg font-black text-campus-700">
-                                ${Number(book.sellingPrice || 0).toFixed(2)}
+                                {formatPrice(getBookPrice(book))}
                               </span>
                               {Number(book.originalPrice) > 0 && (
                                 <span className="text-xs text-slate-400 line-through">
-                                  ${Number(book.originalPrice).toFixed(2)}
+                                  {formatPrice(book.originalPrice)}
                                 </span>
                               )}
                             </div>
@@ -538,13 +540,17 @@ export default function MyBooksPage() {
 
         {/* Delete Confirmation Modal */}
         {deletingId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+          <MotionDialog
+            labelledBy="delete-book-title"
+            onClose={() => setDeletingId(null)}
+            closeDisabled={isDeleting}
+            panelClassName="max-w-md space-y-4 border border-slate-200 p-6"
+          >
               <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
                 <Trash2 className="w-6 h-6" />
               </div>
               <div className="text-center">
-                <h3 className="text-lg font-bold text-slate-900">Delete Book Listing?</h3>
+                <h3 id="delete-book-title" className="text-lg font-bold text-slate-900">Delete Book Listing?</h3>
                 <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
                   Are you sure you want to remove this book from the campus marketplace? This action
                   is permanent and cannot be undone. Associated photos will also be cleared.
@@ -575,8 +581,7 @@ export default function MyBooksPage() {
                   )}
                 </button>
               </div>
-            </div>
-          </div>
+          </MotionDialog>
         )}
       </div>
     </ProtectedRoute>

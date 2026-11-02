@@ -7,7 +7,8 @@ import AdminDataTable, { AdminTableColumn } from '@/components/AdminDataTable';
 import AdminToast, { AdminToastState } from '@/components/AdminToast';
 import api from '@/lib/api';
 import { Book, BookImage } from '@/types';
-import { getBookPrice } from '@/lib/pricing';
+import { formatPrice, getBookPrice } from '@/lib/pricing';
+import { MotionDialog } from '@/components/MotionEffects';
 
 type BookStatusFilter = '' | 'pending' | 'approved' | 'rejected' | 'sold';
 
@@ -117,7 +118,7 @@ export default function AdminBooksPage() {
       ),
     },
     { key: 'seller', header: 'Seller', render: (book) => <span className="font-medium">{getName(book.seller)}</span> },
-    { key: 'price', header: 'Price', render: (book) => <span className="font-bold text-slate-900">{book.listingType === 'donate' ? 'Free' : `$${getBookPrice(book).toFixed(2)}`}</span> },
+    { key: 'price', header: 'Price', render: (book) => <span className="font-bold text-slate-900">{book.listingType === 'donate' ? 'Free' : formatPrice(getBookPrice(book))}</span> },
     { key: 'listingType', header: 'Listing', render: (book) => <span className="capitalize">{book.listingType}</span> },
     { key: 'status', header: 'Status', render: (book) => <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold capitalize ${statusStyle(book.status)}`}>{book.status}</span> },
   ];
@@ -171,8 +172,12 @@ export default function AdminBooksPage() {
       />
 
       {rejectingBook && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/60 p-4" role="dialog" aria-modal="true" aria-labelledby="reject-book-title">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
+        <MotionDialog
+          labelledBy="reject-book-title"
+          onClose={() => setRejectingBook(null)}
+          closeDisabled={actionId === rejectingBook._id}
+          panelClassName="max-w-lg p-5 sm:p-6"
+        >
             <h3 id="reject-book-title" className="text-lg font-extrabold text-slate-900">Reject listing</h3>
             <p className="mt-1 text-sm text-slate-500">Add an optional reason for “{rejectingBook.title}”. The seller will be notified.</p>
             <textarea value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)} maxLength={500} rows={4} placeholder="Reason for rejection…" className="mt-4 w-full rounded-xl border border-slate-300 p-3 text-sm text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
@@ -183,8 +188,7 @@ export default function AdminBooksPage() {
                 {actionId === rejectingBook._id && <LoaderCircle className="h-4 w-4 animate-spin" />} Reject listing
               </button>
             </div>
-          </div>
-        </div>
+        </MotionDialog>
       )}
       <AdminToast toast={toast} />
     </div>

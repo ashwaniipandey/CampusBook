@@ -1,597 +1,599 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  Search,
-  BookOpen,
   ArrowLeftRight,
-  HeartHandshake,
-  DollarSign,
-  GraduationCap,
-  MapPin,
-  Star,
-  CheckCircle,
-  Sparkles,
   ArrowRight,
-  BookMarked,
-  Users,
+  BadgeDollarSign,
+  BookOpen,
+  CheckCircle2,
+  GraduationCap,
+  HeartHandshake,
+  Leaf,
+  MapPin,
+  MessageCircle,
+  Search,
   ShieldCheck,
-  Tag,
+  Sparkles,
+  Users,
 } from 'lucide-react';
-import api from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
 import SearchAutocomplete from '@/components/SearchAutocomplete';
-import { Book } from '@/types';
-import { getBookPrice } from '@/lib/pricing';
+import { useAuth } from '@/context/AuthContext';
+import api from '@/lib/api';
+import { formatPrice, getBookPrice } from '@/lib/pricing';
+import { MotionCard, MotionSection } from '@/components/MotionEffects';
+import { Book, Category, University } from '@/types';
 
-// Preview books matching the seed data
-const sampleBooks = [
+interface PublicStats {
+  students: number;
+  booksListed: number;
+  universities: number;
+  booksReused: number;
+  co2SavedKg: number;
+}
+
+interface CategoryCount {
+  _id: string;
+  count: number;
+}
+
+function SkeletonGrid({ count = 4 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      {Array.from({ length: count }, (_, index) => (
+        <div key={index} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          <div className="aspect-[4/3] animate-pulse bg-slate-200" />
+          <div className="space-y-2 p-4">
+            <div className="h-4 w-4/5 animate-pulse rounded bg-slate-200" />
+            <div className="h-3 w-2/3 animate-pulse rounded bg-slate-100" />
+            <div className="h-4 w-1/3 animate-pulse rounded bg-slate-100" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SectionError({ message }: { message: string }) {
+  return (
+    <div role="status" className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800">
+      {message}
+    </div>
+  );
+}
+
+function BookCard({ book }: { book: Book }) {
+  const image = book.images?.[0];
+  const imageUrl = image ? (typeof image === 'string' ? image : image.url) : '';
+  const categoryName = typeof book.category === 'object' ? book.category.name : '';
+  const universityName = typeof book.university === 'object' ? book.university.name : '';
+  const price = getBookPrice(book);
+
+  return (
+    <MotionCard className="h-full">
+      <Link
+        href={`/books/${book._id}`}
+        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-campus-300 hover:shadow-lg"
+      >
+      <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={`Cover of ${book.title}`}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-slate-300">
+            <BookOpen className="h-12 w-12" aria-hidden="true" />
+          </div>
+        )}
+        {book.listingType === 'donate' && (
+          <span className="absolute left-3 top-3 rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white shadow">
+            Free
+          </span>
+        )}
+        {book.listingType === 'exchange' && (
+          <span className="absolute left-3 top-3 rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white shadow">
+            Exchange
+          </span>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col p-4">
+        {categoryName && <p className="text-[11px] font-bold uppercase tracking-wide text-campus-700">{categoryName}</p>}
+        <h3 className="mt-1 line-clamp-2 min-h-10 text-sm font-bold text-slate-900">{book.title}</h3>
+        <p className="mt-1 line-clamp-1 text-xs text-slate-500">{book.author}</p>
+        <div className="mt-auto flex items-end justify-between gap-2 pt-4">
+          <span className="font-extrabold text-campus-800">
+            {book.listingType === 'donate' ? 'Free' : book.listingType === 'exchange' ? 'Trade' : formatPrice(price)}
+          </span>
+          <span className="max-w-[55%] truncate text-right text-[11px] text-slate-500">
+            {universityName || book.condition}
+          </span>
+        </div>
+      </div>
+      </Link>
+    </MotionCard>
+  );
+}
+
+const smartFeatures = [
   {
-    id: '1',
-    title: 'Introduction to Algorithms (CLRS)',
-    author: 'Cormen, Leiserson, Rivest, Stein',
-    edition: '4th Edition',
-    category: 'Computer Science',
-    university: 'MIT',
-    campusCity: 'Cambridge, MA',
-    seller: 'Emily Zhang',
-    sellerRating: 5.0,
-    listingType: 'sell',
-    price: 65,
-    originalPrice: 135,
-    condition: 'Like New',
-    imageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500',
+    icon: Sparkles,
+    title: 'Personalized recommendations',
+    description: 'Find books matched to your course, campus, wishlist, and interests.',
+    href: '/dashboard',
   },
   {
-    id: '2',
-    title: 'Clean Code: Agile Software Craftsmanship',
-    author: 'Robert C. Martin',
-    edition: '1st Edition',
-    category: 'Computer Science',
-    university: 'Stanford',
-    campusCity: 'Stanford, CA',
-    seller: 'Alex Johnson',
-    sellerRating: 4.9,
-    listingType: 'sell',
-    price: 25,
-    originalPrice: 55,
-    condition: 'Good',
-    imageUrl: 'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=500',
+    icon: BadgeDollarSign,
+    title: 'Fair price suggestions',
+    description: 'Get a data-informed price range from comparable campus listings.',
+    href: '/sell',
   },
   {
-    id: '3',
-    title: 'Operating System Concepts (Dinosaur Book)',
-    author: 'Silberschatz, Galvin, Gagne',
-    edition: '10th Edition',
-    category: 'Computer Science',
-    university: 'UC Berkeley',
-    campusCity: 'Berkeley, CA',
-    seller: 'Marcus Williams',
-    sellerRating: 4.8,
-    listingType: 'exchange',
-    price: 0,
-    originalPrice: 120,
-    exchangeFor: 'Kurose Networks or DB Systems',
-    condition: 'Good',
-    imageUrl: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500',
+    icon: ArrowLeftRight,
+    title: 'Exchange matching',
+    description: 'Discover students whose book needs line up with your own.',
+    href: '/exchange-matches',
   },
   {
-    id: '4',
-    title: 'Campbell Biology (Pre-Med Essential)',
-    author: 'Urry, Cain, Wasserman',
-    edition: '12th Edition',
-    category: 'Biology & Life Sciences',
-    university: 'Harvard',
-    campusCity: 'Cambridge, MA',
-    seller: 'Sophia Patel',
-    sellerRating: 4.95,
-    listingType: 'sell',
-    price: 80,
-    originalPrice: 220,
-    condition: 'Like New',
-    imageUrl: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=500',
+    icon: Leaf,
+    title: 'Savings and impact',
+    description: 'See the money you save and the books you help keep in circulation.',
+    href: '/dashboard',
   },
   {
-    id: '5',
-    title: 'Organic Chemistry as a Second Language',
-    author: 'David R. Klein',
-    edition: '5th Edition',
-    category: 'Chemistry',
-    university: 'Harvard',
-    campusCity: 'Cambridge, MA',
-    seller: 'Sophia Patel',
-    sellerRating: 4.95,
-    listingType: 'donate',
-    price: 0,
-    originalPrice: 45,
-    condition: 'Like New',
-    imageUrl: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=500',
+    icon: Search,
+    title: 'Smarter search',
+    description: 'Find titles, authors, and ISBNs with quick suggestions and filters.',
+    href: '/explore',
   },
   {
-    id: '6',
-    title: 'Calculus: Early Transcendentals',
-    author: 'James Stewart',
-    edition: '8th Edition',
-    category: 'Mathematics',
-    university: 'Stanford',
-    campusCity: 'Stanford, CA',
-    seller: 'Liam Chen',
-    sellerRating: 5.0,
-    listingType: 'sell',
-    price: 35,
-    originalPrice: 150,
-    condition: 'Good',
-    imageUrl: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500',
+    icon: MessageCircle,
+    title: 'Campus messaging',
+    description: 'Coordinate trades and safe handovers directly with other students.',
+    href: '/messages',
+  },
+];
+
+const sampleTestimonials = [
+  {
+    quote: 'I found the book I needed for class and arranged a quick campus pickup.',
+    attribution: 'Sample student story',
   },
   {
-    id: '7',
-    title: 'Introduction to Electrodynamics',
-    author: 'David J. Griffiths',
-    edition: '4th Edition',
-    category: 'Physics',
-    university: 'MIT',
-    campusCity: 'Cambridge, MA',
-    seller: 'Ava Thompson',
-    sellerRating: 4.9,
-    listingType: 'exchange',
-    price: 0,
-    originalPrice: 95,
-    exchangeFor: 'Griffiths Quantum Mechanics',
-    condition: 'Like New',
-    imageUrl: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=500',
+    quote: 'Passing my textbooks on helped another student and cleared my shelf.',
+    attribution: 'Sample community story',
   },
   {
-    id: '8',
-    title: 'Justice: What\'s the Right Thing to Do?',
-    author: 'Michael J. Sandel',
-    edition: '1st Edition',
-    category: 'Humanities',
-    university: 'Harvard',
-    campusCity: 'Cambridge, MA',
-    seller: 'Hannah Martinez',
-    sellerRating: 5.0,
-    listingType: 'donate',
-    price: 0,
-    originalPrice: 30,
-    condition: 'Good',
-    imageUrl: 'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=500',
+    quote: 'The exchange made it easy to trade a book I had for one I needed.',
+    attribution: 'Sample exchange story',
   },
 ];
 
 export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const [filterType, setFilterType] = useState<'all' | 'sell' | 'exchange' | 'donate'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUniversity, setSelectedUniversity] = useState('all');
-  const [platformImpact, setPlatformImpact] = useState<{
-    impact: { booksReused: number; estimatedCo2SavedKg: number; treesSaved: number };
-    totalSaved: number;
-    students?: number;
-  } | null>(null);
-  const [impactLoading, setImpactLoading] = useState(true);
+  const [selectedUniversity, setSelectedUniversity] = useState('');
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [universityError, setUniversityError] = useState('');
+  const [stats, setStats] = useState<PublicStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryCounts, setCategoryCounts] = useState<CategoryCount[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState('');
   const [trendingBooks, setTrendingBooks] = useState<Book[]>([]);
   const [trendingLoading, setTrendingLoading] = useState(true);
-  const [impactError, setImpactError] = useState('');
   const [trendingError, setTrendingError] = useState('');
-  const [searchError, setSearchError] = useState('');
+  const [exchangeBooks, setExchangeBooks] = useState<Book[]>([]);
+  const [donationBooks, setDonationBooks] = useState<Book[]>([]);
+  const [highlightsLoading, setHighlightsLoading] = useState(true);
+  const [highlightsError, setHighlightsError] = useState('');
 
   useEffect(() => {
-    api.getSmartPlatformImpact()
-      .then(setPlatformImpact)
-      .catch((error: unknown) => setImpactError(error instanceof Error ? error.message : 'Unable to load platform impact.'))
-      .finally(() => setImpactLoading(false));
+    let active = true;
+    api.getUniversities()
+      .then((response) => {
+        if (active) setUniversities(response.universities || []);
+      })
+      .catch((error: unknown) => {
+        if (active) setUniversityError(error instanceof Error ? error.message : 'Unable to load universities.');
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) return;
-    setTrendingLoading(true);
-    api.getSmartTrending()
-      .then((response) => setTrendingBooks(response.books || []))
-      .catch((error: unknown) => setTrendingError(error instanceof Error ? error.message : 'Unable to load trending books.'))
-      .finally(() => setTrendingLoading(false));
-  }, [isAuthenticated]);
+    let active = true;
+    api.getPublicStats()
+      .then((response) => {
+        if (active) setStats(response);
+      })
+      .catch((error: unknown) => {
+        if (active) setStatsError(error instanceof Error ? error.message : 'Unable to load community stats.');
+      })
+      .finally(() => {
+        if (active) setStatsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const handleHeroSearch = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const term = searchQuery.trim();
-    if (isAuthenticated && term) {
-      try {
-        await api.addRecentSearch(term);
-        setSearchError('');
-      } catch (error) {
-        setSearchError(error instanceof Error ? error.message : 'Unable to save this recent search.');
-      }
-    }
+  useEffect(() => {
+    let active = true;
+    Promise.all([api.getCategories(), api.getFiltersMeta()])
+      .then(([categoryResponse, filtersResponse]) => {
+        if (active) {
+          setCategories(categoryResponse.categories || []);
+          setCategoryCounts(filtersResponse.categoryCounts || []);
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) setCategoriesError(error instanceof Error ? error.message : 'Unable to load categories.');
+      })
+      .finally(() => {
+        if (active) setCategoriesLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    api.getSmartTrending()
+      .then((response) => {
+        if (active) setTrendingBooks(response.books || []);
+      })
+      .catch((error: unknown) => {
+        if (active) setTrendingError(error instanceof Error ? error.message : 'Unable to load trending books.');
+      })
+      .finally(() => {
+        if (active) setTrendingLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      api.getBooks({ listingType: 'exchange', limit: 3, sort: 'popular' }),
+      api.getBooks({ listingType: 'donate', limit: 3, sort: 'popular' }),
+    ])
+      .then(([exchangeResponse, donationResponse]) => {
+        if (active) {
+          setExchangeBooks(exchangeResponse.books || []);
+          setDonationBooks(donationResponse.books || []);
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) setHighlightsError(error instanceof Error ? error.message : 'Unable to load exchange and donation listings.');
+      })
+      .finally(() => {
+        if (active) setHighlightsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const categoryCountById = useMemo(
+    () => new Map(categoryCounts.map((item) => [item._id, item.count])),
+    [categoryCounts]
+  );
+
+  const goToExplore = (query = searchQuery) => {
     const params = new URLSearchParams();
-    if (term) params.set('q', term);
-    router.push(`/explore${params.toString() ? `?${params.toString()}` : ''}`);
+    if (query.trim()) params.set('q', query.trim());
+    if (selectedUniversity) params.set('university', selectedUniversity);
+    router.push(`/explore${params.size ? `?${params.toString()}` : ''}`);
   };
 
-  const filteredBooks = sampleBooks.filter((book) => {
-    const matchesType = filterType === 'all' || book.listingType === filterType;
-    const matchesSearch =
-      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesUni = selectedUniversity === 'all' || book.university.toLowerCase() === selectedUniversity.toLowerCase();
-    return matchesType && matchesSearch && matchesUni;
-  });
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    goToExplore();
+  };
 
   return (
-    <div className="space-y-16 pb-20">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/80 via-white to-slate-50 pt-12 pb-20 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/80 text-emerald-800 text-xs sm:text-sm font-semibold shadow-xs">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
-            <span>Peer-to-Peer Campus Textbook Network • Phase 2 Live</span>
-          </div>
-
-          {/* Heading */}
-          <div className="max-w-3xl mx-auto space-y-4">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
-              Buy, Sell, Exchange & Donate{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-campus-600 to-emerald-800">
-                Textbooks on Campus
-              </span>
+    <main className="overflow-hidden">
+      <MotionSection className="relative isolate border-b border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-green-50">
+        <div className="absolute -right-32 -top-32 -z-10 h-96 w-96 rounded-full bg-emerald-100/70 blur-3xl" />
+        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.05fr_.95fr] lg:px-8 lg:py-24">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1.5 text-xs font-bold text-campus-800 shadow-sm">
+              <ShieldCheck className="h-4 w-4 text-campus-600" />
+              The student-to-student book marketplace
+            </span>
+            <h1 className="mt-6 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+              Your Next Chapter Starts With a{' '}
+              <span className="text-campus-700">Pre-Loved Book</span>
             </h1>
-            <p className="text-base sm:text-lg text-slate-600 leading-relaxed">
-              Stop overpaying at college bookstores. Connect directly with verified classmates at your university for
-              affordable course materials, instant swaps, and free textbook donations.
+            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+              Find affordable course books from students around your campus. Buy, exchange, or pass on the books you no longer need.
             </p>
-          </div>
 
-          {/* Search Box Card */}
-          <form
-            onSubmit={handleHeroSearch}
-            className="max-w-4xl mx-auto bg-white p-3 sm:p-4 rounded-2xl shadow-xl border border-slate-200/80 text-left"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-              {/* Text Search */}
-              <div className="md:col-span-6 relative">
+            <form onSubmit={handleSearchSubmit} className="mt-8 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl shadow-emerald-900/5 sm:p-4">
+              <div className="grid gap-3 md:grid-cols-[1fr_auto]">
                 <SearchAutocomplete
                   value={searchQuery}
                   onChange={setSearchQuery}
-                  onSearch={(term) => {
-                    setSearchQuery(term);
-                    const params = new URLSearchParams({ q: term });
-                    router.push(`/explore?${params.toString()}`);
-                  }}
-                  inputClassName="py-3 pl-11"
-                  placeholder="Search book title, author, course code, or ISBN..."
+                  onSearch={goToExplore}
+                  placeholder="Search title, author, course, or ISBN"
+                  inputClassName="py-3.5"
+                />
+                <label className="relative block">
+                  <GraduationCap className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <select
+                    value={selectedUniversity}
+                    onChange={(event) => setSelectedUniversity(event.target.value)}
+                    aria-label="Filter by university"
+                    className="w-full min-w-0 rounded-xl border border-slate-200 bg-white py-3.5 pl-10 pr-8 text-sm text-slate-800 focus:border-campus-400 focus:outline-none focus:ring-2 focus:ring-campus-500/30 md:min-w-64"
+                  >
+                    <option value="">All universities</option>
+                    {universities.map((university) => (
+                      <option key={university._id} value={university._id}>{university.name}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              {universityError && <p role="status" className="mt-2 text-xs text-rose-700">{universityError}</p>}
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <button type="submit" className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-campus-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-campus-800">
+                  <Search className="h-4 w-4" /> Explore Books
+                </button>
+                <Link href={isAuthenticated ? '/sell' : '/login?redirect=%2Fsell'} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-campus-200 bg-campus-50 px-5 py-3 text-sm font-bold text-campus-800 transition hover:bg-campus-100">
+                  <BookOpen className="h-4 w-4" /> Sell a Book
+                </Link>
+              </div>
+            </form>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-xl">
+            <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-campus-200/70 to-emerald-100/30 blur-xl" />
+            <div className="relative overflow-hidden rounded-[2rem] border border-white bg-white p-3 shadow-2xl shadow-emerald-950/10">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-campus-700 to-emerald-950">
+                <Image
+                  src="/book-marketplace-hero.svg"
+                  alt="Illustration of books being shared in a campus community"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 90vw, 45vw"
+                  className="object-cover"
                 />
               </div>
-
-              {/* Campus Filter */}
-              <div className="md:col-span-4 relative">
-                <GraduationCap className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <select
-                  value={selectedUniversity}
-                  onChange={(e) => setSelectedUniversity(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 focus:border-transparent text-sm text-slate-800 bg-white"
-                >
-                  <option value="all">All Universities</option>
-                  <option value="stanford">Stanford University</option>
-                  <option value="mit">MIT</option>
-                  <option value="uc berkeley">UC Berkeley</option>
-                  <option value="harvard">Harvard University</option>
-                  <option value="uw">University of Washington</option>
-                  <option value="ut austin">UT Austin</option>
-                </select>
+              <div className="absolute bottom-7 left-7 flex items-center gap-3 rounded-2xl border border-slate-100 bg-white/95 p-3 shadow-xl backdrop-blur">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-campus-700">
+                  <HeartHandshake className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-slate-900">Books find new stories</p>
+                  <p className="text-xs text-slate-500">Shared locally, used again</p>
+                </div>
               </div>
-
-              {/* Search Button */}
-              <div className="md:col-span-2">
-                <button
-                  type="submit"
-                  className="w-full bg-campus-600 hover:bg-campus-700 text-white font-medium py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Search className="w-4 h-4" />
-                  Browse Books
-                </button>
-              </div>
-            </div>
-          </form>
-          {searchError && <p role="status" className="mx-auto max-w-4xl text-left text-xs text-rose-700">{searchError}</p>}
-
-          {/* Quick Metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto pt-6 text-left">
-            <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-slate-200">
-              <div className="text-2xl font-bold text-slate-900">{impactLoading ? <span className="block h-7 w-16 animate-pulse rounded bg-slate-200" /> : platformImpact?.impact.booksReused ?? '—'}</div>
-              <div className="text-xs text-slate-500 mt-0.5">Books Reused</div>
-            </div>
-            <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-slate-200">
-              <div className="text-2xl font-bold text-campus-600">{impactLoading ? <span className="block h-7 w-20 animate-pulse rounded bg-slate-200" /> : platformImpact ? `${platformImpact.impact.estimatedCo2SavedKg.toFixed(1)} kg` : '—'}</div>
-              <div className="text-xs text-slate-500 mt-0.5">CO₂ Saved</div>
-            </div>
-            <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-slate-200">
-              <div className="text-2xl font-bold text-emerald-600">{impactLoading ? <span className="block h-7 w-16 animate-pulse rounded bg-slate-200" /> : platformImpact?.students ?? '—'}</div>
-              <div className="text-xs text-slate-500 mt-0.5">Students Participating</div>
-            </div>
-            <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-slate-200">
-              <div className="text-2xl font-bold text-amber-600">{impactLoading ? <span className="block h-7 w-20 animate-pulse rounded bg-slate-200" /> : platformImpact ? `$${platformImpact.totalSaved.toFixed(0)}` : '—'}</div>
-              <div className="text-xs text-slate-500 mt-0.5">Student Savings</div>
             </div>
           </div>
-          {impactError && <p role="status" className="mx-auto max-w-4xl text-left text-xs text-rose-700">{impactError}</p>}
         </div>
-      </section>
+      </MotionSection>
 
-      {!isAuthenticated && (
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <MotionSection aria-label="Live CampusBook community statistics" className="border-b border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-y divide-slate-100 px-4 sm:px-6 md:grid-cols-3 md:divide-y-0 lg:grid-cols-5 lg:px-8">
+          {[
+            { label: 'Students', value: stats?.students, icon: Users },
+            { label: 'Books listed', value: stats?.booksListed, icon: BookOpen },
+            { label: 'Universities', value: stats?.universities, icon: GraduationCap },
+            { label: 'Books reused', value: stats?.booksReused, icon: HeartHandshake },
+            { label: 'CO₂ saved', value: stats ? `${stats.co2SavedKg.toFixed(1)} kg` : undefined, icon: Leaf },
+          ].map(({ label, value, icon: Icon }) => (
+            <div key={label} className="flex items-center gap-3 px-4 py-5 sm:justify-center sm:px-6 lg:py-7">
+              <span className="hidden h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-campus-700 sm:flex">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div>
+                {statsLoading ? (
+                  <div className="h-7 w-16 animate-pulse rounded bg-slate-100" />
+                ) : (
+                  <p className="text-xl font-extrabold text-slate-900 sm:text-2xl">{value ?? '—'}</p>
+                )}
+                <p className="mt-0.5 text-xs font-medium text-slate-500">{label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        {statsError && <p role="status" className="mx-auto max-w-7xl px-4 pb-3 text-xs text-rose-700 sm:px-6 lg:px-8">{statsError}</p>}
+      </MotionSection>
+
+      <MotionSection className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="mx-auto mb-10 max-w-2xl text-center">
+          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-campus-700">A better way to find your books</p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">How CampusBook works</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">A simple, local loop that keeps useful course books moving between students.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { icon: BookOpen, title: 'List a book', text: 'Post a book to sell, exchange, or donate in a few steps.' },
+            { icon: Search, title: 'Discover', text: 'Search listings by title, course, ISBN, or university.' },
+            { icon: MessageCircle, title: 'Connect and chat', text: 'Message students to ask questions and agree on the details.' },
+            { icon: MapPin, title: 'Meet on campus', text: 'Arrange a convenient handover at a familiar campus spot.' },
+          ].map(({ icon: Icon, title, text }, index) => (
+            <article key={title} className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-campus-50 text-campus-700"><Icon className="h-5 w-5" /></span>
+              <span className="absolute right-5 top-5 text-3xl font-black text-emerald-100">0{index + 1}</span>
+              <h3 className="mt-5 text-base font-bold text-slate-900">{title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+            </article>
+          ))}
+        </div>
+      </MotionSection>
+
+      <MotionSection className="border-y border-slate-200 bg-slate-50/80">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="flex items-center gap-2 text-sm font-bold text-campus-700"><Sparkles className="h-4 w-4" /> CAMPUSBOOK TRENDING</p>
-              <h2 className="mt-1 text-2xl font-extrabold text-slate-900">Popular with students</h2>
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-campus-700">Browse by subject</p>
+              <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">Explore categories</h2>
             </div>
-            <Link href="/explore" className="text-sm font-bold text-campus-700 hover:underline">Explore all books</Link>
+            <Link href="/explore" className="inline-flex items-center gap-1 text-sm font-bold text-campus-700 hover:text-campus-900">
+              Browse all books <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-          {trendingError ? (
-            <div role="status" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{trendingError}</div>
-          ) : trendingLoading ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              {[0, 1, 2, 3, 4, 5].map((item) => <div key={item} className="h-52 animate-pulse rounded-xl bg-slate-200" />)}
+          {categoriesLoading ? (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl bg-slate-200" />)}
             </div>
-          ) : trendingBooks.length ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              {trendingBooks.slice(0, 6).map((book) => {
-                const image = book.images?.[0];
-                const imageUrl = image ? (typeof image === 'string' ? image : image.url) : '';
-                return (
-                  <Link key={book._id} href={`/books/${book._id}`} className="overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:border-campus-300 hover:shadow-md">
-                    <div className="aspect-[4/3] bg-slate-100">
-                      {imageUrl ? <img src={imageUrl} alt={book.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center"><BookOpen className="h-9 w-9 text-slate-300" /></div>}
-                    </div>
-                    <div className="p-3">
-                      <p className="line-clamp-2 min-h-10 text-sm font-bold text-slate-900">{book.title}</p>
-                      <p className="mt-1 line-clamp-1 text-xs text-slate-500">{book.author}</p>
-                      <p className="mt-2 text-sm font-extrabold text-campus-700">{book.listingType === 'donate' ? 'Free' : `$${getBookPrice(book).toFixed(2)}`}</p>
-                    </div>
-                  </Link>
-                );
-              })}
+          ) : categoriesError ? (
+            <SectionError message={categoriesError} />
+          ) : categories.length ? (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {categories.slice(0, 8).map((category) => (
+                <Link
+                  key={category._id}
+                  href={`/explore?category=${encodeURIComponent(category._id)}`}
+                  className="group flex items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-campus-300 hover:shadow-md sm:p-5"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-bold text-slate-900 group-hover:text-campus-800">{category.name}</span>
+                    <span className="mt-1 block text-xs text-slate-500">{categoryCountById.get(category._id) ?? 0} books</span>
+                  </span>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-campus-700 transition group-hover:bg-campus-700 group-hover:text-white">
+                    <BookOpen className="h-4 w-4" />
+                  </span>
+                </Link>
+              ))}
             </div>
-          ) : <p className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">No trending listings are available right now.</p>}
-        </section>
-      )}
-
-      {/* Main Browse Section */}
-      <section id="browse" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        {/* Section Header & Listing Filter Tabs */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">Featured Campus Listings</h2>
-            <p className="text-sm text-slate-500 mt-1">
-              Browse available course books listed by fellow students.
-            </p>
-          </div>
-
-          {/* Filter Pills */}
-          <div className="inline-flex p-1 bg-slate-200/80 rounded-xl text-xs sm:text-sm font-medium">
-            <button
-              onClick={() => setFilterType('all')}
-              className={`px-3.5 py-1.5 rounded-lg transition ${
-                filterType === 'all'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              All Listings
-            </button>
-            <button
-              onClick={() => setFilterType('sell')}
-              className={`px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                filterType === 'sell'
-                  ? 'bg-white text-campus-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <DollarSign className="w-3.5 h-3.5" /> For Sale
-            </button>
-            <button
-              onClick={() => setFilterType('exchange')}
-              className={`px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                filterType === 'exchange'
-                  ? 'bg-white text-amber-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <ArrowLeftRight className="w-3.5 h-3.5" /> Exchange
-            </button>
-            <button
-              onClick={() => setFilterType('donate')}
-              className={`px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                filterType === 'donate'
-                  ? 'bg-white text-emerald-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <HeartHandshake className="w-3.5 h-3.5" /> Free Donation
-            </button>
-          </div>
+          ) : (
+            <p className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Categories will appear here as they become available.</p>
+          )}
         </div>
+      </MotionSection>
 
-        {/* Book Grid */}
-        {filteredBooks.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
-            <BookMarked className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-slate-800">No books found</h3>
-            <p className="text-sm text-slate-500 mt-1">Try adjusting your filters or search keywords.</p>
+      <MotionSection className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-campus-700">Popular on campus</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">Featured and trending books</h2>
+            <p className="mt-2 text-sm text-slate-600">Real listings students are browsing right now.</p>
+          </div>
+          <Link href="/explore" className="inline-flex items-center gap-1 text-sm font-bold text-campus-700 hover:text-campus-900">
+            See all listings <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        {trendingLoading ? (
+          <SkeletonGrid count={4} />
+        ) : trendingError ? (
+          <SectionError message={trendingError} />
+        ) : trendingBooks.length ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {trendingBooks.slice(0, 8).map((book) => <BookCard key={book._id} book={book} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredBooks.map((book) => (
-              <div
-                key={book.id}
-                className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition flex flex-col group"
-              >
-                {/* Book Cover Image Container */}
-                <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
-                  <img
-                    src={book.imageUrl}
-                    alt={book.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                  />
-                  {/* Badge: Listing Type */}
-                  <div className="absolute top-3 left-3">
-                    {book.listingType === 'sell' && (
-                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-campus-600 text-white shadow-xs">
-                        For Sale
-                      </span>
-                    )}
-                    {book.listingType === 'exchange' && (
-                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500 text-white shadow-xs">
-                        Exchange
-                      </span>
-                    )}
-                    {book.listingType === 'donate' && (
-                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white shadow-xs">
-                        Free Donation
-                      </span>
-                    )}
-                  </div>
+          <p className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-600">There are no trending listings yet. Check back soon or browse all books.</p>
+        )}
+      </MotionSection>
 
-                  {/* Condition Badge */}
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[11px] font-medium text-slate-700 shadow-xs">
-                    {book.condition}
-                  </div>
+      <MotionSection className="bg-campus-950">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-20">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-300">Give books another chapter</p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Exchange or pass one on for free</h2>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-emerald-100/80">Find a different book through a trade, or help another student by donating a title you’ve finished.</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/explore?listingType=exchange" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-campus-900 hover:bg-emerald-50">
+                <ArrowLeftRight className="h-4 w-4" /> Browse exchanges
+              </Link>
+              <Link href="/explore?listingType=donate" className="inline-flex items-center gap-2 rounded-xl border border-white/30 px-4 py-3 text-sm font-bold text-white hover:bg-white/10">
+                <HeartHandshake className="h-4 w-4" /> Find free books
+              </Link>
+            </div>
+          </div>
+          {highlightsLoading ? (
+            <div className="grid grid-cols-2 gap-3">
+              {[0, 1, 2, 3].map((item) => <div key={item} className="h-52 animate-pulse rounded-2xl bg-white/10" />)}
+            </div>
+          ) : highlightsError ? (
+            <SectionError message={highlightsError} />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                ...exchangeBooks.slice(0, 2),
+                ...donationBooks.slice(0, 2),
+              ].map((book) => <BookCard key={book._id} book={book} />)}
+              {!exchangeBooks.length && !donationBooks.length && (
+                <p className="col-span-2 rounded-2xl border border-white/20 bg-white/5 p-8 text-center text-sm text-emerald-100">No exchange or donation listings are available right now.</p>
+              )}
+            </div>
+          )}
+        </div>
+      </MotionSection>
+
+      <MotionSection className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="mx-auto mb-10 max-w-2xl text-center">
+          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-campus-700">Built for student book sharing</p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Smarter tools for every chapter</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {smartFeatures.map(({ icon: Icon, title, description, href }) => (
+            <Link key={title} href={href} className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-campus-300 hover:shadow-md">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-campus-50 text-campus-700 group-hover:bg-campus-700 group-hover:text-white">
+                <Icon className="h-5 w-5" />
+              </span>
+              <h3 className="mt-4 font-bold text-slate-900">{title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+            </Link>
+          ))}
+        </div>
+      </MotionSection>
+
+      <MotionSection className="border-y border-slate-200 bg-emerald-50/60">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+          <div className="mx-auto mb-9 max-w-2xl text-center">
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-campus-700">Student stories</p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">A community built around sharing</h2>
+            <p className="mt-2 text-xs text-slate-500">Sample testimonials for demonstration; not verified user reviews.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {sampleTestimonials.map((testimonial) => (
+              <figure key={testimonial.attribution} className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+                <div className="flex gap-1 text-amber-400" aria-label="Sample five-star rating">
+                  {Array.from({ length: 5 }, (_, index) => <span key={index} aria-hidden="true">★</span>)}
                 </div>
-
-                {/* Content */}
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                  <div className="space-y-1.5">
-                    <div className="text-[11px] uppercase font-semibold text-campus-600 tracking-wider">
-                      {book.category}
-                    </div>
-                    <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-2" title={book.title}>
-                      {book.title}
-                    </h3>
-                    <p className="text-xs text-slate-500">{book.author}</p>
-                  </div>
-
-                  {/* Price / Exchange detail */}
-                  <div className="pt-2 border-t border-slate-100">
-                    {book.listingType === 'sell' && (
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold text-slate-900">${book.price}</span>
-                        {book.originalPrice > 0 && (
-                          <span className="text-xs text-slate-400 line-through">${book.originalPrice}</span>
-                        )}
-                        <span className="text-[11px] text-emerald-600 font-semibold ml-auto">
-                          {Math.round(((book.originalPrice - book.price) / book.originalPrice) * 100)}% OFF
-                        </span>
-                      </div>
-                    )}
-                    {book.listingType === 'exchange' && (
-                      <div className="text-xs text-amber-700 bg-amber-50 p-2 rounded-lg font-medium leading-relaxed">
-                        🔄 Wants: {book.exchangeFor}
-                      </div>
-                    )}
-                    {book.listingType === 'donate' && (
-                      <div className="text-xs text-emerald-700 bg-emerald-50 p-2 rounded-lg font-medium">
-                        🎁 Free for student in need
-                      </div>
-                    )}
-                  </div>
-
-                  {/* University & Seller Info */}
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                    <div className="flex items-center gap-1 text-slate-700 font-medium">
-                      <GraduationCap className="w-3.5 h-3.5 text-campus-600" />
-                      <span>{book.university}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-amber-500 font-semibold">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span>{book.sellerRating}</span>
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  <button className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-campus-600 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5">
-                    {book.listingType === 'sell' && 'Contact Seller'}
-                    {book.listingType === 'exchange' && 'Propose Exchange'}
-                    {book.listingType === 'donate' && 'Request Donation'}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+                <blockquote className="mt-4 text-sm leading-6 text-slate-700">“{testimonial.quote}”</blockquote>
+                <figcaption className="mt-5 flex items-center gap-2 text-xs font-bold text-campus-800">
+                  <CheckCircle2 className="h-4 w-4" /> {testimonial.attribution}
+                </figcaption>
+              </figure>
             ))}
           </div>
-        )}
-      </section>
-
-      {/* How CampusBook Works */}
-      <section className="bg-white py-16 border-y border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-            <h2 className="text-3xl font-bold text-slate-900">How CampusBook Works</h2>
-            <p className="text-sm text-slate-500">Simple, secure, student-to-student textbook trading on your campus.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center space-y-3">
-              <div className="w-12 h-12 bg-campus-100 text-campus-600 rounded-2xl flex items-center justify-center mx-auto">
-                <Search className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-slate-900">1. Find or List Your Book</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Search by ISBN, title, or course code. Or snap photos and post your used book for sale, trade, or donation in under a minute.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center space-y-3">
-              <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
-                <Users className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-slate-900">2. Chat Directly</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Connect directly with classmates via campus messaging. Agree on price, exchange terms, or donation eligibility.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center space-y-3">
-              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto">
-                <MapPin className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-slate-900">3. Safe Campus Handover</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Meet up safely on campus — student union, library steps, or dining hall. No shipping fees or waiting weeks for deliveries.
-              </p>
-            </div>
-          </div>
         </div>
-      </section>
+      </MotionSection>
 
-      {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-campus-600 to-emerald-800 rounded-3xl p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="space-y-3 max-w-xl">
-            <h2 className="text-3xl font-extrabold tracking-tight">Ready to clear your bookshelf?</h2>
-            <p className="text-emerald-100 text-sm leading-relaxed">
-              Join thousands of university students saving hundreds of dollars every semester. Post your books or request books in seconds.
-            </p>
+      <MotionSection className="px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 rounded-[2rem] bg-gradient-to-r from-campus-800 to-emerald-950 p-7 text-white shadow-xl sm:p-10 md:flex-row md:items-center">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200">Your campus book community</p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">Ready to find your next read?</h2>
+            <p className="mt-3 text-sm leading-6 text-emerald-100">Explore student listings or give a book a new home on campus.</p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <Link
-              href="/signup"
-              className="bg-white text-campus-800 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-xl text-sm transition shadow-sm text-center"
-            >
-              Register with .edu Email
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <Link href="/explore" className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-campus-900 hover:bg-emerald-50">
+              Explore Books <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link
-              href="/explore"
-              className="bg-campus-800/80 hover:bg-campus-800 border border-white/20 text-white font-semibold px-6 py-3 rounded-xl text-sm transition text-center"
-            >
-              Explore Listings
+            <Link href={isAuthenticated ? '/sell' : '/login?redirect=%2Fsell'} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 px-5 py-3 text-sm font-bold text-white hover:bg-white/10">
+              Sell a Book <BookOpen className="h-4 w-4" />
             </Link>
           </div>
         </div>
-      </section>
-    </div>
+      </MotionSection>
+    </main>
   );
 }

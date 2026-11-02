@@ -15,7 +15,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { BookImage, User } from '@/types';
 import api from '@/lib/api';
-import { getBookPrice } from '@/lib/pricing';
+import { formatPrice, getBookPrice } from '@/lib/pricing';
 
 type Toast = { message: string; type: 'success' | 'error' };
 
@@ -203,7 +203,7 @@ export default function CartPage() {
                 const cover = book.images?.[0];
                 const seller = typeof book.seller === 'string' ? 'Campus seller' : (book.seller as User).name;
                 const price = getBookPrice(book);
-                const priceLabel = book.listingType === 'donate' ? 'Free' : `$${price.toFixed(2)}`;
+                const priceLabel = book.listingType === 'donate' ? 'Free' : formatPrice(price);
 
                 return (
                   <article key={item._id || book._id} className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row">
@@ -253,11 +253,11 @@ export default function CartPage() {
                 <h2 className="text-lg font-extrabold text-slate-900">Order summary</h2>
                 <div className="mt-4 flex justify-between border-b border-slate-100 pb-3 text-sm">
                   <span className="text-slate-500">Items ({cartCount})</span>
-                  <span className="font-semibold text-slate-800">${cartTotalAmount.toFixed(2)}</span>
+                  <span className="font-semibold text-slate-800">{formatPrice(cartTotalAmount)}</span>
                 </div>
                 <div className="flex justify-between pt-3">
                   <span className="font-bold text-slate-900">Total</span>
-                  <span className="text-lg font-extrabold text-campus-700">${cartTotalAmount.toFixed(2)}</span>
+                  <span className="text-lg font-extrabold text-campus-700">{formatPrice(cartTotalAmount)}</span>
                 </div>
               </div>
 

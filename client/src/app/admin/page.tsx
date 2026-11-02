@@ -33,7 +33,7 @@ import {
 } from 'recharts';
 import api from '@/lib/api';
 import { Book, Order, User } from '@/types';
-import { getBookPrice } from '@/lib/pricing';
+import { formatPrice, getBookPrice } from '@/lib/pricing';
 
 type Stats = Awaited<ReturnType<typeof api.getAdminStats>>;
 type ActivityData = Awaited<ReturnType<typeof api.getAdminActivity>>['months'];
@@ -367,7 +367,7 @@ export default function AdminDashboardPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-1 text-sm font-bold text-slate-800">{book.title}</p>
-                      <p className="mt-0.5 truncate text-xs text-slate-500">by {getPersonName(book.seller)} · {book.listingType === 'donate' ? 'Free' : `$${getBookPrice(book).toFixed(2)}`}</p>
+                      <p className="mt-0.5 truncate text-xs text-slate-500">by {getPersonName(book.seller)} · {book.listingType === 'donate' ? 'Free' : formatPrice(getBookPrice(book))}</p>
                       <div className="mt-2 flex gap-2">
                         <button type="button" disabled={actionId === book._id} onClick={() => void handleModeration(book, 'approve')} className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-800 disabled:opacity-50">
                           {actionId === book._id ? <LoaderCircle className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Approve

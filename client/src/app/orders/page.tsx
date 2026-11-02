@@ -17,7 +17,8 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { BookImage, Order, OrderStatus, Review, User } from '@/types';
-import { getBookPrice } from '@/lib/pricing';
+import { formatPrice, getBookPrice } from '@/lib/pricing';
+import { MotionDialog } from '@/components/MotionEffects';
 
 type OrderRole = 'buying' | 'selling';
 type Toast = { message: string; type: 'success' | 'error' };
@@ -343,7 +344,7 @@ export default function OrdersPage() {
 
                     <div className="flex items-start justify-between gap-3 sm:flex-col sm:items-end">
                       <p className="text-lg font-extrabold text-slate-900">
-                        {book?.listingType === 'donate' ? 'Free' : `$${price.toFixed(2)}`}
+                        {book?.listingType === 'donate' ? 'Free' : formatPrice(price)}
                       </p>
                       <Link href={bookHref} className="text-xs font-bold text-campus-700 hover:text-campus-900">
                         View book
@@ -440,10 +441,12 @@ export default function OrdersPage() {
       </div>
 
       {pendingAction && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4" role="presentation" onMouseDown={(event) => {
-          if (event.target === event.currentTarget && updatingOrderId !== pendingAction.order._id) setPendingAction(null);
-        }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="order-action-title" className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+        <MotionDialog
+          labelledBy="order-action-title"
+          onClose={() => setPendingAction(null)}
+          closeDisabled={updatingOrderId === pendingAction.order._id}
+          panelClassName="max-w-sm p-6"
+        >
             <h2 id="order-action-title" className="text-lg font-extrabold text-slate-900">
               {pendingAction.status === 'confirmed' ? 'Confirm this order?' : pendingAction.status === 'completed' ? 'Mark this order completed?' : 'Cancel this order?'}
             </h2>
@@ -463,8 +466,7 @@ export default function OrdersPage() {
                 {pendingAction.status === 'confirmed' ? 'Confirm order' : pendingAction.status === 'completed' ? 'Mark completed' : 'Cancel order'}
               </button>
             </div>
-          </section>
-        </div>
+        </MotionDialog>
       )}
     </main>
   );

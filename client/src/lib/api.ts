@@ -313,6 +313,16 @@ export const api = {
       impact: SmartSavings['impact'];
     }>('/smart/platform-impact', { method: 'GET' }),
 
+  getPublicStats: () =>
+    request<{
+      status: string;
+      students: number;
+      booksListed: number;
+      universities: number;
+      booksReused: number;
+      co2SavedKg: number;
+    }>('/public/stats', { method: 'GET' }),
+
   getExchangeMatches: () =>
     request<{ status: string; results: number; matches: ExchangeMatch[] }>(
       '/smart/exchange-matches',

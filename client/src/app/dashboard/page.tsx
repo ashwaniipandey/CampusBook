@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import api from '@/lib/api';
 import { Book, BookImage, StudentDashboard } from '@/types';
-import { getBookPrice } from '@/lib/pricing';
+import { formatPrice, getBookPrice } from '@/lib/pricing';
 import { SmartRecommendation, SmartSavings } from '@/types';
 import {
   Area,
@@ -330,7 +330,7 @@ export default function StudentDashboardPage() {
                   { label: 'Books Purchased', value: dashboard?.booksPurchased, icon: ClipboardList },
                   { label: 'Active Exchanges', value: dashboard?.activeExchanges, icon: Repeat2 },
                   { label: 'Donations Made', value: dashboard?.donationsMade, icon: HeartHandshake },
-                  { label: 'Total Money Saved', value: dashboard ? `$${dashboard.totalMoneySaved.toFixed(2)}` : undefined, icon: Sparkles },
+                  { label: 'Total Money Saved', value: dashboard ? formatPrice(dashboard.totalMoneySaved) : undefined, icon: Sparkles },
                 ].map(({ label, value, icon: Icon }) => (
                   <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-campus-50 text-campus-700">
@@ -361,7 +361,7 @@ export default function StudentDashboardPage() {
                     {smartLoading ? (
                       <div className="h-8 w-28 animate-pulse rounded bg-slate-100" />
                     ) : (
-                      <span className="text-2xl font-extrabold text-campus-800">${(smartSavings?.totalSaved ?? dashboard?.totalMoneySaved ?? 0).toFixed(2)}</span>
+                      <span className="text-2xl font-extrabold text-campus-800">{formatPrice(smartSavings?.totalSaved ?? dashboard?.totalMoneySaved ?? 0)}</span>
                     )}
                     <span className="text-xs text-slate-500">total saved</span>
                   </div>
@@ -380,7 +380,7 @@ export default function StudentDashboardPage() {
                           <CartesianGrid strokeDasharray="3 3" vertical={false} />
                           <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={11} />
                           <YAxis tickLine={false} axisLine={false} fontSize={11} width={36} />
-                          <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Saved']} />
+                          <Tooltip formatter={(value) => [formatPrice(Number(value)), 'Saved']} />
                           <Area type="monotone" dataKey="saved" stroke="#15803d" fill="url(#studentSavingsFill)" strokeWidth={2} />
                         </AreaChart>
                       </ResponsiveContainer>
@@ -502,7 +502,7 @@ export default function StudentDashboardPage() {
                         <div className="p-3">
                           <p className="line-clamp-2 min-h-10 text-sm font-bold text-slate-900">{book.title}</p>
                           <p className="mt-1 text-xs text-slate-500">{book.author}</p>
-                          <p className="mt-2 text-sm font-extrabold text-campus-700">{book.listingType === 'donate' ? 'Free' : `$${getBookPrice(book).toFixed(2)}`}</p>
+                          <p className="mt-2 text-sm font-extrabold text-campus-700">{book.listingType === 'donate' ? 'Free' : formatPrice(getBookPrice(book))}</p>
                           <div className="mt-2 flex flex-wrap gap-1">
                             {book.reasons.slice(0, 2).map((reason) => (
                               <span key={reason} className="rounded-full bg-campus-50 px-2 py-0.5 text-[9px] font-semibold text-campus-800">{reason}</span>

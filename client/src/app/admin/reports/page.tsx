@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 import AdminToast, { AdminToastState } from '@/components/AdminToast';
 import api from '@/lib/api';
+import { formatPrice } from '@/lib/pricing';
 
 const COLORS = ['#059669', '#34d399', '#a7f3d0', '#0f766e', '#6ee7b7', '#047857', '#d1fae5'];
 
@@ -68,7 +69,7 @@ export default function AdminReportsPage() {
     { title: 'Students', value: stats?.totalStudents, icon: Users },
     { title: 'Books', value: stats?.totalBooks, icon: BookOpen },
     { title: 'Orders', value: stats?.totalOrders, icon: ShoppingBag },
-    { title: 'Revenue value', value: stats ? `$${stats.totalRevenueValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : undefined, icon: Activity },
+    { title: 'Revenue value', value: stats ? formatPrice(stats.totalRevenueValue) : undefined, icon: Activity },
   ];
 
   return (

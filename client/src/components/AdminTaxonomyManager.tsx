@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import AdminDataTable, { AdminTableColumn } from '@/components/AdminDataTable';
 import AdminToast, { AdminToastState } from '@/components/AdminToast';
+import { MotionDialog } from '@/components/MotionEffects';
 import api from '@/lib/api';
 import { Category, University } from '@/types';
 
@@ -215,8 +216,13 @@ export default function AdminTaxonomyManager({ kind }: { kind: TaxonomyKind }) {
       />
 
       {modalOpen && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/60 p-4" role="dialog" aria-modal="true" aria-labelledby="taxonomy-modal-title">
-          <form onSubmit={submit} className="max-h-[90vh] w-full max-w-xl space-y-4 overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
+        <MotionDialog
+          labelledBy="taxonomy-modal-title"
+          onClose={() => setModalOpen(false)}
+          closeDisabled={saving}
+          panelClassName="max-w-xl p-5 sm:p-6"
+        >
+          <form onSubmit={submit} className="space-y-4">
             <div>
               <h3 id="taxonomy-modal-title" className="text-lg font-extrabold text-slate-900">{editing ? 'Edit' : 'Add'} {isUniversities ? 'university' : 'category'}</h3>
               <p className="mt-1 text-sm text-slate-500">Fill in the details below.</p>
@@ -245,7 +251,7 @@ export default function AdminTaxonomyManager({ kind }: { kind: TaxonomyKind }) {
               <button type="submit" disabled={saving} className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 disabled:opacity-50">{saving ? 'Saving…' : editing ? 'Save changes' : 'Create'}</button>
             </div>
           </form>
-        </div>
+        </MotionDialog>
       )}
       <AdminToast toast={toast} />
     </div>

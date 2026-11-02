@@ -33,6 +33,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
 import { Notification } from '@/types';
 import SearchAutocomplete from '@/components/SearchAutocomplete';
+import ThemeToggle from '@/components/ThemeToggle';
 
 function relativeTime(value?: string) {
   if (!value) return '';
@@ -75,6 +76,9 @@ export default function Navbar() {
   const [searchValue, setSearchValue] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
+  const userMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const notificationTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuTriggerRef = useRef<HTMLButtonElement>(null);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -89,6 +93,20 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      if (userDropdownOpen) userMenuTriggerRef.current?.focus();
+      if (notificationDropdownOpen) notificationTriggerRef.current?.focus();
+      if (mobileMenuOpen) mobileMenuTriggerRef.current?.focus();
+      setUserDropdownOpen(false);
+      setNotificationDropdownOpen(false);
+      setMobileMenuOpen(false);
+    }
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [mobileMenuOpen, notificationDropdownOpen, userDropdownOpen]);
 
   useEffect(() => {
     if (!socket) return;
@@ -184,6 +202,10 @@ export default function Navbar() {
               <HeartHandshake className="w-4 h-4 text-emerald-500" />
               Free Donations
             </Link>
+            <div className="hidden md:block">
+              <ThemeToggle />
+            </div>
+
             {isAuthenticated && (
               <Link
                 href="/my-books"
@@ -241,9 +263,11 @@ export default function Navbar() {
             <div className="relative" ref={notificationRef}>
               <button
                 type="button"
+                ref={notificationTriggerRef}
                 onClick={() => setNotificationDropdownOpen((open) => !open)}
                 aria-label={`Notifications, ${unreadNotificationCount} unread`}
                 aria-expanded={notificationDropdownOpen}
+                aria-controls={notificationDropdownOpen ? 'navbar-notifications' : undefined}
                 className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-campus-700"
               >
                 <Bell className="h-5 w-5" />
@@ -254,7 +278,7 @@ export default function Navbar() {
                 )}
               </button>
               {notificationDropdownOpen && (
-                <div className="absolute right-0 top-full z-[65] mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                <div id="navbar-notifications" className="absolute right-0 top-full z-[65] mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
                   <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                     <div>
                       <h2 className="font-bold text-slate-900">Notifications</h2>
@@ -343,9 +367,12 @@ export default function Navbar() {
               /* Logged In User Avatar Dropdown */
               <div className="relative" ref={dropdownRef}>
                 <button
+                  type="button"
+                  ref={userMenuTriggerRef}
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   className="flex items-center space-x-2.5 p-1.5 rounded-xl hover:bg-slate-100 border border-slate-200 transition"
                   aria-expanded={userDropdownOpen}
+                  aria-controls={userDropdownOpen ? 'navbar-user-menu' : undefined}
                 >
                   {/* Avatar */}
                   <div className="w-8 h-8 rounded-lg bg-campus-100 text-campus-700 font-bold text-xs flex items-center justify-center border border-campus-200 shadow-2xs">
@@ -381,7 +408,7 @@ export default function Navbar() {
 
                 {/* Dropdown Menu */}
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 text-sm z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div id="navbar-user-menu" className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 text-sm z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     {/* Header */}
                     <div className="px-4 py-3 border-b border-slate-100">
                       <p className="font-semibold text-slate-900 truncate">{user.name}</p>
@@ -580,10 +607,14 @@ export default function Navbar() {
 
           {/* Mobile menu hamburger */}
           <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
             <button
+              ref={mobileMenuTriggerRef}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100"
               aria-label="Toggle menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls={mobileMenuOpen ? 'navbar-mobile-menu' : undefined}
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -593,7 +624,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2 text-sm font-medium">
+        <div id="navbar-mobile-menu" className="md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2 text-sm font-medium">
           <SearchAutocomplete
             value={searchValue}
             onChange={setSearchValue}

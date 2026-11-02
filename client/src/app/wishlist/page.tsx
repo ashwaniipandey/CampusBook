@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { BookOpen, GraduationCap, Heart, LoaderCircle, ShoppingCart, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Book, BookImage, University } from '@/types';
-import { getBookPrice } from '@/lib/pricing';
+import { formatPrice, getBookPrice } from '@/lib/pricing';
 
 type Toast = { message: string; type: 'success' | 'error' };
 
@@ -153,7 +153,7 @@ export default function WishlistPage() {
             {wishlistBooks.map((book) => {
               const cover = book.images?.[0];
               const sellingPrice = getBookPrice(book);
-              const price = book.listingType === 'donate' ? 'Free' : `$${sellingPrice.toFixed(2)}`;
+              const price = book.listingType === 'donate' ? 'Free' : formatPrice(sellingPrice);
 
               return (
                 <article key={book._id} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">

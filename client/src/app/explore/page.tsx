@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
-import { getBookPrice } from '@/lib/pricing';
+import { formatPrice, getBookPrice } from '@/lib/pricing';
 import { Book, University, Category, FiltersMeta, BookCondition, ListingType } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -953,7 +953,7 @@ function ExploreContent() {
                   ))}
                   {(minPriceInput || maxPriceInput) && (
                     <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[11px]">
-                      ${minPriceInput || '0'} - ${maxPriceInput || 'Any'}
+                      {formatPrice(minPriceInput || '0')} - {maxPriceInput ? formatPrice(maxPriceInput) : 'Any'}
                       <button
                         onClick={() => {
                           setMinPriceInput('');
@@ -1168,11 +1168,11 @@ function ExploreContent() {
                       ) : (
                         <div className="flex items-baseline gap-1.5">
                           <span className="text-lg font-black text-slate-900">
-                            ${sell.toFixed(2)}
+                            {formatPrice(sell)}
                           </span>
                           {orig > 0 && (
                             <span className="text-xs text-slate-400 line-through">
-                              ${orig.toFixed(2)}
+                              {formatPrice(orig)}
                             </span>
                           )}
                         </div>

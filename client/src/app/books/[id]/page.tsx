@@ -20,7 +20,8 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { Book, BookImage, Category, Review, University, User } from '@/types';
-import { getBookPrice } from '@/lib/pricing';
+import { formatPrice, getBookPrice } from '@/lib/pricing';
+import { MotionDialog } from '@/components/MotionEffects';
 
 type Toast = { message: string; type: 'success' | 'error' };
 
@@ -39,7 +40,7 @@ function getReviewerName(review: Review) {
 
 function BookCard({ book }: { book: Book }) {
   const image = book.images?.[0];
-  const price = book.listingType === 'donate' ? 'Free' : `$${getBookPrice(book).toFixed(2)}`;
+  const price = book.listingType === 'donate' ? 'Free' : formatPrice(getBookPrice(book));
 
   return (
     <Link
@@ -465,9 +466,9 @@ export default function BookDetailPage() {
                       </>
                     ) : (
                       <>
-                        <span className="text-3xl font-black text-slate-950">${sellingPrice.toFixed(2)}</span>
+                        <span className="text-3xl font-black text-slate-950">{formatPrice(sellingPrice)}</span>
                         {originalPrice > sellingPrice && (
-                          <span className="mb-1 text-lg text-slate-400 line-through">${originalPrice.toFixed(2)}</span>
+                          <span className="mb-1 text-lg text-slate-400 line-through">{formatPrice(originalPrice)}</span>
                         )}
                         {discount > 0 && <span className="mb-1 rounded-full bg-campus-50 px-3 py-1 text-xs font-bold text-campus-800">{discount}% off</span>}
                       </>
@@ -656,10 +657,12 @@ export default function BookDetailPage() {
       </div>
 
       {orderModalOpen && book && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4" role="presentation" onMouseDown={(event) => {
-          if (event.target === event.currentTarget && !submittingOrder) setOrderModalOpen(false);
-        }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="order-dialog-title" className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+        <MotionDialog
+          labelledBy="order-dialog-title"
+          onClose={() => setOrderModalOpen(false)}
+          closeDisabled={submittingOrder}
+          panelClassName="max-w-md p-6"
+        >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 id="order-dialog-title" className="text-xl font-extrabold text-slate-900">Arrange your purchase</h2>
@@ -696,18 +699,19 @@ export default function BookDetailPage() {
               </label>
               <button type="submit" disabled={submittingOrder} className="flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-60">
                 {submittingOrder && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                {submittingOrder ? 'Placing order…' : `Place order · $${sellingPrice.toFixed(2)}`}
+                {submittingOrder ? 'Placing order…' : `Place order · ${formatPrice(sellingPrice)}`}
               </button>
             </form>
-          </section>
-        </div>
+        </MotionDialog>
       )}
 
       {exchangeModalOpen && book && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4" role="presentation" onMouseDown={(event) => {
-          if (event.target === event.currentTarget && !submittingRequest) setExchangeModalOpen(false);
-        }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="exchange-dialog-title" className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+        <MotionDialog
+          labelledBy="exchange-dialog-title"
+          onClose={() => setExchangeModalOpen(false)}
+          closeDisabled={submittingRequest}
+          panelClassName="max-w-md p-6"
+        >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 id="exchange-dialog-title" className="text-xl font-extrabold text-slate-900">Request an exchange</h2>
@@ -742,15 +746,16 @@ export default function BookDetailPage() {
                 </button>
               </form>
             )}
-          </section>
-        </div>
+        </MotionDialog>
       )}
 
       {donationModalOpen && book && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4" role="presentation" onMouseDown={(event) => {
-          if (event.target === event.currentTarget && !submittingRequest) setDonationModalOpen(false);
-        }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="donation-dialog-title" className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+        <MotionDialog
+          labelledBy="donation-dialog-title"
+          onClose={() => setDonationModalOpen(false)}
+          closeDisabled={submittingRequest}
+          panelClassName="max-w-md p-6"
+        >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 id="donation-dialog-title" className="text-xl font-extrabold text-slate-900">Request this donation</h2>
@@ -770,8 +775,7 @@ export default function BookDetailPage() {
                 {submittingRequest ? 'Sending…' : 'Send Request'}
               </button>
             </form>
-          </section>
-        </div>
+        </MotionDialog>
       )}
     </main>
   );

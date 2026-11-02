@@ -13,6 +13,87 @@ body {
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
+html.dark {
+  color-scheme: dark;
+  --foreground-rgb: 226, 232, 240;
+  --background-rgb: 15, 23, 42;
+}
+
+html.dark body {
+  color: rgb(var(--foreground-rgb));
+  background-color: rgb(var(--background-rgb));
+}
+
+html.dark [class~='bg-white'],
+html.dark [class~='bg-white/95'],
+html.dark [class~='bg-white/90'] {
+  background-color: #0f172a;
+}
+
+html.dark [class~='bg-slate-50'],
+html.dark [class~='bg-slate-100'] {
+  background-color: #1e293b;
+}
+
+html.dark [class~='bg-slate-200'] {
+  background-color: #334155;
+}
+
+html.dark [class~='text-slate-950'],
+html.dark [class~='text-slate-900'],
+html.dark [class~='text-slate-800'] {
+  color: #f1f5f9;
+}
+
+html.dark [class~='text-slate-700'],
+html.dark [class~='text-slate-600'],
+html.dark [class~='text-slate-500'] {
+  color: #cbd5e1;
+}
+
+html.dark [class~='text-slate-400'],
+html.dark [class~='text-slate-300'] {
+  color: #94a3b8;
+}
+
+html.dark [class~='border-slate-100'],
+html.dark [class~='border-slate-200'],
+html.dark [class~='border-slate-300'] {
+  border-color: #334155;
+}
+
+html.dark [class~='divide-slate-100'] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155;
+}
+
+html.dark [class~='bg-campus-50'] {
+  background-color: #052e16;
+}
+
+html.dark [class~='bg-campus-100'] {
+  background-color: #064e3b;
+}
+
+html.dark [class~='text-campus-900'],
+html.dark [class~='text-campus-800'] {
+  color: #bbf7d0;
+}
+
+html.dark [class~='text-campus-700'],
+html.dark [class~='text-campus-600'] {
+  color: #86efac;
+}
+
+html.dark [class~='hover:bg-slate-50']:hover,
+html.dark [class~='hover:bg-slate-100']:hover {
+  background-color: #334155;
+}
+
+*:focus-visible {
+  outline: 2px solid #16a34a;
+  outline-offset: 2px;
+}
+
 ::selection {
   background-color: #dcfce7;
   color: #14532d;
@@ -35,4 +116,15 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

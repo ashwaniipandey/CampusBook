@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Clock3, Loader2, Search, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -32,6 +32,8 @@ export default function SearchAutocomplete({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const listId = useId();
   const requestId = useRef(0);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -62,7 +64,10 @@ export default function SearchAutocomplete({
       setError('');
       try {
         const response = await api.getBookSuggestions(query);
-        if (requestId.current === id) setSuggestions(response.suggestions || []);
+        if (requestId.current === id) {
+          setSuggestions(response.suggestions || []);
+          setActiveSuggestion(-1);
+        }
       } catch (requestError) {
         if (requestId.current === id) {
           setSuggestions([]);
@@ -117,6 +122,13 @@ export default function SearchAutocomplete({
     <div className="relative min-w-0" ref={rootRef}>
       <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
       <input
+        role="combobox"
+        aria-label="Search book listings"
+        aria-autocomplete="list"
+        aria-haspopup="listbox"
+        aria-expanded={showSuggestions}
+        aria-controls={showSuggestions ? listId : undefined}
+        aria-activedescendant={activeSuggestion >= 0 ? `${listId}-option-${activeSuggestion}` : undefined}
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -129,9 +141,26 @@ export default function SearchAutocomplete({
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
             event.preventDefault();
-            void submitSearch(value);
+            void submitSearch(
+              activeSuggestion >= 0
+                ? suggestions[activeSuggestion]?.value || value
+                : value
+            );
           }
-          if (event.key === 'Escape') setOpen(false);
+          if (event.key === 'ArrowDown' && suggestions.length) {
+            event.preventDefault();
+            setOpen(true);
+            setActiveSuggestion((index) => (index + 1) % suggestions.length);
+          }
+          if (event.key === 'ArrowUp' && suggestions.length) {
+            event.preventDefault();
+            setOpen(true);
+            setActiveSuggestion((index) => (index <= 0 ? suggestions.length - 1 : index - 1));
+          }
+          if (event.key === 'Escape') {
+            setOpen(false);
+            setActiveSuggestion(-1);
+          }
         }}
         placeholder={placeholder}
         className={`w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-9 text-sm text-slate-900 placeholder:text-slate-400 focus:border-campus-400 focus:outline-none focus:ring-2 focus:ring-campus-500/30 ${inputClassName}`}
@@ -157,17 +186,27 @@ export default function SearchAutocomplete({
             </div>
           )}
           {error && <p role="status" className="px-4 py-3 text-xs text-rose-700">{error}</p>}
-          {showSuggestions && suggestions.map((suggestion) => (
-            <button
-              type="button"
-              key={`${suggestion.type}-${suggestion.value}`}
-              onClick={() => void submitSearch(suggestion.value)}
-              className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-campus-50"
-            >
-              <span className="truncate">{suggestion.value}</span>
-              <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] capitalize text-slate-500">{suggestion.type}</span>
-            </button>
-          ))}
+          {showSuggestions && (
+            <div id={listId} role="listbox" aria-label="Search suggestions">
+              {suggestions.map((suggestion, index) => (
+                <button
+                  type="button"
+                  role="option"
+                  id={`${listId}-option-${index}`}
+                  aria-selected={activeSuggestion === index}
+                  key={`${suggestion.type}-${suggestion.value}`}
+                  onMouseEnter={() => setActiveSuggestion(index)}
+                  onClick={() => void submitSearch(suggestion.value)}
+                  className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-campus-50 ${
+                    activeSuggestion === index ? 'bg-campus-50' : ''
+                  }`}
+                >
+                  <span className="truncate">{suggestion.value}</span>
+                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] capitalize text-slate-500">{suggestion.type}</span>
+                </button>
+              ))}
+            </div>
+          )}
           {showRecent && (
             <>
               <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2">
