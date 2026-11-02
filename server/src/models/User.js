@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema(
     university: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'University',
-      required: [true, 'University association is required'],
+      default: null,
     },
     studentId: {
       type: String,
@@ -74,6 +74,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    googleId: {
+      type: String,
+      default: undefined,
+    },
     bio: {
       type: String,
       maxlength: [500, 'Bio cannot exceed 500 characters'],
@@ -92,6 +96,33 @@ const userSchema = new mongoose.Schema(
     isVerified: {
       type: Boolean,
       default: false,
+    },
+    verificationStatus: {
+      type: String,
+      enum: ['unverified', 'pending', 'verified', 'rejected'],
+      default: 'unverified',
+    },
+    collegeEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      maxlength: 254,
+      default: '',
+    },
+    verificationMethod: {
+      type: String,
+      enum: ['college_email', 'id_card', ''],
+      default: '',
+    },
+    idCardImage: {
+      type: String,
+      default: '',
+    },
+    verificationNote: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: '',
     },
     isBlocked: {
       type: Boolean,
@@ -117,6 +148,14 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    collegeVerificationOtp: {
+      type: String,
+      select: false,
+    },
+    collegeVerificationOtpExpires: {
+      type: Date,
+      select: false,
+    },
     resetPasswordOtp: {
       type: String,
       select: false,
@@ -137,6 +176,17 @@ userSchema.index({ status: 1 });
 userSchema.index({ role: 1, createdAt: -1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ isBlocked: 1, role: 1 });
+userSchema.index({ verificationStatus: 1, role: 1 });
+userSchema.index({ googleId: 1 }, { unique: true, sparse: true });
+
+userSchema.pre('save', function (next) {
+  if (this.isModified('verificationStatus')) {
+    this.isVerified = this.verificationStatus === 'verified';
+  } else if (this.isModified('isVerified')) {
+    this.verificationStatus = this.isVerified ? 'verified' : 'unverified';
+  }
+  next();
+});
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
@@ -155,8 +205,11 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;
+  delete user.googleId;
   delete user.verificationOtp;
   delete user.verificationOtpExpires;
+  delete user.collegeVerificationOtp;
+  delete user.collegeVerificationOtpExpires;
   delete user.resetPasswordOtp;
   delete user.resetPasswordExpires;
   return user;

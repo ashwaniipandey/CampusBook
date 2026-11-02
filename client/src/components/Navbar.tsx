@@ -34,6 +34,7 @@ import { useSocket } from '@/context/SocketContext';
 import { Notification } from '@/types';
 import SearchAutocomplete from '@/components/SearchAutocomplete';
 import ThemeToggle from '@/components/ThemeToggle';
+import { getVerificationHref, isVerifiedStudent } from '@/lib/verification';
 
 function relativeTime(value?: string) {
   if (!value) return '';
@@ -192,6 +193,11 @@ export default function Navbar() {
 
   const actionHref = (href: string) =>
     isAuthenticated ? href : `/login?redirect=${encodeURIComponent(href)}`;
+  const sellHref = !isAuthenticated
+    ? `/login?redirect=${encodeURIComponent('/sell')}`
+    : isVerifiedStudent(user)
+      ? '/sell'
+      : getVerificationHref('/sell');
 
   const isActive = (href: string) =>
     href === '/explore'
@@ -346,7 +352,7 @@ export default function Navbar() {
             {renderIconLink('/cart', 'Cart', ShoppingCart, isAuthenticated ? cartCount : undefined)}
             <ThemeToggle />
             <Link
-              href={actionHref('/sell')}
+              href={sellHref}
               className="inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-campus-600 px-3 text-sm font-semibold text-white shadow-sm transition hover:bg-campus-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 focus-visible:ring-offset-2 xl:px-4"
             >
               <PlusCircle className="h-4 w-4" aria-hidden="true" /> Sell a Book
@@ -363,11 +369,11 @@ export default function Navbar() {
                   title={user.name}
                   className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 p-1 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 dark:border-slate-700 dark:hover:bg-slate-800"
                 >
-                  <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border border-campus-200 bg-campus-100 text-xs font-bold text-campus-800 dark:border-campus-800 dark:bg-campus-900 dark:text-campus-200">
+                  <span className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border border-campus-200 bg-campus-100 text-xs font-bold text-campus-800 dark:border-campus-800 dark:bg-campus-900 dark:text-campus-200">
                     {user.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : getInitials(user.name)}
+                    {isVerifiedStudent(user) && <BadgeCheck className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-white text-campus-600 dark:bg-slate-900" aria-label="Verified student" />}
                   </span>
                   <span className="hidden max-w-24 truncate text-xs font-semibold text-slate-800 xl:block dark:text-slate-100">{user.name}</span>
-                  {user.isVerified && <BadgeCheck className="hidden h-4 w-4 fill-campus-100 text-campus-600 xl:block" aria-label="Verified student" />}
                   <ChevronDown className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
                 </button>
                 {userDropdownOpen && <UserDropdown id="navbar-user-menu" user={user} universityName={universityName} close={() => setUserDropdownOpen(false)} logout={logout} />}
@@ -516,7 +522,7 @@ export default function Navbar() {
               </>
             )}
             <div className="my-3 border-t border-slate-200" />
-            <Link href={actionHref('/sell')} onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-campus-600 px-4 py-2 text-sm font-semibold text-white hover:bg-campus-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500">
+            <Link href={sellHref} onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-campus-600 px-4 py-2 text-sm font-semibold text-white hover:bg-campus-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500">
               <PlusCircle className="h-4 w-4" aria-hidden="true" /> Sell a Book
             </Link>
             {!isAuthenticated && (
@@ -648,12 +654,12 @@ function UserDropdown({
             <span className="inline-flex items-center gap-1.5 rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700">
               <Shield className="h-3.5 w-3.5" aria-hidden="true" /> Platform Administrator
             </span>
-          ) : user.isVerified ? (
+          ) : isVerifiedStudent(user) ? (
             <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
               <BadgeCheck className="h-4 w-4 text-emerald-600" aria-hidden="true" /> Verified Student
             </span>
           ) : (
-            <Link href="/verify-otp" onClick={close} className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
+            <Link href="/verify" onClick={close} className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
               <ShieldAlert className="h-3.5 w-3.5 text-amber-600" aria-hidden="true" /> Verify Student Status
             </Link>
           )}

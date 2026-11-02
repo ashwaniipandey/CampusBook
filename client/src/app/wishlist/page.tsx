@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { GraduationCap, Heart, LoaderCircle, ShoppingCart, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { getVerificationHref, isVerifiedStudent } from '@/lib/verification';
 import BookCover from '@/components/BookCover';
 import { Book, BookImage, University } from '@/types';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
@@ -63,6 +64,10 @@ export default function WishlistPage() {
   };
 
   const moveToCart = async (book: Book) => {
+    if (!isVerifiedStudent(user)) {
+      router.push(getVerificationHref('/wishlist'));
+      return;
+    }
     setPendingBook((previous) => ({ ...previous, [book._id]: true }));
     try {
       const message = await addCartBook(book);

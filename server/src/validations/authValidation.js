@@ -18,6 +18,9 @@ const schemas = {
     phone: z.string().trim().max(30).optional(),
   }).strict(),
   login: z.object({ email, password: z.string().min(1).max(128) }).strict(),
+  google: z.object({ credential: z.string().min(20).max(8192) }).strict(),
+  collegeEmail: z.object({ email }).strict(),
+  collegeOtp: z.object({ otp }).strict(),
   verifyOtp: z.object({ email, otp }).strict(),
   resendOtp: z.object({ email }).strict(),
   forgotPassword: z.object({ email }).strict(),
@@ -34,6 +37,21 @@ const schemas = {
     bio: z.string().trim().max(500).optional(),
     avatar: z.string().url().max(2048).optional(),
   }).strict().refine((value) => Object.keys(value).length > 0, 'At least one profile field is required.'),
+};
+
+export const validateVerificationBody = (schemaName) => (req, res, next) => {
+  const schema = schemas[schemaName];
+  if (!schema) return next(new Error(`Unknown verification validation schema: ${schemaName}`));
+
+  const result = schema.safeParse(req.body);
+  if (!result.success) {
+    const message = result.error.issues
+      .map((issue) => `${issue.path.join('.') || 'body'}: ${issue.message}`)
+      .join(', ');
+    return next(new AppError(`Validation error: ${message}`, 400));
+  }
+  req.body = result.data;
+  next();
 };
 
 export const validateAuthBody = (schemaName) => (req, res, next) => {

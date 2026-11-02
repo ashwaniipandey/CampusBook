@@ -289,7 +289,7 @@ export const getAdminUsers = async (query) => {
   }
   const [users, total] = await Promise.all([
     User.find(filter)
-      .select('name email role university status isBlocked isVerified avatar createdAt')
+      .select('name email role university status isBlocked isVerified verificationStatus verificationMethod collegeEmail idCardImage verificationNote avatar createdAt')
       .populate('university', 'name code')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -319,7 +319,8 @@ export const setAdminUserBlocked = async (id, isBlocked, adminId) => {
 
 export const verifyAdminUser = async (id) => {
   const user = await getStudentUser(id);
-  user.isVerified = true;
+  user.verificationStatus = 'verified';
+  user.verificationNote = '';
   await user.save();
   await user.populate('university', 'name code');
   return user;

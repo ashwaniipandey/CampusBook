@@ -15,7 +15,7 @@ export interface User {
   name: string;
   email: string;
   role: 'student' | 'admin';
-  university: University | string;
+  university: University | string | null;
   studentId?: string;
   department?: string;
   course?: string;
@@ -27,11 +27,25 @@ export interface User {
   rating?: number;
   totalRatings?: number;
   isVerified: boolean;
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationMethod?: 'college_email' | 'id_card' | '';
+  collegeEmail?: string;
+  idCardImage?: string;
+  verificationNote?: string;
   status: 'active' | 'suspended' | 'pending';
   isBlocked?: boolean;
   lastSeen?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface VerificationStatus {
+  status: 'unverified' | 'pending' | 'verified' | 'rejected';
+  method?: User['verificationMethod'];
+  collegeEmail?: string;
+  idCardImage?: string;
+  note?: string;
+  isVerified: boolean;
 }
 
 export interface AuthResponse {

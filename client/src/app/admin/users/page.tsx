@@ -25,6 +25,7 @@ function badge(text: string, tone: 'green' | 'amber' | 'rose' | 'slate') {
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [pendingVerifications, setPendingVerifications] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -36,10 +37,10 @@ export default function AdminUsersPage() {
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState<AdminToastState>(null);
 
-  const showToast = (message: string, type: 'success' | 'error') => {
+  const showToast = useCallback((message: string, type: 'success' | 'error') => {
     setToast({ message, type });
     window.setTimeout(() => setToast(null), 3500);
-  };
+  }, []);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -53,9 +54,38 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, status, role]);
+  }, [page, search, status, role, showToast]);
 
   useEffect(() => { void loadUsers(); }, [loadUsers]);
+
+  const loadPendingVerifications = useCallback(async () => {
+    try {
+      const response = await api.getPendingVerifications();
+      setPendingVerifications(response.users || []);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to load pending student verifications.', 'error');
+    }
+  }, [showToast]);
+
+  useEffect(() => { void loadPendingVerifications(); }, [loadPendingVerifications]);
+
+  const decideVerification = async (student: User, decision: 'approve' | 'reject') => {
+    const reason = decision === 'reject'
+      ? window.prompt(`Optional reason for rejecting ${student.name}'s ID card:`, 'Please submit a clearer student ID card.')
+      : undefined;
+    if (decision === 'reject' && reason === null) return;
+    if (!window.confirm(`${decision === 'approve' ? 'Approve' : 'Reject'} ${student.name}'s student ID verification?`)) return;
+    setActionId(student._id);
+    try {
+      const response = await api.decideIdCardVerification(student._id, decision, reason || undefined);
+      showToast(response.message, 'success');
+      await Promise.all([loadPendingVerifications(), loadUsers()]);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Unable to update student verification.', 'error');
+    } finally {
+      setActionId(null);
+    }
+  };
 
   const setFilter = (setter: (value: string) => void, value: string) => {
     setter(value);
@@ -153,6 +183,43 @@ export default function AdminUsersPage() {
           <p className="mt-1 text-sm text-slate-500">Review campus accounts, verification, and access.</p>
         </div>
       </div>
+      {pendingVerifications.length > 0 && (
+        <section className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900 dark:bg-amber-950/20 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="font-bold text-slate-900 dark:text-slate-100">Pending student ID reviews</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-300">Review uploaded student IDs before approving access.</p>
+            </div>
+            {badge(String(pendingVerifications.length), 'amber')}
+          </div>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {pendingVerifications.map((student) => (
+              <article key={student._id} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900 sm:flex-row">
+                {student.idCardImage ? (
+                  <a href={student.idCardImage} target="_blank" rel="noreferrer" className="block h-32 w-full shrink-0 overflow-hidden rounded-lg bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 sm:w-40">
+                    <img src={student.idCardImage} alt={`Student ID card for ${student.name}`} className="h-full w-full object-cover" />
+                  </a>
+                ) : (
+                  <div className="flex h-32 w-full shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm text-slate-500 sm:w-40">No image</div>
+                )}
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <p className="truncate font-bold text-slate-900 dark:text-slate-100">{student.name}</p>
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">{student.email}</p>
+                  <p className="mt-1 truncate text-xs text-slate-600 dark:text-slate-300">{universityName(student.university)}</p>
+                  <div className="mt-auto flex gap-2 pt-3">
+                    <button type="button" disabled={actionId === student._id} onClick={() => void decideVerification(student, 'approve')} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800 disabled:opacity-50">
+                      {actionId === student._id ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />} Approve
+                    </button>
+                    <button type="button" disabled={actionId === student._id} onClick={() => void decideVerification(student, 'reject')} className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900 dark:text-rose-300 dark:hover:bg-rose-950/30">
+                      <ShieldOff className="h-3.5 w-3.5" /> Reject
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
       <AdminDataTable
         columns={columns}
         rows={users}

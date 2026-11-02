@@ -85,8 +85,9 @@ export const requireVerified = (req, res, next) => {
   if (!req.user || (!req.user.isVerified && req.user.role !== 'admin')) {
     return next(
       new AppError(
-        'Please verify your university email before continuing.',
-        403
+        'Verify your student status before using this feature.',
+        403,
+        'VERIFICATION_REQUIRED'
       )
     );
   }

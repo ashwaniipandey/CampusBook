@@ -142,7 +142,7 @@ export default function ProfilePage() {
               ) : (
                 <UserRound className="h-9 w-9" />
               )}
-              {user?.isVerified && (
+              {(user?.isVerified || user?.verificationStatus === 'verified') && (
                 <span title="Verified student" className="absolute -right-0.5 -top-0.5 rounded-full bg-white p-0.5">
                   <BadgeCheck className="h-5 w-5 fill-campus-100 text-campus-700" />
                 </span>
@@ -151,7 +151,7 @@ export default function ProfilePage() {
             <div className="min-w-[12rem] flex-1">
               <p className="font-bold text-slate-900">{user?.name}</p>
               <p className="mt-0.5 text-sm text-slate-500">{user?.email}</p>
-              {user?.isVerified && <p className="mt-1 text-xs font-semibold text-campus-700">Verified student</p>}
+              {(user?.isVerified || user?.verificationStatus === 'verified') && <p className="mt-1 text-xs font-semibold text-campus-700">Verified student</p>}
               <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
                 <Camera className="h-4 w-4" />
                 Choose avatar

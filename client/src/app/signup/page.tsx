@@ -26,8 +26,8 @@ import {
   ChevronDown,
   Check,
   RotateCw,
-  Sparkles,
 } from 'lucide-react';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 const popularCourses = [
   'Computer Science',
@@ -39,7 +39,7 @@ const popularCourses = [
 ];
 
 export default function SignupPage() {
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, googleLogin } = useAuth();
   const router = useRouter();
 
   const [universities, setUniversities] = useState<University[]>([]);
@@ -155,6 +155,16 @@ export default function SignupPage() {
     }
   };
 
+  const onGoogleCredential = async (credential: string) => {
+    setServerError(null);
+    const result = await googleLogin(credential);
+    if (result.success) {
+      router.push('/verify');
+    } else {
+      setServerError(result.error || 'Google sign-in failed.');
+    }
+  };
+
   return (
     <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
       <div className="max-w-xl w-full space-y-8 bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-200/80">
@@ -169,6 +179,16 @@ export default function SignupPage() {
           <p className="text-xs sm:text-sm text-slate-500">
             Join your campus community to trade, swap, and donate textbooks safely.
           </p>
+        </div>
+
+        <GoogleSignInButton
+          onCredential={onGoogleCredential}
+          onError={setServerError}
+        />
+        <div className="flex items-center gap-3 text-xs text-slate-400">
+          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+          <span>or create an account with email</span>
+          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
         </div>
 
         {/* Server Error Alert */}

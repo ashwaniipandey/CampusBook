@@ -4,7 +4,7 @@ import {
   getExchangeRequests,
   updateExchangeRequestStatus,
 } from '../controllers/exchangeController.js';
-import { protect } from '../middlewares/auth.js';
+import { protect, requireVerified } from '../middlewares/auth.js';
 import { validateObjectIdParam } from '../middlewares/requestSecurity.js';
 import { validateAllowedQuery, validateBody, validateRoleQuery } from '../validations/requestValidation.js';
 
@@ -13,7 +13,7 @@ router.param('id', validateObjectIdParam);
 
 router.use(protect);
 
-router.post('/', validateAllowedQuery(), validateBody('exchange'), createExchangeRequest);
+router.post('/', requireVerified, validateAllowedQuery(), validateBody('exchange'), createExchangeRequest);
 router.get('/', validateRoleQuery(['received', 'sent']), getExchangeRequests);
 router.patch('/:id/status', validateAllowedQuery(), validateBody('requestStatus'), updateExchangeRequestStatus);
 

@@ -8,11 +8,13 @@ import { Loader2 } from 'lucide-react';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: 'student' | 'admin';
+  requireVerified?: boolean;
 }
 
 export default function ProtectedRoute({
   children,
   requiredRole,
+  requireVerified = false,
 }: ProtectedRouteProps) {
   const { user, loading, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -27,9 +29,11 @@ export default function ProtectedRoute({
         } else {
           router.push('/dashboard');
         }
+      } else if (requireVerified && user?.role !== 'admin' && !user?.isVerified) {
+        router.replace(`/verify?required=1&returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`);
       }
     }
-  }, [loading, isAuthenticated, user, requiredRole, router]);
+  }, [loading, isAuthenticated, user, requiredRole, requireVerified, router]);
 
   if (loading) {
     return (
@@ -48,6 +52,9 @@ export default function ProtectedRoute({
     return null;
   }
 
+  if (requireVerified && user?.role !== 'admin' && !user?.isVerified) {
+    return null;
+  }
+
   return <>{children}</>;
 }
-

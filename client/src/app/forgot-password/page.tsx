@@ -89,7 +89,7 @@ export default function ForgotPasswordPage() {
               <input
                 type="email"
                 {...register('email')}
-                placeholder="e.g. alex.johnson@stanford.edu"
+                placeholder="e.g. student@university.edu"
                 className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-none focus:ring-2 ${
                   errors.email
                     ? 'border-rose-300 focus:ring-rose-500'

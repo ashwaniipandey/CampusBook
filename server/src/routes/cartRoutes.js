@@ -5,7 +5,7 @@ import {
   removeFromCart,
   clearCart,
 } from '../controllers/cartController.js';
-import { protect } from '../middlewares/auth.js';
+import { protect, requireVerified } from '../middlewares/auth.js';
 import { validateObjectIdParam } from '../middlewares/requestSecurity.js';
 import { validateAllowedQuery } from '../validations/requestValidation.js';
 
@@ -27,7 +27,7 @@ router.get('/', getCart);
  * @desc    Add book to shopping cart
  * @access  Private
  */
-router.post('/:bookId', addToCart);
+router.post('/:bookId', requireVerified, addToCart);
 
 /**
  * @route   DELETE /api/cart/:bookId

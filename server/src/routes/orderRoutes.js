@@ -4,7 +4,7 @@ import {
   getOrders,
   updateOrderStatus,
 } from '../controllers/orderController.js';
-import { protect } from '../middlewares/auth.js';
+import { protect, requireVerified } from '../middlewares/auth.js';
 import {
   validateCreateOrder,
   validateUpdateOrderStatus,
@@ -23,7 +23,7 @@ router.use(protect);
  * @desc    Create a new order (single book or checkout from cart)
  * @access  Private
  */
-router.post('/', validateAllowedQuery(), validateCreateOrder, createOrder);
+router.post('/', requireVerified, validateAllowedQuery(), validateCreateOrder, createOrder);
 
 /**
  * @route   GET /api/orders

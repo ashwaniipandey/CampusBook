@@ -40,6 +40,9 @@ const schemas = {
     })
     .strict(),
   search: z.object({ term: nonEmptyText(120) }).strict(),
+  verificationDecision: z.object({
+    reason: z.string().trim().max(500).optional(),
+  }).strict(),
 };
 
 const rejectUnknownQueryKeys = (query, allowedKeys) => {

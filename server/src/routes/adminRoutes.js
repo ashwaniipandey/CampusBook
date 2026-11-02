@@ -14,6 +14,9 @@ import {
   getUniversities,
   getUniversity,
   getUsers,
+  listPendingVerifications,
+  approveIdCard,
+  rejectIdCard,
   blockUser,
   unblockUser,
   verifyUser,
@@ -31,7 +34,7 @@ import {
 } from '../controllers/adminController.js';
 import { authorize, protect } from '../middlewares/auth.js';
 import { validateObjectIdParam } from '../middlewares/requestSecurity.js';
-import { validateAdminQuery, validateAllowedQuery } from '../validations/requestValidation.js';
+import { validateAdminQuery, validateAllowedQuery, validateBody } from '../validations/requestValidation.js';
 
 const router = express.Router();
 router.param('id', validateObjectIdParam);
@@ -45,6 +48,9 @@ router.get('/analytics/universities', validateAllowedQuery(), getAnalyticsUniver
 router.get('/recent', validateAllowedQuery(), getRecent);
 
 router.get('/users', validateAdminQuery('users'), getUsers);
+router.get('/verifications/pending', validateAllowedQuery(), listPendingVerifications);
+router.patch('/verifications/:id/approve', validateAllowedQuery(), validateBody('verificationDecision'), approveIdCard);
+router.patch('/verifications/:id/reject', validateAllowedQuery(), validateBody('verificationDecision'), rejectIdCard);
 router.patch('/users/:id/block', validateAllowedQuery(), blockUser);
 router.patch('/users/:id/unblock', validateAllowedQuery(), unblockUser);
 router.patch('/users/:id/verify', validateAllowedQuery(), verifyUser);

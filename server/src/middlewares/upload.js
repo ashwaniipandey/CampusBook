@@ -105,4 +105,20 @@ export const uploadMessageImage = (req, res, next) => {
   });
 };
 
-export default { uploadBookImages, uploadMessageImage };
+export const uploadIdCardImage = (req, res, next) => {
+  singleImageUpload.single('image')(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return next(new AppError('ID card image must be less than 5MB.', 400));
+        }
+        return next(new AppError('Upload exactly one ID card image.', 400));
+      }
+      return next(err);
+    }
+    if (!req.file) return next(new AppError('Please upload an ID card image.', 400));
+    next();
+  });
+};
+
+export default { uploadBookImages, uploadMessageImage, uploadIdCardImage };

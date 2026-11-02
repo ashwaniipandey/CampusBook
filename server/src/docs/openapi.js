@@ -203,6 +203,14 @@ const paths = {
         message: 'Logged in successfully.',
         user: { name: 'A Student' },
       },
+      '/api/auth/google': {
+        post: operation({
+          summary: 'Verify a Google ID token and set the auth cookie',
+          tag: 'Authentication',
+          auth: false,
+          requestBody: 'GoogleLoginRequest',
+        }),
+      },
     }),
   },
   '/api/auth/verify-otp': {
@@ -280,6 +288,34 @@ const paths = {
       summary: 'Upload a profile avatar',
       tag: 'Users and profile',
       requestSchema: 'AvatarUploadRequest',
+      requestContentType: 'multipart/form-data',
+    }),
+  },
+  '/api/verification/status': {
+    get: operation({
+      summary: 'Get the current student verification status',
+      tag: 'Users and profile',
+    }),
+  },
+  '/api/verification/email/send-otp': {
+    post: operation({
+      summary: 'Send a student verification code to a college email',
+      tag: 'Users and profile',
+      requestBody: 'CollegeEmailRequest',
+    }),
+  },
+  '/api/verification/email/verify': {
+    post: operation({
+      summary: 'Verify the college email one-time code',
+      tag: 'Users and profile',
+      requestBody: 'CollegeOtpRequest',
+    }),
+  },
+  '/api/verification/id-card': {
+    post: operation({
+      summary: 'Submit a student ID image for admin review',
+      tag: 'Users and profile',
+      requestSchema: 'IdCardUploadRequest',
       requestContentType: 'multipart/form-data',
     }),
   },
@@ -692,6 +728,28 @@ const paths = {
       ],
     }),
   },
+  '/api/admin/verifications/pending': {
+    get: operation({
+      summary: 'List student ID card verifications awaiting review',
+      tag: 'Administration',
+    }),
+  },
+  '/api/admin/verifications/{id}/approve': {
+    patch: operation({
+      summary: 'Approve a pending student ID card verification',
+      tag: 'Administration',
+      parameters: [pathId('id', 'User ID')],
+      requestBody: 'VerificationDecisionRequest',
+    }),
+  },
+  '/api/admin/verifications/{id}/reject': {
+    patch: operation({
+      summary: 'Reject a student ID card verification with a reason',
+      tag: 'Administration',
+      parameters: [pathId('id', 'User ID')],
+      requestBody: 'VerificationDecisionRequest',
+    }),
+  },
   '/api/admin/users/{id}/block': {
     patch: operation({
       summary: 'Block a student account',
@@ -1005,6 +1063,7 @@ const definition = {
         properties: {
           status: { type: 'string', example: 'fail' },
           message: { type: 'string', example: 'Validation error.' },
+          code: { type: 'string', example: 'VERIFICATION_REQUIRED' },
         },
         required: ['status', 'message'],
       },
@@ -1022,6 +1081,11 @@ const definition = {
           university: { oneOf: [{ type: 'string' }, { type: 'object' }] },
           avatar: { type: 'string', format: 'uri' },
           isVerified: { type: 'boolean' },
+          verificationStatus: { type: 'string', enum: ['unverified', 'pending', 'verified', 'rejected'] },
+          verificationMethod: { type: 'string', enum: ['college_email', 'id_card', ''] },
+          collegeEmail: { type: 'string', format: 'email' },
+          idCardImage: { type: 'string', format: 'uri' },
+          verificationNote: { type: 'string', maxLength: 500 },
           rating: { type: 'number', minimum: 0, maximum: 5 },
           totalRatings: { type: 'integer', minimum: 0 },
         },
@@ -1111,6 +1175,26 @@ const definition = {
         },
         ['email', 'password'],
       ),
+      GoogleLoginRequest: bodySchema(
+        { credential: { type: 'string', minLength: 20, maxLength: 8192 } },
+        ['credential'],
+      ),
+      CollegeEmailRequest: bodySchema(
+        { email: { type: 'string', format: 'email', maxLength: 254 } },
+        ['email'],
+      ),
+      CollegeOtpRequest: bodySchema(
+        { otp: { type: 'string', pattern: '^\\d{6}$' } },
+        ['otp'],
+      ),
+      IdCardUploadRequest: {
+        type: 'object',
+        properties: { image: { type: 'string', format: 'binary' } },
+        required: ['image'],
+      },
+      VerificationDecisionRequest: bodySchema({
+        reason: { type: 'string', maxLength: 500 },
+      }),
       EmailRequest: bodySchema({ email: { type: 'string', format: 'email' } }, [
         'email',
       ]),

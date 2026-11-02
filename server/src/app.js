@@ -28,6 +28,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import smartRoutes from './routes/smartRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import publicRoutes from './routes/publicRoutes.js';
+import verificationRoutes from './routes/verificationRoutes.js';
 import { apiLimiter } from './middlewares/rateLimiter.js';
 import {
   sanitizeRequestInputs,
@@ -120,6 +121,7 @@ app.get('/api/health', validateAllowedQuery(), async (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/verification', verificationRoutes);
 app.use('/api/universities', universityRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/books', bookRoutes);

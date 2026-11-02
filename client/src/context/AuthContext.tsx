@@ -27,6 +27,7 @@ interface AuthContextType {
   clearCart: () => Promise<string>;
   emptyCart: () => void;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: User }>;
+  googleLogin: (credential: string) => Promise<{ success: boolean; error?: string; user?: User }>;
   register: (data: {
     name: string;
     email: string;
@@ -38,12 +39,15 @@ interface AuthContextType {
     phone?: string;
   }) => Promise<{ success: boolean; error?: string; user?: User }>;
   verifyOtp: (otp: string, email?: string) => Promise<{ success: boolean; error?: string; user?: User }>;
+  sendCollegeVerificationOtp: (email: string) => Promise<{ success: boolean; error?: string; message?: string }>;
+  verifyCollegeVerificationOtp: (otp: string) => Promise<{ success: boolean; error?: string; user?: User }>;
+  submitVerificationIdCard: (image: File) => Promise<{ success: boolean; error?: string; user?: User }>;
   resendOtp: (email?: string) => Promise<{ success: boolean; error?: string; message?: string }>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<{ success: boolean; error?: string; user?: User }>;
   uploadAvatar: (file: File) => Promise<{ success: boolean; error?: string; user?: User }>;
   changePassword: (data: { currentPassword: string; newPassword: string }) => Promise<{ success: boolean; error?: string }>;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
   redirectByRole: (userToRoute?: User | null) => void;
 }
 
@@ -296,11 +300,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await api.getMe();
       if (res && res.user) {
         setUser(res.user);
+        return res.user;
       } else {
         setUser(null);
+        return null;
       }
     } catch {
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -322,6 +329,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: 'Login failed: no user data returned' };
     } catch (err: any) {
       return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleLogin = async (credential: string) => {
+    setLoading(true);
+    try {
+      const response = await api.googleLogin(credential);
+      if (!response.user) throw new Error('Google sign-in did not return a user account.');
+      setUser(response.user);
+      return { success: true, user: response.user };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Google sign-in failed.' };
     } finally {
       setLoading(false);
     }
@@ -364,6 +385,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: res.message || 'OTP verification failed' };
     } catch (err: any) {
       return { success: false, error: err.message };
+    }
+  };
+
+  const sendCollegeVerificationOtp = async (email: string) => {
+    try {
+      const response = await api.sendCollegeVerificationOtp(email);
+      await refreshUser();
+      return { success: true, message: response.message };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Unable to send a verification code.' };
+    }
+  };
+
+  const verifyCollegeVerificationOtp = async (otp: string) => {
+    try {
+      const response = await api.verifyCollegeVerificationOtp(otp);
+      if (response.user) {
+        setUser(response.user);
+        return { success: true, user: response.user };
+      }
+      return { success: false, error: response.message || 'Verification failed.' };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Verification failed.' };
+    }
+  };
+
+  const submitVerificationIdCard = async (image: File) => {
+    try {
+      const response = await api.submitVerificationIdCard(image);
+      if (response.user) {
+        setUser(response.user);
+        return { success: true, user: response.user };
+      }
+      return { success: false, error: response.message || 'ID card submission failed.' };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'ID card submission failed.' };
     }
   };
 
@@ -449,8 +506,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearCart,
         emptyCart,
         login,
+        googleLogin,
         register,
         verifyOtp,
+        sendCollegeVerificationOtp,
+        verifyCollegeVerificationOtp,
+        submitVerificationIdCard,
         resendOtp,
         logout,
         updateProfile,

@@ -177,10 +177,16 @@ export default function BookDetailPage() {
     };
   }, [bookId]);
 
-  const requireLogin = () => {
+  const requireLogin = (requireVerified = false) => {
     if (authLoading) return false;
-    if (user) return true;
     const returnUrl = `${window.location.pathname}${window.location.search}`;
+    if (user) {
+      if (requireVerified && user.role !== 'admin' && !user.isVerified) {
+        router.push(`/verify?required=1&returnTo=${encodeURIComponent(returnUrl)}`);
+        return false;
+      }
+      return true;
+    }
     router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
     return false;
   };
@@ -197,7 +203,7 @@ export default function BookDetailPage() {
   };
 
   const addToCart = async () => {
-    if (!book || !requireLogin()) return;
+    if (!book || !requireLogin(true)) return;
     setAddingToCart(true);
     try {
       const message = await addCartBook(book);
@@ -211,7 +217,7 @@ export default function BookDetailPage() {
 
   const submitOrder = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!book || !requireLogin()) return;
+    if (!book || !requireLogin(true)) return;
     setSubmittingOrder(true);
     try {
       await api.createOrder({
@@ -227,7 +233,7 @@ export default function BookDetailPage() {
   };
 
   const openExchangeRequest = async () => {
-    if (!book || !requireLogin()) return;
+    if (!book || !requireLogin(true)) return;
     setMyBooksLoading(true);
     try {
       const response = await api.getMyBooks();
@@ -249,7 +255,7 @@ export default function BookDetailPage() {
 
   const submitExchangeRequest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!book || !offeredBookId || !requireLogin()) return;
+    if (!book || !offeredBookId || !requireLogin(true)) return;
     setSubmittingRequest(true);
     try {
       const response = await api.createExchangeRequest({
@@ -268,7 +274,7 @@ export default function BookDetailPage() {
 
   const submitDonationRequest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!book || !requireLogin()) return;
+    if (!book || !requireLogin(true)) return;
     setSubmittingRequest(true);
     try {
       const response = await api.createDonationRequest({
@@ -285,7 +291,7 @@ export default function BookDetailPage() {
   };
 
   const chatWithSeller = async () => {
-    if (!book || !sellerId || isOwner || !requireLogin() || openingConversation) return;
+    if (!book || !sellerId || isOwner || !requireLogin(true) || openingConversation) return;
     setOpeningConversation(true);
     try {
       const response = await api.createConversation({ userId: sellerId, bookId: book._id });
@@ -487,7 +493,7 @@ export default function BookDetailPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => requireLogin() && setOrderModalOpen(true)}
+                          onClick={() => requireLogin(true) && setOrderModalOpen(true)}
                           disabled={authLoading}
                           className="rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-50"
                         >
@@ -525,7 +531,7 @@ export default function BookDetailPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (!requireLogin()) return;
+                        if (!requireLogin(true)) return;
                         setRequestMessage('');
                         setDonationModalOpen(true);
                       }}
@@ -589,7 +595,7 @@ export default function BookDetailPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-bold text-slate-900">{seller?.name || 'Campus seller'}</h2>
-                      {seller?.isVerified && (
+                      {(seller?.isVerified || seller?.verificationStatus === 'verified') && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-campus-50 px-2 py-1 text-[11px] font-semibold text-campus-700">
                           <CheckCircle2 className="h-3.5 w-3.5" /> Verified
                         </span>

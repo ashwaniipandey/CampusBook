@@ -2,11 +2,12 @@
  * Custom Operational Application Error
  */
 export class AppError extends Error {
-  constructor(message, statusCode) {
+  constructor(message, statusCode, errorCode) {
     super(message);
     this.statusCode = statusCode;
     this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
     this.isOperational = true;
+    if (errorCode) this.errorCode = errorCode;
 
     Error.captureStackTrace(this, this.constructor);
   }
@@ -75,6 +76,7 @@ export const errorHandler = (err, req, res, next) => {
   res.status(responseStatusCode).json({
     status: error.status || 'error',
     message,
+    ...(err.errorCode ? { code: err.errorCode } : {}),
     ...(!isProduction && {
       error: error.name,
       stack: err.stack,

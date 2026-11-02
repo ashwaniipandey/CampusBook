@@ -16,11 +16,11 @@ import {
   Loader2,
   Eye,
   EyeOff,
-  Sparkles,
 } from 'lucide-react';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 export default function LoginPage() {
-  const { login, redirectByRole } = useAuth();
+  const { login, googleLogin, redirectByRole } = useAuth();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -28,7 +28,6 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -53,10 +52,19 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickFill = (demoEmail: string, demoPass: string) => {
-    setValue('email', demoEmail, { shouldValidate: true });
-    setValue('password', demoPass, { shouldValidate: true });
+  const onGoogleCredential = async (credential: string) => {
     setServerError(null);
+    const result = await googleLogin(credential);
+    if (result.success) {
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      if (redirect?.startsWith('/') && !redirect.startsWith('//')) {
+        router.replace(redirect);
+      } else {
+        redirectByRole(result.user);
+      }
+    } else {
+      setServerError(result.error || 'Google sign-in failed.');
+    }
   };
 
   return (
@@ -75,28 +83,14 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Quick Fill Demo Badges */}
-        <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
-          <div className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Quick Fill Test Accounts:</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('admin@campusbook.edu', 'AdminPass123!')}
-              className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 hover:bg-purple-200 transition"
-            >
-              Demo Admin (admin@campusbook.edu)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('alex.johnson@stanford.edu', 'StudentPass123!')}
-              className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-campus-100 text-campus-800 hover:bg-campus-200 transition"
-            >
-              Demo Student (Stanford)
-            </button>
-          </div>
+        <GoogleSignInButton
+          onCredential={onGoogleCredential}
+          onError={setServerError}
+        />
+        <div className="flex items-center gap-3 text-xs text-slate-400">
+          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+          <span>or sign in with email</span>
+          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
         </div>
 
         {/* Server Error Alert */}
@@ -119,7 +113,7 @@ export default function LoginPage() {
               <input
                 type="email"
                 {...register('email')}
-                placeholder="e.g. yourname@stanford.edu"
+                placeholder="e.g. yourname@university.edu"
                 className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${
                   errors.email
                     ? 'border-rose-300 focus:ring-rose-500'

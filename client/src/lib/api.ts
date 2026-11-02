@@ -22,6 +22,7 @@ import {
   SmartPriceSuggestion,
   SmartSavings,
   ExchangeMatch,
+  VerificationStatus,
 } from '@/types';
 
 const API_BASE_URL =
@@ -95,6 +96,49 @@ export const api = {
     request<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
+    }),
+
+  googleLogin: (credential: string) =>
+    request<AuthResponse>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ credential }),
+    }),
+
+  sendCollegeVerificationOtp: (email: string) =>
+    request<{ status: string; message: string }>('/verification/email/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  verifyCollegeVerificationOtp: (otp: string) =>
+    request<AuthResponse>('/verification/email/verify', {
+      method: 'POST',
+      body: JSON.stringify({ otp }),
+    }),
+
+  submitVerificationIdCard: (image: File) => {
+    const formData = new FormData();
+    formData.append('image', image);
+    return request<AuthResponse>('/verification/id-card', {
+      method: 'POST',
+      body: formData,
+    });
+  },
+
+  getVerificationStatus: () =>
+    request<{ status: string; verification: VerificationStatus }>('/verification/status', {
+      method: 'GET',
+    }),
+
+  getPendingVerifications: () =>
+    request<{ status: string; results: number; users: User[] }>('/admin/verifications/pending', {
+      method: 'GET',
+    }),
+
+  decideIdCardVerification: (userId: string, decision: 'approve' | 'reject', reason?: string) =>
+    request<{ status: string; message: string; user: User }>(`/admin/verifications/${userId}/${decision}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ ...(reason ? { reason } : {}) }),
     }),
 
   register: (data: {

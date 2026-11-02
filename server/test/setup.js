@@ -4,6 +4,7 @@ process.env.NODE_ENV = 'test';
 process.env.DOTENV_CONFIG_QUIET = 'true';
 process.env.CLIENT_URL = 'http://localhost:3000';
 process.env.JWT_SECRET = 'test-only-jwt-secret-with-at-least-32-characters';
+process.env.GOOGLE_CLIENT_ID = 'test-google-client.apps.googleusercontent.com';
 process.env.MONGO_URI = 'mongodb://127.0.0.1:27017/campusbook-test-only';
 process.env.EMAIL_HOST = 'smtp.test.invalid';
 process.env.EMAIL_PORT = '587';
@@ -30,6 +31,14 @@ jest.unstable_mockModule('../src/config/cloudinary.js', () => ({
 
 jest.unstable_mockModule('socket.io', () => ({
   Server: jest.fn(),
+}));
+
+jest.unstable_mockModule('google-auth-library', () => ({
+  OAuth2Client: jest.fn(() => ({
+    verifyIdToken: jest.fn(async () => {
+      throw new Error('Invalid mocked Google token');
+    }),
+  })),
 }));
 
 const mongoose = (await import('mongoose')).default;

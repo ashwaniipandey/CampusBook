@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
+import { AppError } from '../middlewares/errorHandler.js';
 
 dotenv.config();
 
@@ -44,9 +45,13 @@ if (isConfigured) {
  * @returns {Promise<{url: string, public_id: string}>}
  */
 export const uploadToCloudinary = (buffer, folder = 'campusbook/books', options = {}) => {
+  const { disableFallback = false, ...uploadOptions } = options;
   return new Promise((resolve, reject) => {
     // Graceful fallback for local development if Cloudinary credentials are not configured or are placeholder
     if (!isConfigured) {
+      if (disableFallback) {
+        return reject(new AppError('Cloudinary image storage is not configured.', 503));
+      }
       const mockId = `mock_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       const mockUrl = `https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80`;
       return resolve({
@@ -59,10 +64,11 @@ export const uploadToCloudinary = (buffer, folder = 'campusbook/books', options 
       {
         folder,
         resource_type: 'image',
-        ...options,
+        ...uploadOptions,
       },
       (error, result) => {
         if (error) {
+          if (disableFallback) return reject(error);
           console.warn(
             `[Cloudinary] Live upload failed (${error.message}). Falling back to local placeholder for dev.`
           );
@@ -108,4 +114,3 @@ export const deleteFromCloudinary = async (public_id) => {
 };
 
 export default cloudinary;
-

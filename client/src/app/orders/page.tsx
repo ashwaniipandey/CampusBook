@@ -20,6 +20,7 @@ import api from '@/lib/api';
 import { BookImage, Order, OrderStatus, Review, User } from '@/types';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
 import { MotionDialog } from '@/components/MotionEffects';
+import { getVerificationHref, isVerifiedStudent } from '@/lib/verification';
 
 type OrderRole = 'buying' | 'selling';
 type Toast = { message: string; type: 'success' | 'error' };
@@ -180,6 +181,10 @@ export default function OrdersPage() {
   };
 
   const messageOrderParty = async (order: Order, otherParty: User | string) => {
+    if (!isVerifiedStudent(user)) {
+      router.push(getVerificationHref('/orders'));
+      return;
+    }
     const userId = typeof otherParty === 'string' ? otherParty : otherParty._id;
     if (!userId || !order.book?._id || messagingOrderId) return;
     setMessagingOrderId(order._id);

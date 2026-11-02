@@ -28,6 +28,11 @@ import {
   verifyAdminUser,
 } from '../services/adminService.js';
 import { AppError } from '../middlewares/errorHandler.js';
+import {
+  approveIdCard,
+  listPendingVerifications,
+  rejectIdCard,
+} from './verificationController.js';
 
 const handleError = (error, next) => {
   if (error?.code === 11000) {
@@ -102,6 +107,8 @@ export const getUsers = async (req, res, next) => {
     handleError(error, next);
   }
 };
+
+export { listPendingVerifications, approveIdCard, rejectIdCard };
 
 export const blockUser = async (req, res, next) => {
   try {

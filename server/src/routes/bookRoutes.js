@@ -11,7 +11,7 @@ import {
   markSold,
 } from '../controllers/bookController.js';
 import { getBookSuggestions } from '../controllers/searchController.js';
-import { protect, optionalAuth } from '../middlewares/auth.js';
+import { protect, optionalAuth, requireVerified } from '../middlewares/auth.js';
 import { uploadBookImages } from '../middlewares/upload.js';
 import {
   validateCreateBook,
@@ -71,14 +71,14 @@ router.get('/:id', validateAllowedQuery(), optionalAuth, getBookById);
  * @desc    Create a new book listing (multipart with up to 5 images)
  * @access  Private
  */
-router.post('/', validateAllowedQuery(), protect, uploadLimiter, uploadBookImages, sanitizeRequestInputs, validateCreateBook, createBook);
+router.post('/', validateAllowedQuery(), protect, requireVerified, uploadLimiter, uploadBookImages, sanitizeRequestInputs, validateCreateBook, createBook);
 
 /**
  * @route   PUT /api/books/:id
  * @desc    Update book listing (owner only, can add/remove images)
  * @access  Private
  */
-router.put('/:id', validateAllowedQuery(), protect, uploadLimiter, uploadBookImages, sanitizeRequestInputs, validateUpdateBook, updateBook);
+router.put('/:id', validateAllowedQuery(), protect, requireVerified, uploadLimiter, uploadBookImages, sanitizeRequestInputs, validateUpdateBook, updateBook);
 
 /**
  * @route   DELETE /api/books/:id

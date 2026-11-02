@@ -8,7 +8,7 @@ import {
   sendMessage,
   uploadConversationImage,
 } from '../controllers/conversationController.js';
-import { protect } from '../middlewares/auth.js';
+import { protect, requireVerified } from '../middlewares/auth.js';
 import { uploadMessageImage } from '../middlewares/upload.js';
 import { chatLimiter, uploadLimiter } from '../middlewares/rateLimiter.js';
 import { sanitizeRequestInputs, validateObjectIdParam } from '../middlewares/requestSecurity.js';
@@ -24,7 +24,7 @@ router.param('id', validateObjectIdParam);
 
 router.use(protect);
 
-router.post('/', validateAllowedQuery(), validateBody('conversation'), createConversation);
+router.post('/', requireVerified, validateAllowedQuery(), validateBody('conversation'), createConversation);
 router.get('/', validateConversationListQuery, getConversations);
 router.get('/:id/messages', validatePagedQuery(['page', 'limit']), requireConversationParticipant, getConversationMessages);
 router.post('/:id/messages', validateAllowedQuery(), chatLimiter, requireConversationParticipant, validateBody('message'), sendMessage);

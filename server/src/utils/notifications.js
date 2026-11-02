@@ -35,6 +35,7 @@ export const buildNotificationLink = (notification) => {
       if (ids.orderId) return '/orders';
       if (ids.conversationId) return `/messages/${ids.conversationId}`;
       if (ids.bookId) return `/books/${ids.bookId}`;
+      if (ids.verificationStatus) return '/verify';
       return '/';
     default:
       return '/';

@@ -31,6 +31,8 @@ export const createUser = async ({
     password,
     role,
     university: assignedUniversity._id,
+    isVerified: true,
+    verificationStatus: 'verified',
     ...overrides,
   });
   testPasswords.set(user.email, password);

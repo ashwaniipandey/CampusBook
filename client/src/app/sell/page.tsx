@@ -1379,7 +1379,7 @@ function SellBookWizard() {
 
 export default function SellPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireVerified>
       <Suspense
         fallback={
           <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-3">

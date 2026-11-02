@@ -17,6 +17,7 @@ import BookCover from '@/components/BookCover';
 import { BookImage, User } from '@/types';
 import api from '@/lib/api';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
+import { getVerificationHref, isVerifiedStudent } from '@/lib/verification';
 
 type Toast = { message: string; type: 'success' | 'error' };
 
@@ -88,6 +89,10 @@ export default function CartPage() {
 
   const checkout = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!isVerifiedStudent(user)) {
+      router.push(getVerificationHref('/cart'));
+      return;
+    }
     if (!meetingLocation.trim()) {
       showToast('Meeting location is required.', 'error');
       return;

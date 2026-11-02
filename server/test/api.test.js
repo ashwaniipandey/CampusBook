@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../src/app.js';
-import { Book, Category, Order, User } from '../src/models/index.js';
+import { Book, Category, Notification, Order, User } from '../src/models/index.js';
 import {
   createBook,
   createTestIdentity,
@@ -87,9 +87,55 @@ describe('authentication API', () => {
     }
     expect(response.status).toBe(429);
   });
+
+  test('rejects an invalid Google ID token', async () => {
+    const response = await request(app)
+      .post('/api/auth/google')
+      .send({ credential: 'invalid-google-id-token-value' });
+    expect(response.status).toBe(401);
+    expect(response.body.message).toMatch(/invalid or expired/i);
+  });
 });
 
 describe('books API', () => {
+  test('blocks unverified users from creating listings while verified users can', async () => {
+    const { university, user: seller } = await createTestIdentity({
+      isVerified: false,
+      verificationStatus: 'unverified',
+    });
+    const cookie = await loginAndGetCookie(app, seller);
+    const category = await Category.create({
+      name: 'Verification Test Books',
+      slug: 'verification-test-books',
+    });
+    const payload = {
+      title: 'Unverified Listing Attempt',
+      author: 'Test Writer',
+      category: category._id.toString(),
+      condition: 'Good',
+      originalPrice: '120',
+      sellingPrice: '60',
+      listingType: 'sell',
+      description: 'A book listing created by the automated test suite.',
+      university: university._id.toString(),
+    };
+
+    const response = await request(app)
+      .post('/api/books')
+      .set('Cookie', cookie)
+      .send(payload);
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('VERIFICATION_REQUIRED');
+
+    const verified = await createUser({ university });
+    const verifiedCookie = await loginAndGetCookie(app, verified);
+    const permitted = await request(app)
+      .post('/api/books')
+      .set('Cookie', verifiedCookie)
+      .send({ ...payload, title: 'Verified Listing' });
+    expect(permitted.status).toBe(201);
+  });
+
   test('requires auth to create a pending listing and restricts edit/delete to its owner', async () => {
     const { university, user: seller } = await createTestIdentity();
     const otherUser = await createUser();
@@ -97,6 +143,7 @@ describe('books API', () => {
       name: 'Books for Testing',
       slug: 'books-for-testing',
     });
+
     const sellerCookie = await loginAndGetCookie(app, seller);
     const otherCookie = await loginAndGetCookie(app, otherUser);
     const payload = {
@@ -215,6 +262,93 @@ describe('books API', () => {
     );
     expect(secondPage.body.total).toBe(2);
     expect(secondPage.body.books[0]._id).toBe(second.id);
+  });
+});
+
+describe('student verification API', () => {
+  test('verifies a student with a college email OTP', async () => {
+    const university = await createUniversity({ domain: 'email-campus.edu' });
+    const user = await createUser({
+      university,
+      isVerified: false,
+      verificationStatus: 'unverified',
+    });
+    const cookie = await loginAndGetCookie(app, user);
+    const collegeEmail = `verify-${Date.now()}@${university.domain}`;
+
+    const sent = await request(app)
+      .post('/api/verification/email/send-otp')
+      .set('Cookie', cookie)
+      .send({ email: collegeEmail });
+    expect(sent.status).toBe(200);
+    const storedUser = await User.findById(user._id).select('+collegeVerificationOtp');
+    expect(storedUser.collegeVerificationOtp).toMatch(/^\d{6}$/);
+    const verified = await request(app)
+      .post('/api/verification/email/verify')
+      .set('Cookie', cookie)
+      .send({ otp: storedUser.collegeVerificationOtp });
+    expect(verified.status).toBe(200);
+    expect(verified.body.user.verificationStatus).toBe('verified');
+    expect(verified.body.user.isVerified).toBe(true);
+  });
+
+  test('admin can approve an ID card verification and the student is notified', async () => {
+    const student = await createUser({
+      verificationStatus: 'unverified',
+      isVerified: false,
+    });
+    const admin = await createUser({ role: 'admin' });
+    const studentCookie = await loginAndGetCookie(app, student);
+    const adminCookie = await loginAndGetCookie(app, admin);
+
+    const submitted = await request(app)
+      .post('/api/verification/id-card')
+      .set('Cookie', studentCookie)
+      .attach('image', Buffer.from('fake image data'), {
+        filename: 'student-id.png',
+        contentType: 'image/png',
+      });
+    expect(submitted.status).toBe(200);
+    expect(submitted.body.user.verificationStatus).toBe('pending');
+    expect(submitted.body.user.idCardImage).toBe('https://example.invalid/test-book.jpg');
+
+    const pending = await request(app)
+      .get('/api/admin/verifications/pending')
+      .set('Cookie', adminCookie);
+    expect(pending.status).toBe(200);
+    expect(pending.body.users.some((user) => user._id === student._id.toString())).toBe(true);
+
+    const approved = await request(app)
+      .patch(`/api/admin/verifications/${student._id}/approve`)
+      .set('Cookie', adminCookie)
+      .send({});
+    expect(approved.status).toBe(200);
+    expect(approved.body.user.verificationStatus).toBe('verified');
+    expect(approved.body.user.isVerified).toBe(true);
+    const updatedStudent = await User.findById(student._id);
+    expect(updatedStudent.verificationStatus).toBe('verified');
+    expect(await Notification.countDocuments({ recipient: student._id, type: 'system' })).toBe(1);
+
+    const rejectedStudent = await createUser({
+      verificationStatus: 'unverified',
+      isVerified: false,
+    });
+    const rejectedCookie = await loginAndGetCookie(app, rejectedStudent);
+    await request(app)
+      .post('/api/verification/id-card')
+      .set('Cookie', rejectedCookie)
+      .attach('image', Buffer.from('fake image data'), {
+        filename: 'student-id.png',
+        contentType: 'image/png',
+      });
+    const rejected = await request(app)
+      .patch(`/api/admin/verifications/${rejectedStudent._id}/reject`)
+      .set('Cookie', adminCookie)
+      .send({ reason: 'Please upload a clearer student ID.' });
+    expect(rejected.status).toBe(200);
+    expect(rejected.body.user.verificationStatus).toBe('rejected');
+    expect(rejected.body.user.verificationNote).toBe('Please upload a clearer student ID.');
+    expect(await Notification.countDocuments({ recipient: rejectedStudent._id, type: 'system' })).toBe(1);
   });
 });
 

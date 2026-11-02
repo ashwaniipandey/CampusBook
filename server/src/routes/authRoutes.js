@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   register,
+  googleLogin,
   verifyOtp,
   resendOtp,
   login,
@@ -22,6 +23,7 @@ router.use(validateAllowedQuery());
 // Public routes with rate limiting
 router.post('/register', authLimiter, validateAuthBody('register'), register);
 router.post('/login', sensitiveAuthLimiter, validateAuthBody('login'), login);
+router.post('/google', sensitiveAuthLimiter, validateAuthBody('google'), googleLogin);
 router.post('/verify-otp', sensitiveAuthLimiter, validateAuthBody('verifyOtp'), verifyOtp);
 router.post('/resend-otp', sensitiveAuthLimiter, validateAuthBody('resendOtp'), resendOtp);
 router.post('/forgot-password', sensitiveAuthLimiter, validateAuthBody('forgotPassword'), forgotPassword);

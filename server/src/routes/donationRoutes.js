@@ -4,7 +4,7 @@ import {
   getDonationRequests,
   updateDonationRequestStatus,
 } from '../controllers/donationController.js';
-import { protect } from '../middlewares/auth.js';
+import { protect, requireVerified } from '../middlewares/auth.js';
 import { validateObjectIdParam } from '../middlewares/requestSecurity.js';
 import { validateAllowedQuery, validateBody, validateRoleQuery } from '../validations/requestValidation.js';
 
@@ -13,7 +13,7 @@ router.param('id', validateObjectIdParam);
 
 router.use(protect);
 
-router.post('/', validateAllowedQuery(), validateBody('donation'), createDonationRequest);
+router.post('/', requireVerified, validateAllowedQuery(), validateBody('donation'), createDonationRequest);
 router.get('/', validateRoleQuery(['received', 'sent']), getDonationRequests);
 router.patch('/:id/status', validateAllowedQuery(), validateBody('requestStatus'), updateDonationRequestStatus);
 

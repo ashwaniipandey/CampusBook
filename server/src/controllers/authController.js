@@ -4,6 +4,10 @@ import University from '../models/University.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { sendOtpEmail } from '../utils/emailService.js';
 import { getJwtSecret } from '../config/jwt.js';
+import { OAuth2Client } from 'google-auth-library';
+import { randomUUID } from 'node:crypto';
+
+const googleClient = new OAuth2Client();
 
 const authCookieOptions = () => ({
   httpOnly: true,
@@ -178,7 +182,7 @@ export const verifyOtp = async (req, res, next) => {
     }
 
     // Mark student as verified
-    user.isVerified = true;
+    user.verificationStatus = 'verified';
     user.verificationOtp = undefined;
     user.verificationOtpExpires = undefined;
     await user.save({ validateBeforeSave: false });
@@ -188,6 +192,67 @@ export const verifyOtp = async (req, res, next) => {
       message: 'Email verified successfully! You have unlocked the Verified Student badge.',
       user,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const googleLogin = async (req, res, next) => {
+  try {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      return next(new AppError('Google sign-in is not configured.', 503));
+    }
+
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: req.body.credential,
+        audience: clientId,
+      });
+      payload = ticket.getPayload();
+    } catch {
+      return next(new AppError('The Google credential is invalid or expired.', 401));
+    }
+
+    if (!payload?.sub || !payload.email || payload.email_verified !== true) {
+      return next(new AppError('Google must provide a verified email address.', 401));
+    }
+
+    const email = payload.email.trim().toLowerCase();
+    let user = await User.findOne({ googleId: payload.sub }).populate('university');
+    if (!user) user = await User.findOne({ email }).populate('university');
+    if (user) {
+      if (user.googleId && user.googleId !== payload.sub) {
+        return next(new AppError('This account is linked to a different Google account.', 409));
+      }
+      if (!user.googleId) user.googleId = payload.sub;
+      if (!user.avatar && payload.picture) user.avatar = payload.picture;
+      await user.save();
+    } else {
+      const domain = email.split('@')[1];
+      const domainCandidates = domain.split('.').map((_, index, parts) => parts.slice(index).join('.'));
+      const university = await University.findOne({
+        domain: { $in: domainCandidates },
+      });
+      user = await User.create({
+        name: String(payload.name || email.split('@')[0]).trim().slice(0, 60),
+        email,
+        password: `${randomUUID()}${randomUUID()}`,
+        role: 'student',
+        university: university?._id || null,
+        avatar: payload.picture || '',
+        googleId: payload.sub,
+        verificationStatus: 'unverified',
+      });
+      await user.populate('university');
+    }
+
+    if (user.isBlocked || user.status === 'suspended') {
+      return next(new AppError('This account has been suspended. Please contact support.', 403));
+    }
+
+    sendTokenResponse(user, 200, res, 'Signed in with Google successfully.');
   } catch (error) {
     next(error);
   }

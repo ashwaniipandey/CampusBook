@@ -8,6 +8,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import BookCover from '@/components/BookCover';
 import api from '@/lib/api';
 import { ExchangeMatch } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+import { getVerificationHref, isVerifiedStudent } from '@/lib/verification';
 
 function cover(book: ExchangeMatch['yourBook']) {
   const image = book.images?.[0];
@@ -16,6 +18,7 @@ function cover(book: ExchangeMatch['yourBook']) {
 
 function ExchangeMatchesContent() {
   const router = useRouter();
+  const { user } = useAuth();
   const [matches, setMatches] = useState<ExchangeMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,6 +44,10 @@ function ExchangeMatchesContent() {
   }, [loadMatches]);
 
   const sendRequest = async (match: ExchangeMatch) => {
+    if (!isVerifiedStudent(user)) {
+      router.push(getVerificationHref('/exchange-matches'));
+      return;
+    }
     const key = `${match.theirBook._id}:${match.yourBook._id}`;
     setBusyMatch(key);
     setToast('');
@@ -60,6 +67,10 @@ function ExchangeMatchesContent() {
   };
 
   const messageStudent = async (match: ExchangeMatch) => {
+    if (!isVerifiedStudent(user)) {
+      router.push(getVerificationHref('/exchange-matches'));
+      return;
+    }
     setBusyMatch(`message:${match.otherUser._id}`);
     setToast('');
     try {
