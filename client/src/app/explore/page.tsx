@@ -7,6 +7,7 @@ import api from '@/lib/api';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
 import { Book, University, Category, FiltersMeta, BookCondition, ListingType } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import BookCover from '@/components/BookCover';
 import {
   Search,
   Filter,
@@ -439,6 +440,7 @@ function ExploreContent() {
 
   // Count active filters
   const activeFiltersCount = [
+    Boolean(searchInput.trim()),
     selectedCategories.length > 0,
     Boolean(selectedUniversity),
     selectedConditions.length > 0,
@@ -474,7 +476,7 @@ function ExploreContent() {
 
   // Reusable Filter Sidebar Component
   const FilterSidebar = () => (
-    <div className="space-y-6 text-sm">
+    <div className="divide-y divide-slate-100 text-sm [&>div]:pt-5 [&>div:first-child]:pt-0">
       {/* Header with Clear All */}
       <div className="flex items-center justify-between pb-3 border-b border-slate-200">
         <div className="flex items-center gap-2 font-bold text-slate-900">
@@ -505,7 +507,7 @@ function ExploreContent() {
         <select
           value={selectedUniversity}
           onChange={(e) => handleUniversityChange(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-800 bg-white focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-campus-500 dark:bg-slate-900 dark:text-slate-100"
         >
           <option value="">All Universities</option>
           {universities.map((uni) => (
@@ -623,7 +625,7 @@ function ExploreContent() {
               placeholder="Min"
               value={minPriceInput}
               onChange={(e) => setMinPriceInput(e.target.value)}
-              className="w-full pl-6 pr-2 py-1.5 rounded-xl border border-slate-300 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+              className="w-full rounded-xl border border-slate-300 py-1.5 pl-6 pr-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-campus-500 dark:bg-slate-900 dark:text-slate-100"
             />
           </div>
           <span className="text-slate-400 text-xs font-bold">—</span>
@@ -635,7 +637,7 @@ function ExploreContent() {
               placeholder="Max"
               value={maxPriceInput}
               onChange={(e) => setMaxPriceInput(e.target.value)}
-              className="w-full pl-6 pr-2 py-1.5 rounded-xl border border-slate-300 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+              className="w-full rounded-xl border border-slate-300 py-1.5 pl-6 pr-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-campus-500 dark:bg-slate-900 dark:text-slate-100"
             />
           </div>
           <button
@@ -860,7 +862,7 @@ function ExploreContent() {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="Search by title, author, course (e.g. CS106), ISBN, or subject..."
-                  className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-campus-500 text-xs sm:text-sm text-slate-900 placeholder-slate-400 bg-slate-50/50"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-9 text-xs text-slate-900 placeholder:text-slate-500 focus:border-campus-500 focus:outline-none focus:ring-2 focus:ring-campus-500/30 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400 sm:text-sm"
                 />
                 {searchInput && (
                   <button
@@ -895,7 +897,7 @@ function ExploreContent() {
                   <select
                     value={currentSort}
                     onChange={(e) => handleSortChange(e.target.value)}
-                    className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-campus-500 cursor-pointer"
+                    className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 focus:border-campus-500 focus:outline-none focus:ring-2 focus:ring-campus-500/30 dark:bg-slate-900 dark:text-slate-100"
                   >
                     <option value="newest">Newest</option>
                     <option value="price_asc">Price: Low to High</option>
@@ -927,9 +929,33 @@ function ExploreContent() {
               {activeFiltersCount > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[11px] text-slate-400 font-medium">Active:</span>
+                  {searchInput.trim() && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      “{searchInput.trim()}”
+                      <button type="button" aria-label="Clear search filter" onClick={() => setSearchInput('')} className="hover:text-rose-500">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  )}
+                  {selectedCategories.map((categoryId) => (
+                    <span key={categoryId} className="inline-flex items-center gap-1 rounded-full bg-campus-50 px-2.5 py-1 text-[11px] text-campus-800 dark:bg-campus-900/50 dark:text-campus-200">
+                      {categories.find((category) => category._id === categoryId)?.name || 'Category'}
+                      <button type="button" aria-label="Remove category filter" onClick={() => handleCategoryToggle(categoryId)} className="hover:text-rose-500">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                  {universityScope === 'mine' && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-campus-50 px-2.5 py-1 text-[11px] text-campus-800 dark:bg-campus-900/50 dark:text-campus-200">
+                      My University
+                      <button type="button" aria-label="Show all universities" onClick={() => handleUniversityScopeChange('all')} className="hover:text-rose-500">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  )}
                   {selectedUniversity && (
                     <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[11px]">
-                      Campus
+                      {universities.find((university) => university._id === selectedUniversity)?.name || 'Campus'}
                       <button onClick={() => handleUniversityChange('')} className="hover:text-rose-500">
                         <X className="w-3 h-3" />
                       </button>
@@ -951,6 +977,30 @@ function ExploreContent() {
                       </button>
                     </span>
                   ))}
+                  {editionInput && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      Edition: {editionInput}
+                      <button type="button" aria-label="Remove edition filter" onClick={() => { setEditionInput(''); updateUrlParams({ edition: '', page: 1 }); }} className="hover:text-rose-500">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  )}
+                  {courseInput && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      Course: {courseInput}
+                      <button type="button" aria-label="Remove course filter" onClick={() => { setCourseInput(''); updateUrlParams({ course: '', page: 1 }); }} className="hover:text-rose-500">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  )}
+                  {semesterInput && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      Semester: {semesterInput}
+                      <button type="button" aria-label="Remove semester filter" onClick={() => { setSemesterInput(''); updateUrlParams({ semester: '', page: 1 }); }} className="hover:text-rose-500">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  )}
                   {(minPriceInput || maxPriceInput) && (
                     <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[11px]">
                       {formatPrice(minPriceInput || '0')} - {maxPriceInput ? formatPrice(maxPriceInput) : 'Any'}
@@ -1077,27 +1127,20 @@ function ExploreContent() {
                   <Link
                     key={book._id}
                     href={`/books/${book._id}`}
-                    className="group bg-white border border-slate-200 hover:border-campus-300 rounded-3xl overflow-hidden shadow-xs hover:shadow-lg transition duration-200 flex flex-col justify-between"
+                    className="group flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-campus-300 hover:shadow-[0_16px_36px_-18px_rgba(21,128,61,0.42)] focus-visible:ring-2 focus-visible:ring-campus-500 dark:bg-slate-900"
                   >
                     <div>
                       {/* Image Thumbnail with Wishlist Heart */}
-                      <div className="relative aspect-16/10 bg-slate-100 overflow-hidden border-b border-slate-100">
-                        {coverUrl ? (
-                          <img
-                            src={coverUrl}
-                            alt={book.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">
-                            <BookOpen className="w-10 h-10 mb-1 text-slate-300" />
-                            <span className="text-[11px] font-medium">No cover image</span>
-                          </div>
-                        )}
+                      <div className="relative aspect-[4/3] overflow-hidden border-b border-slate-100 bg-slate-100">
+                        <BookCover
+                          src={coverUrl}
+                          alt={`Cover of ${book.title}`}
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                        />
 
                         {/* Condition Badge */}
                         <div className="absolute top-3 left-3">
-                          <span className="bg-white/95 backdrop-blur-xs text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs border border-slate-200">
+                          <span className="rounded-full border border-white/80 bg-white/95 px-2.5 py-1 text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-100">
                             {book.condition}
                           </span>
                         </div>
@@ -1141,7 +1184,7 @@ function ExploreContent() {
                           {book.title}
                         </h3>
 
-                        <p className="text-xs text-slate-500 font-medium line-clamp-1">
+                        <p className="line-clamp-1 text-xs font-medium text-slate-500">
                           By {book.author} ({book.edition || '1st Edition'})
                         </p>
 
@@ -1156,7 +1199,7 @@ function ExploreContent() {
                     </div>
 
                     {/* Price Footer */}
-                    <div className="p-4 pt-2 border-t border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center justify-between border-t border-slate-100 p-4 pt-3">
                       {book.listingType === 'donate' ? (
                         <span className="text-xs font-black text-emerald-700 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg">
                           Free

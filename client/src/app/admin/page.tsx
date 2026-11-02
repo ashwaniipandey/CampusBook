@@ -32,6 +32,7 @@ import {
   YAxis,
 } from 'recharts';
 import api from '@/lib/api';
+import BookCover from '@/components/BookCover';
 import { Book, Order, User } from '@/types';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
 
@@ -363,7 +364,7 @@ export default function AdminDashboardPage() {
                 <li key={book._id} className="rounded-xl border border-slate-100 p-3">
                   <div className="flex gap-3">
                     <div className="h-14 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                      {getImage(book) ? <img src={getImage(book)} alt="" className="h-full w-full object-cover" /> : <BookOpen className="m-auto mt-4 h-5 w-5 text-slate-300" />}
+                      <BookCover src={getImage(book)} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-1 text-sm font-bold text-slate-800">{book.title}</p>

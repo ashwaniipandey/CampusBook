@@ -21,6 +21,7 @@ import {
   Users,
 } from 'lucide-react';
 import SearchAutocomplete from '@/components/SearchAutocomplete';
+import BookCover from '@/components/BookCover';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
@@ -74,35 +75,39 @@ function BookCard({ book }: { book: Book }) {
   const categoryName = typeof book.category === 'object' ? book.category.name : '';
   const universityName = typeof book.university === 'object' ? book.university.name : '';
   const price = getBookPrice(book);
+  const originalPrice = Number(book.originalPrice || 0);
+  const discount = originalPrice > price && price > 0
+    ? Math.round(((originalPrice - price) / originalPrice) * 100)
+    : 0;
 
   return (
     <MotionCard className="h-full">
       <Link
         href={`/books/${book._id}`}
-          className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-campus-300 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900"
+          className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-campus-300 hover:shadow-[0_16px_36px_-18px_rgba(21,128,61,0.42)] dark:border-slate-700 dark:bg-slate-900"
       >
       <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={`Cover of ${book.title}`}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-slate-300">
-            <BookOpen className="h-12 w-12" aria-hidden="true" />
-          </div>
-        )}
+        <BookCover
+          src={imageUrl}
+          alt={`Cover of ${book.title}`}
+          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+        />
+        <span className="absolute left-3 top-3 rounded-full border border-white/80 bg-white/95 px-2.5 py-1 text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-100">
+          {book.condition}
+        </span>
         {book.listingType === 'donate' && (
-          <span className="absolute left-3 top-3 rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white shadow">
+          <span className="absolute right-3 top-3 rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white shadow">
             Free
           </span>
         )}
         {book.listingType === 'exchange' && (
-          <span className="absolute left-3 top-3 rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white shadow">
+          <span className="absolute right-3 top-3 rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white shadow">
             Exchange
+          </span>
+        )}
+        {discount > 0 && book.listingType === 'sell' && (
+          <span className="absolute right-3 top-3 rounded-full bg-campus-700 px-2.5 py-1 text-[10px] font-bold text-white shadow">
+            {discount}% off
           </span>
         )}
       </div>
@@ -118,6 +123,11 @@ function BookCard({ book }: { book: Book }) {
             {universityName || book.condition}
           </span>
         </div>
+        {discount > 0 && book.listingType === 'sell' && (
+          <span className="mt-1 text-right text-[11px] text-slate-400 line-through">
+            {formatPrice(originalPrice)}
+          </span>
+        )}
       </div>
       </Link>
     </MotionCard>

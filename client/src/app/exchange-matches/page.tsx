@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftRight, BadgeCheck, BookOpen, Loader2, MessageCircle, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowLeftRight, BadgeCheck, Loader2, MessageCircle, RefreshCw, Sparkles } from 'lucide-react';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import BookCover from '@/components/BookCover';
 import api from '@/lib/api';
 import { ExchangeMatch } from '@/types';
 
@@ -145,8 +146,8 @@ function ExchangeMatchesContent() {
                       { title: 'Their book', book: match.theirBook },
                     ].map(({ title, book }) => (
                       <Link key={book._id} href={`/books/${book._id}`} className="overflow-hidden rounded-xl border border-slate-200 hover:border-campus-300">
-                        <div className="flex h-28 items-center justify-center bg-slate-100">
-                          {cover(book) ? <img src={cover(book)} alt={book.title} className="h-full w-full object-cover" /> : <BookOpen className="h-9 w-9 text-slate-300" />}
+                        <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                          <BookCover src={cover(book)} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
                         </div>
                         <div className="p-3">
                           <p className="text-[10px] font-bold uppercase tracking-wide text-campus-700">{title}</p>

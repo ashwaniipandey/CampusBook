@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import BookCover from '@/components/BookCover';
 import api from '@/lib/api';
 import { Book, BookStatus } from '@/types';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
@@ -389,19 +390,8 @@ export default function MyBooksPage() {
                 >
                   <div>
                     {/* Cover Photo & Status Badge */}
-                    <div className="relative aspect-16/10 bg-slate-100 overflow-hidden border-b border-slate-100">
-                      {coverUrl ? (
-                        <img
-                          src={coverUrl}
-                          alt={book.title}
-                          className="w-full h-full object-cover transition hover:scale-105 duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
-                          <BookOpen className="w-10 h-10 mb-1 text-slate-300" />
-                          <span className="text-[11px] font-medium">No cover image</span>
-                        </div>
-                      )}
+                    <div className="group relative aspect-[4/3] overflow-hidden border-b border-slate-100 bg-slate-100">
+                      <BookCover src={coverUrl} alt={`Cover of ${book.title}`} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
 
                       {/* Status Badge in Header */}
                       <div className="absolute top-3 left-3">{getStatusBadge(book.status)}</div>
@@ -424,7 +414,7 @@ export default function MyBooksPage() {
                         <h3 className="font-bold text-base text-slate-900 leading-snug line-clamp-2">
                           {book.title}
                         </h3>
-                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                        <p className="mt-0.5 line-clamp-1 text-xs font-medium text-slate-500">
                           By {book.author} ({book.edition || '1st Edition'})
                         </p>
                       </div>

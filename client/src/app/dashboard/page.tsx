@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import BookCover from '@/components/BookCover';
 import api from '@/lib/api';
 import { Book, BookImage, StudentDashboard } from '@/types';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
@@ -497,7 +498,7 @@ export default function StudentDashboardPage() {
                     {smartRecommendations.map((book) => (
                       <Link key={book._id} href={`/books/${book._id}`} className="overflow-hidden rounded-xl border border-slate-200 transition hover:border-campus-300 hover:shadow-md">
                         <div className="aspect-[4/3] bg-slate-100">
-                          {getCover(book) ? <img src={getCover(book)} alt={book.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-slate-300"><BookOpen className="h-10 w-10" /></div>}
+                          <BookCover src={getCover(book)} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
                         </div>
                         <div className="p-3">
                           <p className="line-clamp-2 min-h-10 text-sm font-bold text-slate-900">{book.title}</p>

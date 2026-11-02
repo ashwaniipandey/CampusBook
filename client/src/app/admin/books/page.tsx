@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Check, Eye, LoaderCircle, Trash2, X } from 'lucide-react';
+import { Check, Eye, LoaderCircle, Trash2, X } from 'lucide-react';
 import AdminDataTable, { AdminTableColumn } from '@/components/AdminDataTable';
 import AdminToast, { AdminToastState } from '@/components/AdminToast';
+import BookCover from '@/components/BookCover';
 import api from '@/lib/api';
 import { Book, BookImage } from '@/types';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
@@ -107,8 +108,8 @@ export default function AdminBooksPage() {
       header: 'Book',
       render: (book) => (
         <div className="flex min-w-56 items-center gap-3">
-          <div className="flex h-14 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100 text-slate-300">
-            {getImage(book) ? <img src={getImage(book)} alt="" className="h-full w-full object-cover" /> : <BookOpen className="h-5 w-5" />}
+          <div className="h-14 w-11 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+            <BookCover src={getImage(book)} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
           </div>
           <div className="min-w-0">
             <p className="line-clamp-2 font-bold text-slate-900">{book.title}</p>

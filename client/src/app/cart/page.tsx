@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import BookCover from '@/components/BookCover';
 import { BookImage, User } from '@/types';
 import api from '@/lib/api';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
@@ -208,13 +209,7 @@ export default function CartPage() {
                 return (
                   <article key={item._id || book._id} className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row">
                     <Link href={`/books/${book._id}`} className="relative block h-44 shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-32 sm:w-32">
-                      {cover ? (
-                        <img src={getImageUrl(cover)} alt={book.title} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-slate-300">
-                          <BookOpen className="h-10 w-10" />
-                        </div>
-                      )}
+                      <BookCover src={cover ? getImageUrl(cover) : ''} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
                     </Link>
                     <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 sm:flex-row sm:items-start">
                       <div className="min-w-0 space-y-2">

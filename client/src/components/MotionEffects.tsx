@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 
 export function MotionSection({
@@ -13,11 +13,15 @@ export function MotionSection({
   'aria-label'?: string;
 }) {
   const reduceMotion = useReducedMotion();
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => setHydrated(true), []);
+
   return (
     <motion.section
       className={className}
       aria-label={ariaLabel}
-      initial={false}
+      initial={hydrated && !reduceMotion ? { opacity: 0.96, y: 8 } : false}
       whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.08 }}
       transition={{ duration: reduceMotion ? 0 : 0.32, ease: 'easeOut' }}

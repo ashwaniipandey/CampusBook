@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import BookCover from '@/components/BookCover';
 import api from '@/lib/api';
 import { Book, BookImage, Category, Review, University, User } from '@/types';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
@@ -48,13 +49,7 @@ function BookCard({ book }: { book: Book }) {
       className="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-campus-300 hover:shadow-lg"
     >
       <div className="aspect-[4/3] bg-slate-100">
-        {image ? (
-          <img src={getImageUrl(image)} alt={book.title} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
-        ) : (
-          <div className="flex h-full items-center justify-center text-slate-300">
-            <BookOpen className="h-12 w-12" />
-          </div>
-        )}
+        <BookCover src={image ? getImageUrl(image) : ''} alt={`Cover of ${book.title}`} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
       </div>
       <div className="space-y-2 p-4">
         <h3 className="line-clamp-2 min-h-10 text-sm font-bold text-slate-900 group-hover:text-campus-700">{book.title}</h3>

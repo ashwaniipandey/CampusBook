@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import BookCover from '@/components/BookCover';
 import api from '@/lib/api';
 import { BookImage, Order, OrderStatus, Review, User } from '@/types';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
@@ -315,11 +316,7 @@ export default function OrdersPage() {
 
                   <div className="grid gap-5 p-4 sm:grid-cols-[112px_1fr_auto] sm:p-5">
                     <Link href={bookHref} className="block h-44 overflow-hidden rounded-xl bg-slate-100 sm:h-28 sm:w-28">
-                      {image ? (
-                        <img src={getImageUrl(image)} alt={book.title} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-slate-300"><BookOpen className="h-10 w-10" /></div>
-                      )}
+                      <BookCover src={image ? getImageUrl(image) : ''} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
                     </Link>
 
                     <div className="min-w-0 space-y-2">

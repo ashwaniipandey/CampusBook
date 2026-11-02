@@ -7,6 +7,7 @@ import { BookOpen, CheckCircle2, LoaderCircle, MessageCircle, X } from 'lucide-r
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { MotionDialog } from '@/components/MotionEffects';
+import BookCover from '@/components/BookCover';
 import {
   Book,
   BookImage,
@@ -310,11 +311,7 @@ export default function RequestDashboard({ kind }: { kind: RequestKind }) {
                           className="flex min-w-0 gap-3 rounded-2xl border border-slate-100 p-3 transition hover:border-campus-200 hover:bg-campus-50/40"
                         >
                           <div className="h-24 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                            {image ? (
-                              <img src={image} alt={book.title} className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full items-center justify-center text-slate-300"><BookOpen className="h-8 w-8" /></div>
-                            )}
+                            <BookCover src={image || ''} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
                           </div>
                           <div className="min-w-0 self-center">
                             <span className="text-[10px] font-bold uppercase tracking-wide text-campus-700">{title}</span>

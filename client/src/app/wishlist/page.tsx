@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BookOpen, GraduationCap, Heart, LoaderCircle, ShoppingCart, X } from 'lucide-react';
+import { GraduationCap, Heart, LoaderCircle, ShoppingCart, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import BookCover from '@/components/BookCover';
 import { Book, BookImage, University } from '@/types';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
 
@@ -157,14 +158,8 @@ export default function WishlistPage() {
 
               return (
                 <article key={book._id} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
-                  <Link href={`/books/${book._id}`} className="group relative block aspect-[16/10] overflow-hidden bg-slate-100">
-                    {cover ? (
-                      <img src={getImageUrl(cover)} alt={book.title} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-slate-300">
-                        <BookOpen className="h-12 w-12" />
-                      </div>
-                    )}
+                  <Link href={`/books/${book._id}`} className="group relative block aspect-[4/3] overflow-hidden bg-slate-100">
+                    <BookCover src={cover ? getImageUrl(cover) : ''} alt={`Cover of ${book.title}`} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
                     <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-slate-800 shadow-sm">
                       {book.condition}
                     </span>
