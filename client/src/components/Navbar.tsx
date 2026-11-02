@@ -1,33 +1,33 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
+  ArrowLeftRight,
+  BadgeCheck,
   Bell,
   BookOpen,
-  Search,
-  ArrowLeftRight,
-  HeartHandshake,
-  PlusCircle,
-  Heart,
-  ShoppingCart,
-  ClipboardList,
-  MessageCircle,
-  Menu,
-  X,
-  BadgeCheck,
-  ShieldAlert,
-  User as UserIcon,
-  LogOut,
-  LayoutDashboard,
-  Shield,
-  ChevronDown,
   CheckCheck,
+  ChevronDown,
+  ClipboardList,
+  Heart,
+  HeartHandshake,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessageCircle,
   PackageCheck,
-  Star,
+  PlusCircle,
+  Search,
   Settings,
+  Shield,
+  ShieldAlert,
+  ShoppingCart,
   Sparkles,
+  Star,
+  User as UserIcon,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
@@ -58,8 +58,13 @@ function notificationIcon(type: Notification['type']) {
   return Bell;
 }
 
+function countLabel(count: number) {
+  return count > 99 ? '99+' : count;
+}
+
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, logout, cartCount } = useAuth();
   const {
     socket,
@@ -69,25 +74,45 @@ export default function Navbar() {
     markNotificationRead,
     markAllNotificationsRead,
   } = useSocket();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [notificationToast, setNotificationToast] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState('');
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const notificationRef = useRef<HTMLDivElement>(null);
-  const userMenuTriggerRef = useRef<HTMLButtonElement>(null);
-  const notificationTriggerRef = useRef<HTMLButtonElement>(null);
-  const mobileMenuTriggerRef = useRef<HTMLButtonElement>(null);
 
-  // Close dropdown on click outside
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const notificationDesktopRef = useRef<HTMLDivElement>(null);
+  const notificationCompactRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const mobilePanelRef = useRef<HTMLDivElement>(null);
+  const userMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const notificationDesktopTriggerRef = useRef<HTMLButtonElement>(null);
+  const notificationCompactTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const searchTriggerRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
         setUserDropdownOpen(false);
       }
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+      if (
+        notificationDesktopRef.current &&
+        !notificationDesktopRef.current.contains(target) &&
+        notificationCompactRef.current &&
+        !notificationCompactRef.current.contains(target)
+      ) {
         setNotificationDropdownOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(target)) {
+        setSearchOpen(false);
+      }
+      if (mobilePanelRef.current && !mobilePanelRef.current.contains(target) &&
+          mobileMenuTriggerRef.current && !mobileMenuTriggerRef.current.contains(target)) {
+        setMobileMenuOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -98,15 +123,21 @@ export default function Navbar() {
     function handleEscape(event: KeyboardEvent) {
       if (event.key !== 'Escape') return;
       if (userDropdownOpen) userMenuTriggerRef.current?.focus();
-      if (notificationDropdownOpen) notificationTriggerRef.current?.focus();
+      if (notificationDropdownOpen) {
+        const desktopTrigger = notificationDesktopTriggerRef.current;
+        if (desktopTrigger?.getClientRects().length) desktopTrigger.focus();
+        else notificationCompactTriggerRef.current?.focus();
+      }
       if (mobileMenuOpen) mobileMenuTriggerRef.current?.focus();
+      if (searchOpen) searchTriggerRef.current?.focus();
       setUserDropdownOpen(false);
       setNotificationDropdownOpen(false);
       setMobileMenuOpen(false);
+      setSearchOpen(false);
     }
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [mobileMenuOpen, notificationDropdownOpen, userDropdownOpen]);
+  }, [mobileMenuOpen, notificationDropdownOpen, searchOpen, userDropdownOpen]);
 
   useEffect(() => {
     if (!socket) return;
@@ -119,6 +150,13 @@ export default function Navbar() {
       socket.off('notification', handleNotification);
     };
   }, [socket]);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setUserDropdownOpen(false);
+    setNotificationDropdownOpen(false);
+    setSearchOpen(false);
+  }, [pathname]);
 
   const openNotification = async (notification: Notification) => {
     if (!notification.isRead) {
@@ -142,683 +180,508 @@ export default function Navbar() {
     }
   };
 
-  const getInitials = (name: string) => {
-    if (!name) return 'U';
-    return name
-      .split(' ')
-      .map((part) => part[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
-  };
+  const getInitials = (name: string) =>
+    name
+      ? name.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase()
+      : 'U';
 
   const universityName =
     typeof user?.university === 'object' && user.university
       ? user.university.name
       : 'Campus Member';
 
+  const actionHref = (href: string) =>
+    isAuthenticated ? href : `/login?redirect=${encodeURIComponent(href)}`;
+
+  const isActive = (href: string) =>
+    href === '/explore'
+      ? pathname === '/explore'
+      : pathname === href || pathname.startsWith(`${href}/`);
+
+  const desktopNavClass = (href: string, active = isActive(href)) =>
+    `inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 ${
+      active
+        ? 'bg-campus-50 text-campus-800 dark:bg-campus-900/40 dark:text-campus-200'
+        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white'
+    }`;
+
+  const menuLinkClass = (href: string, emphasized = false, active = isActive(href)) =>
+    `flex min-h-10 items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 ${
+      emphasized
+        ? 'bg-campus-50 font-semibold text-campus-800 hover:bg-campus-100 dark:bg-campus-900/40 dark:text-campus-200 dark:hover:bg-campus-900/60'
+        : active
+          ? 'bg-campus-50 font-semibold text-campus-800 dark:bg-campus-900/40 dark:text-campus-200'
+          : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
+    }`;
+
+  const iconButtonClass =
+    'relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-campus-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-campus-300';
+
+  const renderIconLink = (
+    href: string,
+    label: string,
+    Icon: typeof Heart,
+    badge?: number,
+    badgeTone: 'green' | 'rose' = 'green'
+  ) => (
+    <Link
+      href={actionHref(href)}
+      aria-label={badge !== undefined && badge > 0 ? `${label}, ${badge} unread` : label}
+      title={label}
+      className={`${iconButtonClass} ${isActive(href) ? 'bg-campus-50 text-campus-800' : ''}`}
+    >
+      <Icon className="h-5 w-5" aria-hidden="true" />
+      {badge !== undefined && badge > 0 && (
+        <span className={`absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${
+          badgeTone === 'rose' ? 'bg-rose-600' : 'bg-campus-600'
+        }`}>
+          {countLabel(badge)}
+        </span>
+      )}
+    </Link>
+  );
+
+  const renderMenuLinks = (closeMenu: () => void) => (
+    <>
+      <Link href="/explore" onClick={closeMenu} className={menuLinkClass('/explore')}>
+        <Search className="h-4 w-4 text-slate-500" aria-hidden="true" /> Explore
+      </Link>
+      <Link href="/explore?listingType=exchange" onClick={closeMenu} className={menuLinkClass('/explore', false, false)}>
+        <ArrowLeftRight className="h-4 w-4 text-amber-500" aria-hidden="true" /> Exchange
+      </Link>
+      <Link href="/explore?listingType=donate" onClick={closeMenu} className={menuLinkClass('/explore', false, false)}>
+        <HeartHandshake className="h-4 w-4 text-emerald-600" aria-hidden="true" /> Free Donations
+      </Link>
+    </>
+  );
+
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2.5 group">
-            <div className="bg-campus-600 text-white p-2 rounded-xl shadow-sm group-hover:bg-campus-700 transition">
-              <BookOpen className="w-5 h-5" />
-            </div>
-            <span className="font-bold text-xl tracking-tight text-slate-900">
+    <header className="sticky top-0 z-50 w-full overflow-x-clip border-b border-slate-200 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95">
+      <div className="mx-auto max-w-7xl px-3 sm:px-5 lg:px-8">
+        <div className="flex h-16 min-w-0 items-center justify-between gap-2 whitespace-nowrap">
+          <Link href="/" aria-label="CampusBook home" className="group flex shrink-0 items-center gap-2">
+            <span className="rounded-xl bg-campus-600 p-2 text-white shadow-sm transition group-hover:bg-campus-700">
+              <BookOpen className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span className="hidden text-lg font-bold tracking-tight text-slate-900 min-[360px]:inline sm:text-xl dark:text-white">
               Campus<span className="text-campus-600">Book</span>
             </span>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium text-slate-700">
-            <div className="hidden xl:block w-48">
-              <SearchAutocomplete
-                value={searchValue}
-                onChange={setSearchValue}
-                inputClassName="py-2 text-xs"
-                placeholder="Search books..."
-              />
-            </div>
-            <Link
-              href="/explore"
-              className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
-            >
-              <Search className="w-4 h-4 text-slate-500" />
-              Explore
+          <nav aria-label="Main navigation" className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex">
+            <Link href="/explore" aria-current={isActive('/explore') ? 'page' : undefined} className={desktopNavClass('/explore')}>
+              <Search className="h-4 w-4 text-slate-500" aria-hidden="true" /> Explore
             </Link>
-            <Link
-              href="/explore?listingType=exchange"
-              className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
-            >
-              <ArrowLeftRight className="w-4 h-4 text-amber-500" />
-              Exchange
+            <Link href="/explore?listingType=exchange" className={desktopNavClass('/explore', false)}>
+              <ArrowLeftRight className="h-4 w-4 text-amber-500" aria-hidden="true" /> Exchange
             </Link>
-            <Link
-              href="/explore?listingType=donate"
-              className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
-            >
-              <HeartHandshake className="w-4 h-4 text-emerald-500" />
-              Free Donations
+            <Link href="/explore?listingType=donate" className={desktopNavClass('/explore', false)}>
+              <HeartHandshake className="h-4 w-4 text-emerald-600" aria-hidden="true" /> Free Donations
             </Link>
-            <div className="hidden md:block">
-              <ThemeToggle />
-            </div>
-
-            {isAuthenticated && (
-              <Link
-                href="/my-books"
-                className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
-              >
-                <BookOpen className="w-4 h-4 text-campus-600" />
-                My Books
-              </Link>
-            )}
-            {isAuthenticated && user?.role !== 'admin' && (
-              <Link
-                href="/exchange-matches"
-                className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
-              >
-                <Sparkles className="w-4 h-4 text-amber-500" />
-                Matches
-              </Link>
-            )}
-            {isAuthenticated && (
-              <Link
-                href="/wishlist"
-                className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
-              >
-                <Heart className="w-4 h-4 text-rose-500" />
-                Wishlist
-              </Link>
-            )}
-            {isAuthenticated && (
-              <Link
-                href="/orders"
-                className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
-              >
-                <ClipboardList className="w-4 h-4 text-campus-600" />
-                Orders
-              </Link>
-            )}
-            {isAuthenticated && (
-              <Link
-                href="/messages"
-                aria-label={`Messages, ${totalUnread} unread`}
-                className="relative px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
-              >
-                <MessageCircle className="w-4 h-4 text-campus-600" />
-                Messages
-                {totalUnread > 0 && (
-                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-campus-600 px-1 text-[9px] font-bold text-white">
-                    {totalUnread > 99 ? '99+' : totalUnread}
-                  </span>
-                )}
-              </Link>
-            )}
-          </nav>
-
-          {isAuthenticated && (
-            <div className="relative" ref={notificationRef}>
+            <div className="relative shrink-0" ref={searchRef}>
               <button
                 type="button"
-                ref={notificationTriggerRef}
-                onClick={() => setNotificationDropdownOpen((open) => !open)}
-                aria-label={`Notifications, ${unreadNotificationCount} unread`}
-                aria-expanded={notificationDropdownOpen}
-                aria-controls={notificationDropdownOpen ? 'navbar-notifications' : undefined}
-                className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-campus-700"
+                ref={searchTriggerRef}
+                onClick={() => setSearchOpen((open) => !open)}
+                aria-label={searchOpen ? 'Close book search' : 'Open book search'}
+                aria-expanded={searchOpen}
+                aria-controls={searchOpen ? 'navbar-search-panel' : undefined}
+                title="Search books"
+                className={`${iconButtonClass} ${searchOpen ? 'bg-campus-50 text-campus-800' : ''}`}
               >
-                <Bell className="h-5 w-5" />
-                {unreadNotificationCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
-                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
-                  </span>
-                )}
+                {searchOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Search className="h-5 w-5" aria-hidden="true" />}
               </button>
-              {notificationDropdownOpen && (
-                <div id="navbar-notifications" className="absolute right-0 top-full z-[65] mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                    <div>
-                      <h2 className="font-bold text-slate-900">Notifications</h2>
-                      <p className="text-xs text-slate-500">{unreadNotificationCount} unread</p>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={!unreadNotificationCount}
-                      onClick={() => void markAllFromBell()}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-campus-700 hover:text-campus-900 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <CheckCheck className="h-3.5 w-3.5" />
-                      Mark all read
-                    </button>
-                  </div>
-                  <div className="max-h-[min(28rem,65vh)] overflow-y-auto">
-                    {notifications.length ? notifications.slice(0, 8).map((notification) => {
-                      const Icon = notificationIcon(notification.type);
-                      return (
-                        <button
-                          key={notification._id}
-                          type="button"
-                          onClick={() => void openNotification(notification)}
-                          className={`flex w-full gap-3 border-b border-slate-100 px-4 py-3 text-left transition hover:bg-campus-50 ${
-                            notification.isRead ? 'bg-white' : 'bg-campus-50/60'
-                          }`}
-                        >
-                          <span className="relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-campus-100 text-campus-700">
-                            <Icon className="h-4 w-4" />
-                            {!notification.isRead && (
-                              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-campus-600" />
-                            )}
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="flex items-start justify-between gap-2">
-                              <span className="line-clamp-1 text-sm font-bold text-slate-900">{notification.title}</span>
-                              <span className="shrink-0 text-[10px] text-slate-400">{relativeTime(notification.createdAt)}</span>
-                            </span>
-                            <span className="mt-1 line-clamp-2 block text-xs leading-5 text-slate-600">{notification.message}</span>
-                          </span>
-                        </button>
-                      );
-                    }) : (
-                      <div className="px-5 py-10 text-center">
-                        <Bell className="mx-auto h-8 w-8 text-slate-300" />
-                        <p className="mt-2 text-sm font-semibold text-slate-700">You’re all caught up</p>
-                        <p className="mt-1 text-xs text-slate-500">New activity will appear here.</p>
-                      </div>
-                    )}
-                  </div>
-                  <Link
-                    href="/notifications"
-                    onClick={() => setNotificationDropdownOpen(false)}
-                    className="block border-t border-slate-100 px-4 py-3 text-center text-sm font-bold text-campus-700 hover:bg-campus-50"
-                  >
-                    View all notifications
-                  </Link>
+              {searchOpen && (
+                <div id="navbar-search-panel" className="absolute right-0 top-full z-[70] mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                  <SearchAutocomplete
+                    value={searchValue}
+                    onChange={setSearchValue}
+                    inputClassName="py-3"
+                    placeholder="Search books, authors, or ISBN..."
+                    onFocus={() => setSearchOpen(true)}
+                  />
                 </div>
               )}
             </div>
-          )}
+          </nav>
 
-          {/* User Auth & Actions */}
-          <div className="hidden md:flex items-center space-x-3">
-            {isAuthenticated && (
-              <Link
-                href="/cart"
-                aria-label={`Shopping cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
-                className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-campus-700"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-campus-600 px-1 text-[10px] font-bold text-white">
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              </Link>
-            )}
-            <Link
-              href={isAuthenticated ? '/sell' : '/login?redirect=/sell'}
-              className="inline-flex items-center gap-1.5 bg-campus-600 hover:bg-campus-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition"
-            >
-              <PlusCircle className="w-4 h-4" />
-              Sell a Book
-            </Link>
-
-            {isAuthenticated && user ? (
-              /* Logged In User Avatar Dropdown */
-              <div className="relative" ref={dropdownRef}>
+          <div className="hidden shrink-0 items-center gap-1 lg:flex">
+            {renderIconLink('/wishlist', 'Wishlist', Heart)}
+            {renderIconLink('/messages', 'Messages', MessageCircle, totalUnread)}
+            {isAuthenticated ? (
+              <div className="relative" ref={notificationDesktopRef}>
                 <button
                   type="button"
-                  ref={userMenuTriggerRef}
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center space-x-2.5 p-1.5 rounded-xl hover:bg-slate-100 border border-slate-200 transition"
-                  aria-expanded={userDropdownOpen}
-                  aria-controls={userDropdownOpen ? 'navbar-user-menu' : undefined}
+                  ref={notificationDesktopTriggerRef}
+                  onClick={() => setNotificationDropdownOpen((open) => !open)}
+                  aria-label={`Notifications, ${unreadNotificationCount} unread`}
+                  aria-expanded={notificationDropdownOpen}
+                  aria-controls={notificationDropdownOpen ? 'navbar-notifications-desktop' : undefined}
+                  title="Notifications"
+                  className={iconButtonClass}
                 >
-                  {/* Avatar */}
-                  <div className="w-8 h-8 rounded-lg bg-campus-100 text-campus-700 font-bold text-xs flex items-center justify-center border border-campus-200 shadow-2xs">
-                    {user.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="w-full h-full rounded-lg object-cover"
-                      />
-                    ) : (
-                      getInitials(user.name)
-                    )}
-                  </div>
-
-                  {/* Name & Badge Preview */}
-                  <div className="text-left hidden lg:block">
-                    <div className="text-xs font-semibold text-slate-800 flex items-center gap-1">
-                      <span className="truncate max-w-[110px]">{user.name}</span>
-                      {user.role === 'admin' ? (
-                        <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-1.5 py-0.2 rounded">
-                          ADMIN
-                        </span>
-                      ) : user.isVerified ? (
-                        <span title="Verified Student">
-                          <BadgeCheck className="w-3.5 h-3.5 text-campus-600 fill-campus-100 inline" />
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <Bell className="h-5 w-5" aria-hidden="true" />
+                  {unreadNotificationCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+                      {countLabel(unreadNotificationCount)}
+                    </span>
+                  )}
                 </button>
-
-                {/* Dropdown Menu */}
-                {userDropdownOpen && (
-                  <div id="navbar-user-menu" className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 text-sm z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    {/* Header */}
-                    <div className="px-4 py-3 border-b border-slate-100">
-                      <p className="font-semibold text-slate-900 truncate">{user.name}</p>
-                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                      <p className="text-[11px] text-campus-600 font-medium truncate mt-0.5">
-                        {universityName}
-                      </p>
-
-                      {/* Verification Status Banner */}
-                      <div className="mt-2">
-                        {user.role === 'admin' ? (
-                          <div className="flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 px-2 py-1 rounded-md font-medium">
-                            <Shield className="w-3.5 h-3.5" />
-                            Platform Administrator
-                          </div>
-                        ) : user.isVerified ? (
-                          <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md font-medium">
-                            <BadgeCheck className="w-4 h-4 text-emerald-600" />
-                            Verified Student
-                          </div>
-                        ) : (
-                          <Link
-                            href="/verify-otp"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center justify-between text-xs text-amber-800 bg-amber-50 hover:bg-amber-100 px-2 py-1.5 rounded-md font-medium transition"
-                          >
-                            <span className="flex items-center gap-1">
-                              <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
-                              Unverified Student
-                            </span>
-                            <span className="underline text-[10px] text-amber-900">Verify</span>
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Navigation Items */}
-                    <div className="py-1">
-                      {user.role === 'admin' ? (
-                        <Link
-                          href="/admin"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                        >
-                          <Shield className="w-4 h-4 text-purple-600" />
-                          Admin Console
-                        </Link>
-                      ) : (
-                        <Link
-                          href="/dashboard"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                        >
-                          <LayoutDashboard className="w-4 h-4 text-campus-600" />
-                          Student Dashboard
-                        </Link>
-                      )}
-
-                      <Link
-                        href="/profile"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                      >
-                        <UserIcon className="w-4 h-4 text-campus-600" />
-                        Profile
-                      </Link>
-
-                      <Link
-                        href="/settings"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                      >
-                        <Settings className="w-4 h-4 text-slate-500" />
-                        Settings
-                      </Link>
-
-                      <Link
-                        href="/sell"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                      >
-                        <PlusCircle className="w-4 h-4 text-campus-600" />
-                        Sell a Book
-                      </Link>
-
-                      <Link
-                        href="/my-books"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                      >
-                        <BookOpen className="w-4 h-4 text-campus-600" />
-                        My Books
-                      </Link>
-
-                      <Link
-                        href="/wishlist"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                      >
-                        <Heart className="w-4 h-4 text-rose-500" />
-                        Wishlist
-                      </Link>
-
-                      <Link
-                        href="/orders"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                      >
-                        <ClipboardList className="w-4 h-4 text-campus-600" />
-                        Orders
-                      </Link>
-
-                      <Link
-                        href="/messages"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center justify-between gap-2 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                      >
-                        <span className="flex items-center gap-2.5">
-                          <MessageCircle className="w-4 h-4 text-campus-600" />
-                          Messages
-                        </span>
-                        {totalUnread > 0 && (
-                          <span className="rounded-full bg-campus-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                            {totalUnread > 99 ? '99+' : totalUnread}
-                          </span>
-                        )}
-                      </Link>
-
-                      <Link
-                        href="/exchanges"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                      >
-                        <ArrowLeftRight className="w-4 h-4 text-amber-500" />
-                        Exchanges
-                      </Link>
-
-                      {user.role !== 'admin' && (
-                        <Link
-                          href="/exchange-matches"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                        >
-                          <Sparkles className="w-4 h-4 text-amber-500" />
-                          Exchange Matches
-                        </Link>
-                      )}
-
-                      <Link
-                        href="/donations"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                      >
-                        <HeartHandshake className="w-4 h-4 text-emerald-500" />
-                        Donations
-                      </Link>
-
-                      {!user.isVerified && user.role !== 'admin' && (
-                        <Link
-                          href="/verify-otp"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 text-amber-700 hover:bg-amber-50"
-                        >
-                          <BadgeCheck className="w-4 h-4 text-amber-600" />
-                          Verify Student Status
-                        </Link>
-                      )}
-                    </div>
-
-                    {/* Sign Out */}
-                    <div className="pt-1 border-t border-slate-100">
-                      <button
-                        onClick={() => {
-                          setUserDropdownOpen(false);
-                          logout();
-                        }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 text-rose-600 hover:bg-rose-50 text-left transition"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Sign Out
-                      </button>
-                    </div>
-                  </div>
+                {notificationDropdownOpen && (
+                  <NotificationDropdown
+                    id="navbar-notifications-desktop"
+                    notifications={notifications}
+                    unreadCount={unreadNotificationCount}
+                    openNotification={openNotification}
+                    markAll={markAllFromBell}
+                    close={() => setNotificationDropdownOpen(false)}
+                  />
                 )}
               </div>
             ) : (
-              /* Guest Sign In Button */
-              <Link
-                href="/login"
-                className="text-sm font-medium text-slate-700 hover:text-slate-900 px-3.5 py-2 rounded-lg border border-slate-300 hover:border-slate-400 transition"
-              >
+              <Link href="/login" aria-label="Sign in to view notifications" title="Notifications" className={iconButtonClass}>
+                <Bell className="h-5 w-5" aria-hidden="true" />
+              </Link>
+            )}
+            {renderIconLink('/cart', 'Cart', ShoppingCart, isAuthenticated ? cartCount : undefined)}
+            <ThemeToggle />
+            <Link
+              href={actionHref('/sell')}
+              className="inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-campus-600 px-3 text-sm font-semibold text-white shadow-sm transition hover:bg-campus-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 focus-visible:ring-offset-2 xl:px-4"
+            >
+              <PlusCircle className="h-4 w-4" aria-hidden="true" /> Sell a Book
+            </Link>
+            {isAuthenticated && user ? (
+              <div className="relative shrink-0" ref={userMenuRef}>
+                <button
+                  type="button"
+                  ref={userMenuTriggerRef}
+                  onClick={() => setUserDropdownOpen((open) => !open)}
+                  aria-label={`Account menu for ${user.name}`}
+                  aria-expanded={userDropdownOpen}
+                  aria-controls={userDropdownOpen ? 'navbar-user-menu' : undefined}
+                  title={user.name}
+                  className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 p-1 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 dark:border-slate-700 dark:hover:bg-slate-800"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border border-campus-200 bg-campus-100 text-xs font-bold text-campus-800 dark:border-campus-800 dark:bg-campus-900 dark:text-campus-200">
+                    {user.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : getInitials(user.name)}
+                  </span>
+                  <span className="hidden max-w-24 truncate text-xs font-semibold text-slate-800 xl:block dark:text-slate-100">{user.name}</span>
+                  {user.isVerified && <BadgeCheck className="hidden h-4 w-4 fill-campus-100 text-campus-600 xl:block" aria-label="Verified student" />}
+                  <ChevronDown className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                </button>
+                {userDropdownOpen && <UserDropdown id="navbar-user-menu" user={user} universityName={universityName} close={() => setUserDropdownOpen(false)} logout={logout} />}
+              </div>
+            ) : (
+              <Link href="/login" className="inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-xl border border-slate-300 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
                 Sign In
               </Link>
             )}
           </div>
 
-          {/* Mobile menu hamburger */}
-          <div className="md:hidden flex items-center gap-2">
-            <ThemeToggle />
+          <div className="ml-auto flex shrink-0 items-center gap-1 lg:hidden">
+            {isAuthenticated ? (
+              <>
+                {renderIconLink('/messages', 'Messages', MessageCircle, totalUnread)}
+                <div className="relative" ref={notificationCompactRef}>
+                  <button
+                    type="button"
+                    ref={notificationCompactTriggerRef}
+                    onClick={() => setNotificationDropdownOpen((open) => !open)}
+                    aria-label={`Notifications, ${unreadNotificationCount} unread`}
+                    aria-expanded={notificationDropdownOpen}
+                    aria-controls={notificationDropdownOpen ? 'navbar-notifications-compact' : undefined}
+                    title="Notifications"
+                    className={iconButtonClass}
+                  >
+                    <Bell className="h-5 w-5" aria-hidden="true" />
+                    {unreadNotificationCount > 0 && (
+                      <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+                        {countLabel(unreadNotificationCount)}
+                      </span>
+                    )}
+                  </button>
+                  {notificationDropdownOpen && (
+                    <NotificationDropdown
+                      id="navbar-notifications-compact"
+                      notifications={notifications}
+                      unreadCount={unreadNotificationCount}
+                      openNotification={openNotification}
+                      markAll={markAllFromBell}
+                      close={() => setNotificationDropdownOpen(false)}
+                    />
+                  )}
+                </div>
+                {renderIconLink('/cart', 'Cart', ShoppingCart, cartCount)}
+              </>
+            ) : (
+              <>
+                <Link href="/login?redirect=%2Fmessages" aria-label="Sign in to view messages" title="Messages" className={iconButtonClass}>
+                  <MessageCircle className="h-5 w-5" aria-hidden="true" />
+                </Link>
+                <Link href="/login" aria-label="Sign in to view notifications" title="Notifications" className={iconButtonClass}>
+                  <Bell className="h-5 w-5" aria-hidden="true" />
+                </Link>
+                <Link href="/login?redirect=%2Fcart" aria-label="Sign in to view cart" title="Cart" className={iconButtonClass}>
+                  <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+                </Link>
+              </>
+            )}
+            <span className="hidden sm:block">
+              <ThemeToggle />
+            </span>
             <button
+              type="button"
               ref={mobileMenuTriggerRef}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              aria-label="Toggle menu"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={mobileMenuOpen}
               aria-controls={mobileMenuOpen ? 'navbar-mobile-menu' : undefined}
+              className={`${iconButtonClass} ml-1`}
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div id="navbar-mobile-menu" className="md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2 text-sm font-medium">
-          <SearchAutocomplete
-            value={searchValue}
-            onChange={setSearchValue}
-            inputClassName="py-3"
-            placeholder="Search books, authors, or ISBN..."
-          />
-          <Link
-            href="/explore"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700"
-          >
-            <Search className="w-4 h-4" /> Explore Books
-          </Link>
-          <Link
-            href="/explore?listingType=exchange"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700"
-          >
-            <ArrowLeftRight className="w-4 h-4 text-amber-500" /> Exchange
-          </Link>
-          <Link
-            href="/explore?listingType=donate"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700"
-          >
-            <HeartHandshake className="w-4 h-4 text-emerald-500" /> Free Donations
-          </Link>
-
-          {isAuthenticated && user ? (
-            <div className="pt-2 border-t border-slate-200 space-y-2">
-              <div className="px-3 py-2 bg-slate-50 rounded-xl">
-                <div className="font-semibold text-slate-900 flex items-center gap-1.5">
-                  {user.name}
-                  {user.role === 'admin' ? (
-                    <span className="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold">
-                      ADMIN
-                    </span>
-                  ) : user.isVerified ? (
-                    <span className="text-[11px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-semibold inline-flex items-center gap-0.5">
-                      <BadgeCheck className="w-3 h-3" /> Verified Student
-                    </span>
-                  ) : (
-                    <span className="text-[11px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-semibold">
-                      Unverified
-                    </span>
-                  )}
-                </div>
-                <div className="text-xs text-slate-500">{user.email}</div>
-              </div>
-
-              <Link
-                href={user.role === 'admin' ? '/admin' : '/dashboard'}
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-campus-50 text-campus-700 font-semibold"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                {user.role === 'admin' ? 'Admin Dashboard' : 'Student Dashboard'}
-              </Link>
-
-              <Link
-                href="/profile"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
-              >
-                <UserIcon className="w-4 h-4 text-campus-600" /> Profile
-              </Link>
-
-              <Link
-                href="/settings"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
-              >
-                <Settings className="w-4 h-4 text-slate-500" /> Settings
-              </Link>
-
-              <Link
-                href="/sell"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-campus-700 hover:bg-campus-50 font-medium"
-              >
-                <PlusCircle className="w-4 h-4 text-campus-600" /> Sell a Book
-              </Link>
-
-              <Link
-                href="/my-books"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
-              >
-                <BookOpen className="w-4 h-4 text-campus-600" /> My Books
-              </Link>
-
-              <Link
-                href="/wishlist"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
-              >
-                <Heart className="w-4 h-4 text-rose-500" /> Wishlist
-              </Link>
-
-              <Link
-                href="/cart"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
-              >
-                <span className="flex items-center gap-2">
-                  <ShoppingCart className="h-4 w-4 text-campus-600" /> Cart
-                </span>
-                <span className="rounded-full bg-campus-100 px-2 py-0.5 text-xs font-bold text-campus-800">{cartCount}</span>
-              </Link>
-
-              <Link
-                href="/orders"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
-              >
-                <ClipboardList className="w-4 h-4 text-campus-600" /> Orders
-              </Link>
-
-              <Link
-                href="/messages"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
-              >
-                <span className="flex items-center gap-2">
-                  <MessageCircle className="w-4 h-4 text-campus-600" /> Messages
-                </span>
-                {totalUnread > 0 && (
-                  <span className="rounded-full bg-campus-600 px-2 py-0.5 text-xs font-bold text-white">
-                    {totalUnread > 99 ? '99+' : totalUnread}
-                  </span>
-                )}
-              </Link>
-
-              <Link
-                href="/exchanges"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
-              >
-                <ArrowLeftRight className="w-4 h-4 text-amber-500" /> Exchanges
-              </Link>
-
-              {user.role !== 'admin' && (
-                <Link
-                  href="/exchange-matches"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-500" /> Exchange Matches
+        <div
+          id="navbar-mobile-menu"
+          ref={mobilePanelRef}
+          className="absolute left-0 right-0 top-full z-[60] max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-slate-200 bg-white px-4 py-4 shadow-xl dark:border-slate-800 dark:bg-slate-950 lg:hidden sm:px-6"
+        >
+          <div className="mb-3">
+            <SearchAutocomplete
+              value={searchValue}
+              onChange={setSearchValue}
+              inputClassName="py-3"
+              placeholder="Search books, authors, or ISBN..."
+            />
+          </div>
+          <nav aria-label="Mobile navigation" className="space-y-1">
+            {renderMenuLinks(() => setMobileMenuOpen(false))}
+            {isAuthenticated && user && (
+              <>
+                <div className="my-3 border-t border-slate-200 dark:border-slate-800" />
+              </>
+            )}
+            <Link href={actionHref('/wishlist')} onClick={() => setMobileMenuOpen(false)} className={menuLinkClass('/wishlist')}>
+                  <Heart className="h-4 w-4 text-rose-500" aria-hidden="true" /> Wishlist
+            </Link>
+            <Link href={actionHref('/messages')} onClick={() => setMobileMenuOpen(false)} className={`${menuLinkClass('/messages')} justify-between`}>
+              <span className="flex items-center gap-3"><MessageCircle className="h-4 w-4 text-campus-600" aria-hidden="true" /> Messages</span>
+              {isAuthenticated && totalUnread > 0 && <CountBadge count={totalUnread} />}
+            </Link>
+            <Link href={actionHref('/notifications')} onClick={() => setMobileMenuOpen(false)} className={`${menuLinkClass('/notifications')} justify-between`}>
+              <span className="flex items-center gap-3"><Bell className="h-4 w-4 text-campus-600" aria-hidden="true" /> Notifications</span>
+              {isAuthenticated && unreadNotificationCount > 0 && <CountBadge count={unreadNotificationCount} />}
+            </Link>
+            <Link href={actionHref('/cart')} onClick={() => setMobileMenuOpen(false)} className={`${menuLinkClass('/cart')} justify-between`}>
+              <span className="flex items-center gap-3"><ShoppingCart className="h-4 w-4 text-campus-600" aria-hidden="true" /> Cart</span>
+              {isAuthenticated && cartCount > 0 && <CountBadge count={cartCount} />}
+            </Link>
+            {isAuthenticated && user && (
+              <>
+                <Link href="/orders" onClick={() => setMobileMenuOpen(false)} className={menuLinkClass('/orders')}>
+                  <ClipboardList className="h-4 w-4 text-campus-600" aria-hidden="true" /> Orders
                 </Link>
-              )}
-
-              <Link
-                href="/donations"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
-              >
-                <HeartHandshake className="w-4 h-4 text-emerald-500" /> Donations
-              </Link>
-
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  logout();
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 font-medium"
-              >
-                <LogOut className="w-4 h-4" /> Sign Out
-              </button>
-            </div>
-          ) : (
-            <div className="pt-2 border-t border-slate-200 flex flex-col gap-2">
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-center text-sm font-medium text-slate-700 py-2.5 rounded-lg border border-slate-300"
-              >
+                <Link href="/my-books" onClick={() => setMobileMenuOpen(false)} className={menuLinkClass('/my-books')}>
+                  <BookOpen className="h-4 w-4 text-campus-600" aria-hidden="true" /> My Books
+                </Link>
+                <Link href="/exchanges" onClick={() => setMobileMenuOpen(false)} className={menuLinkClass('/exchanges')}>
+                  <ArrowLeftRight className="h-4 w-4 text-amber-500" aria-hidden="true" /> Exchanges
+                </Link>
+                {user.role !== 'admin' && (
+                  <Link href="/exchange-matches" onClick={() => setMobileMenuOpen(false)} className={menuLinkClass('/exchange-matches')}>
+                    <Sparkles className="h-4 w-4 text-amber-500" aria-hidden="true" /> Matches
+                  </Link>
+                )}
+                <Link href="/donations" onClick={() => setMobileMenuOpen(false)} className={menuLinkClass('/donations')}>
+                  <HeartHandshake className="h-4 w-4 text-emerald-600" aria-hidden="true" /> Donations
+                </Link>
+                <div className="my-3 border-t border-slate-200 dark:border-slate-800" />
+                <Link href={user.role === 'admin' ? '/admin' : '/dashboard'} onClick={() => setMobileMenuOpen(false)} className={menuLinkClass(user.role === 'admin' ? '/admin' : '/dashboard')}>
+                  <LayoutDashboard className="h-4 w-4 text-campus-600" aria-hidden="true" /> Dashboard
+                </Link>
+                <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className={menuLinkClass('/profile')}>
+                  <UserIcon className="h-4 w-4 text-campus-600" aria-hidden="true" /> Profile
+                </Link>
+                <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className={menuLinkClass('/settings')}>
+                  <Settings className="h-4 w-4 text-slate-500" aria-hidden="true" /> Settings
+                </Link>
+                <button type="button" onClick={() => { setMobileMenuOpen(false); void logout(); }} className="flex min-h-10 w-full items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-700 transition hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 dark:text-rose-300 dark:hover:bg-rose-950/30">
+                  <LogOut className="h-4 w-4" aria-hidden="true" /> Logout
+                </button>
+              </>
+            )}
+            <div className="my-3 border-t border-slate-200" />
+            <Link href={actionHref('/sell')} onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-campus-600 px-4 py-2 text-sm font-semibold text-white hover:bg-campus-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500">
+              <PlusCircle className="h-4 w-4" aria-hidden="true" /> Sell a Book
+            </Link>
+            {!isAuthenticated && (
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="mt-2 flex min-h-10 items-center justify-center whitespace-nowrap rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
                 Sign In
               </Link>
-              <Link
-                href="/signup"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-1.5 bg-campus-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm"
-              >
-                Create Account
-              </Link>
+            )}
+            <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-900">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Appearance</span>
+              <ThemeToggle />
             </div>
-          )}
+          </nav>
         </div>
       )}
+
       {notificationToast && (
-        <div role="status" className="fixed right-4 top-20 z-[80] max-w-sm rounded-xl border border-campus-200 bg-campus-50 px-4 py-3 text-sm font-semibold text-campus-900 shadow-lg">
+        <div role="status" className="fixed right-4 top-20 z-[80] max-w-sm rounded-xl border border-campus-200 bg-white px-4 py-3 text-sm font-semibold text-campus-800 shadow-lg dark:border-campus-800 dark:bg-slate-900 dark:text-campus-200">
           {notificationToast}
         </div>
       )}
     </header>
+  );
+}
+
+function CountBadge({ count }: { count: number }) {
+  return <span className="rounded-full bg-campus-600 px-2 py-0.5 text-[10px] font-bold text-white">{countLabel(count)}</span>;
+}
+
+function NotificationDropdown({
+  id,
+  notifications,
+  unreadCount,
+  openNotification,
+  markAll,
+  close,
+}: {
+  id: string;
+  notifications: Notification[];
+  unreadCount: number;
+  openNotification: (notification: Notification) => Promise<void>;
+  markAll: () => Promise<void>;
+  close: () => void;
+}) {
+  return (
+    <div id={id} className="absolute right-0 top-full z-[70] mt-2 w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+      <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+        <div>
+          <h2 className="font-bold text-slate-900 dark:text-slate-100">Notifications</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} unread</p>
+        </div>
+        <button
+          type="button"
+          disabled={!unreadCount}
+          onClick={() => void markAll()}
+          className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-bold text-campus-700 hover:text-campus-900 disabled:cursor-not-allowed disabled:opacity-40 dark:text-campus-300 dark:hover:text-campus-200"
+        >
+          <CheckCheck className="h-3.5 w-3.5" aria-hidden="true" /> Mark all read
+        </button>
+      </div>
+      <div className="max-h-[min(28rem,65vh)] overflow-y-auto">
+        {notifications.length ? notifications.slice(0, 8).map((notification) => {
+          const Icon = notificationIcon(notification.type);
+          return (
+            <button
+              key={notification._id}
+              type="button"
+              onClick={() => void openNotification(notification)}
+              className={`flex w-full gap-3 border-b border-slate-100 px-4 py-3 text-left transition hover:bg-campus-50 dark:border-slate-800 dark:hover:bg-slate-800 ${
+                notification.isRead ? 'bg-white dark:bg-slate-900' : 'bg-campus-50/60 dark:bg-campus-950/30'
+              }`}
+            >
+              <span className="relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-campus-100 text-campus-700 dark:bg-campus-900 dark:text-campus-300">
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                {!notification.isRead && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-campus-600" />}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-start justify-between gap-2">
+                  <span className="line-clamp-1 text-sm font-bold text-slate-900 dark:text-slate-100">{notification.title}</span>
+                  <span className="shrink-0 text-[10px] text-slate-400 dark:text-slate-500">{relativeTime(notification.createdAt)}</span>
+                </span>
+                <span className="mt-1 line-clamp-2 block text-xs leading-5 text-slate-600 dark:text-slate-300">{notification.message}</span>
+              </span>
+            </button>
+          );
+        }) : (
+          <div className="px-5 py-10 text-center">
+            <Bell className="mx-auto h-8 w-8 text-slate-300" aria-hidden="true" />
+            <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">You’re all caught up</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">New activity will appear here.</p>
+          </div>
+        )}
+      </div>
+      <Link href="/notifications" onClick={close} className="block border-t border-slate-100 px-4 py-3 text-center text-sm font-bold text-campus-700 hover:bg-campus-50 dark:border-slate-800 dark:text-campus-300 dark:hover:bg-slate-800">
+        View all notifications
+      </Link>
+    </div>
+  );
+}
+
+function UserDropdown({
+  id,
+  user,
+  universityName,
+  close,
+  logout,
+}: {
+  id: string;
+  user: NonNullable<ReturnType<typeof useAuth>['user']>;
+  universityName: string;
+  close: () => void;
+  logout: () => Promise<void>;
+}) {
+  const dashboardHref = user.role === 'admin' ? '/admin' : '/dashboard';
+  const linkClass = 'flex min-h-9 items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 dark:text-slate-200 dark:hover:bg-slate-800';
+  const navLink = (href: string, label: string, Icon: typeof BookOpen, color: string) => (
+    <Link href={href} onClick={close} className={linkClass}>
+      <Icon className={`h-4 w-4 ${color}`} aria-hidden="true" /> {label}
+    </Link>
+  );
+
+  return (
+    <div id={id} className="absolute right-0 top-full z-[70] mt-2 max-h-[min(80vh,42rem)] w-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white py-2 text-sm shadow-xl dark:border-slate-700 dark:bg-slate-900">
+      <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+        <p className="truncate font-semibold text-slate-900 dark:text-slate-100">{user.name}</p>
+        <p className="truncate text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
+        <p className="mt-0.5 truncate text-[11px] font-medium text-campus-700">{universityName}</p>
+        <div className="mt-2">
+          {user.role === 'admin' ? (
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700">
+              <Shield className="h-3.5 w-3.5" aria-hidden="true" /> Platform Administrator
+            </span>
+          ) : user.isVerified ? (
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+              <BadgeCheck className="h-4 w-4 text-emerald-600" aria-hidden="true" /> Verified Student
+            </span>
+          ) : (
+            <Link href="/verify-otp" onClick={close} className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
+              <ShieldAlert className="h-3.5 w-3.5 text-amber-600" aria-hidden="true" /> Verify Student Status
+            </Link>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-0.5 px-2 py-2">
+        {navLink('/my-books', 'My Books', BookOpen, 'text-campus-600')}
+        {navLink('/orders', 'Orders', ClipboardList, 'text-campus-600')}
+        {navLink('/wishlist', 'Wishlist', Heart, 'text-rose-500')}
+        {navLink('/exchanges', 'Exchanges', ArrowLeftRight, 'text-amber-500')}
+        {user.role !== 'admin' && navLink('/exchange-matches', 'Matches', Sparkles, 'text-amber-500')}
+        {navLink('/donations', 'Donations', HeartHandshake, 'text-emerald-600')}
+      </div>
+
+      <div className="mx-3 border-t border-slate-100 dark:border-slate-800" />
+      <div className="space-y-0.5 px-2 py-2">
+        {navLink(dashboardHref, 'Dashboard', user.role === 'admin' ? Shield : LayoutDashboard, user.role === 'admin' ? 'text-purple-600' : 'text-campus-600')}
+        {navLink('/profile', 'Profile', UserIcon, 'text-campus-600')}
+        {navLink('/settings', 'Settings', Settings, 'text-slate-500')}
+      </div>
+
+      <div className="mx-3 border-t border-slate-100 dark:border-slate-800" />
+      <div className="px-2 pt-2">
+        <button type="button" onClick={() => { close(); void logout(); }} className={`${linkClass} w-full text-left text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/30`}>
+          <LogOut className="h-4 w-4" aria-hidden="true" /> Logout
+        </button>
+      </div>
+    </div>
   );
 }
