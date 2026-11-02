@@ -59,8 +59,11 @@ function SkeletonGrid({ count = 4 }: { count?: number }) {
 
 function SectionError({ message }: { message: string }) {
   return (
-    <div role="status" className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800">
-      {message}
+    <div role="status" className="flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200 sm:flex-row sm:items-center sm:justify-between">
+      <span>{message}</span>
+      <a href="/" className="w-fit whitespace-nowrap font-bold underline underline-offset-2 hover:text-rose-950">
+        Try again
+      </a>
     </div>
   );
 }
@@ -76,7 +79,7 @@ function BookCard({ book }: { book: Book }) {
     <MotionCard className="h-full">
       <Link
         href={`/books/${book._id}`}
-        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-campus-300 hover:shadow-lg"
+          className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-campus-300 hover:shadow-lg dark:border-slate-700 dark:bg-slate-900"
       >
       <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
         {imageUrl ? (
@@ -307,23 +310,23 @@ export default function HomePage() {
 
   return (
     <main className="overflow-hidden">
-      <MotionSection className="relative isolate border-b border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-green-50">
-        <div className="absolute -right-32 -top-32 -z-10 h-96 w-96 rounded-full bg-emerald-100/70 blur-3xl" />
+      <MotionSection className="relative isolate border-b border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-green-50 dark:border-slate-800 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950">
+        <div className="absolute -right-32 -top-32 -z-10 h-96 w-96 rounded-full bg-emerald-100/70 blur-3xl dark:bg-emerald-900/30" />
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.05fr_.95fr] lg:px-8 lg:py-24">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1.5 text-xs font-bold text-campus-800 shadow-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1.5 text-xs font-bold text-campus-800 shadow-sm dark:border-emerald-800 dark:bg-slate-900/80 dark:text-emerald-200">
               <ShieldCheck className="h-4 w-4 text-campus-600" />
               The student-to-student book marketplace
             </span>
             <h1 className="mt-6 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
               Your Next Chapter Starts With a{' '}
-              <span className="text-campus-700">Pre-Loved Book</span>
+              <span className="text-campus-700 dark:text-emerald-300">Pre-Loved Book</span>
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">
               Find affordable course books from students around your campus. Buy, exchange, or pass on the books you no longer need.
             </p>
 
-            <form onSubmit={handleSearchSubmit} className="mt-8 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl shadow-emerald-900/5 sm:p-4">
+            <form onSubmit={handleSearchSubmit} className="mt-8 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl shadow-emerald-900/5 dark:border-slate-700 dark:bg-slate-900 sm:p-4">
               <div className="grid gap-3 md:grid-cols-[1fr_auto]">
                 <SearchAutocomplete
                   value={searchQuery}
@@ -338,7 +341,7 @@ export default function HomePage() {
                     value={selectedUniversity}
                     onChange={(event) => setSelectedUniversity(event.target.value)}
                     aria-label="Filter by university"
-                    className="w-full min-w-0 rounded-xl border border-slate-200 bg-white py-3.5 pl-10 pr-8 text-sm text-slate-800 focus:border-campus-400 focus:outline-none focus:ring-2 focus:ring-campus-500/30 md:min-w-64"
+                    className="w-full min-w-0 rounded-xl border border-slate-200 bg-white py-3.5 pl-10 pr-8 text-sm text-slate-800 focus:border-campus-400 focus:outline-none focus:ring-2 focus:ring-campus-500/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 md:min-w-64"
                   >
                     <option value="">All universities</option>
                     {universities.map((university) => (
@@ -347,12 +350,17 @@ export default function HomePage() {
                   </select>
                 </label>
               </div>
-              {universityError && <p role="status" className="mt-2 text-xs text-rose-700">{universityError}</p>}
+              {universityError && (
+                <p role="status" className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-rose-700 dark:text-rose-300">
+                  <span>{universityError}</span>
+                  <a href="/" className="font-bold underline underline-offset-2">Retry</a>
+                </p>
+              )}
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <button type="submit" className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-campus-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-campus-800">
                   <Search className="h-4 w-4" /> Explore Books
                 </button>
-                <Link href={isAuthenticated ? '/sell' : '/login?redirect=%2Fsell'} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-campus-200 bg-campus-50 px-5 py-3 text-sm font-bold text-campus-800 transition hover:bg-campus-100">
+                <Link href={isAuthenticated ? '/sell' : '/login?redirect=%2Fsell'} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-campus-200 bg-campus-50 px-5 py-3 text-sm font-bold text-campus-800 transition hover:bg-campus-100 dark:border-campus-800 dark:bg-campus-950 dark:text-campus-200 dark:hover:bg-campus-900">
                   <BookOpen className="h-4 w-4" /> Sell a Book
                 </Link>
               </div>
@@ -361,7 +369,7 @@ export default function HomePage() {
 
           <div className="relative mx-auto w-full max-w-xl">
             <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-campus-200/70 to-emerald-100/30 blur-xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white bg-white p-3 shadow-2xl shadow-emerald-950/10">
+            <div className="relative overflow-hidden rounded-[2rem] border border-white bg-white p-3 shadow-2xl shadow-emerald-950/10 dark:border-slate-700 dark:bg-slate-900">
               <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-campus-700 to-emerald-950">
                 <Image
                   src="/book-marketplace-hero.svg"
@@ -372,13 +380,13 @@ export default function HomePage() {
                   className="object-cover"
                 />
               </div>
-              <div className="absolute bottom-7 left-7 flex items-center gap-3 rounded-2xl border border-slate-100 bg-white/95 p-3 shadow-xl backdrop-blur">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-campus-700">
+              <div className="absolute bottom-7 left-7 flex items-center gap-3 rounded-2xl border border-slate-100 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-campus-700 dark:bg-emerald-950 dark:text-emerald-300">
                   <HeartHandshake className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">Books find new stories</p>
-                  <p className="text-xs text-slate-500">Shared locally, used again</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Books find new stories</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-300">Shared locally, used again</p>
                 </div>
               </div>
             </div>
@@ -386,7 +394,10 @@ export default function HomePage() {
         </div>
       </MotionSection>
 
-      <MotionSection aria-label="Live CampusBook community statistics" className="border-b border-slate-200 bg-white">
+      <MotionSection aria-label="Live CampusBook community statistics" className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+        <h2 className="mx-auto max-w-7xl px-4 pt-5 text-sm font-bold text-slate-700 dark:text-slate-200 sm:px-6 lg:px-8">
+          A campus community growing together
+        </h2>
         <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-y divide-slate-100 px-4 sm:px-6 md:grid-cols-3 md:divide-y-0 lg:grid-cols-5 lg:px-8">
           {[
             { label: 'Students', value: stats?.students, icon: Users },
@@ -403,14 +414,19 @@ export default function HomePage() {
                 {statsLoading ? (
                   <div className="h-7 w-16 animate-pulse rounded bg-slate-100" />
                 ) : (
-                  <p className="text-xl font-extrabold text-slate-900 sm:text-2xl">{value ?? '—'}</p>
+                  <p className="text-xl font-extrabold text-slate-900 sm:text-2xl">{statsError ? '—' : value ?? '—'}</p>
                 )}
                 <p className="mt-0.5 text-xs font-medium text-slate-500">{label}</p>
               </div>
             </div>
           ))}
         </div>
-        {statsError && <p role="status" className="mx-auto max-w-7xl px-4 pb-3 text-xs text-rose-700 sm:px-6 lg:px-8">{statsError}</p>}
+        {statsError && (
+          <p role="status" className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 px-4 pb-3 text-xs text-rose-700 dark:text-rose-300 sm:px-6 lg:px-8">
+            <span>{statsError} Showing neutral placeholders until live counts are available.</span>
+            <a href="/" className="font-bold underline underline-offset-2">Retry</a>
+          </p>
+        )}
       </MotionSection>
 
       <MotionSection className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
@@ -426,7 +442,7 @@ export default function HomePage() {
             { icon: MessageCircle, title: 'Connect and chat', text: 'Message students to ask questions and agree on the details.' },
             { icon: MapPin, title: 'Meet on campus', text: 'Arrange a convenient handover at a familiar campus spot.' },
           ].map(({ icon: Icon, title, text }, index) => (
-            <article key={title} className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <article key={title} className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-campus-50 text-campus-700"><Icon className="h-5 w-5" /></span>
               <span className="absolute right-5 top-5 text-3xl font-black text-emerald-100">0{index + 1}</span>
               <h3 className="mt-5 text-base font-bold text-slate-900">{title}</h3>
@@ -436,7 +452,7 @@ export default function HomePage() {
         </div>
       </MotionSection>
 
-      <MotionSection className="border-y border-slate-200 bg-slate-50/80">
+      <MotionSection className="border-y border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -459,7 +475,7 @@ export default function HomePage() {
                 <Link
                   key={category._id}
                   href={`/explore?category=${encodeURIComponent(category._id)}`}
-                  className="group flex items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-campus-300 hover:shadow-md sm:p-5"
+                  className="group flex items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-campus-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-950 sm:p-5"
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-bold text-slate-900 group-hover:text-campus-800">{category.name}</span>
@@ -472,7 +488,10 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <p className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Categories will appear here as they become available.</p>
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950">
+              <p>Categories will appear here as they become available.</p>
+              <a href="/" className="mt-3 inline-block font-bold text-campus-700 underline underline-offset-2">Refresh categories</a>
+            </div>
           )}
         </div>
       </MotionSection>
@@ -497,7 +516,10 @@ export default function HomePage() {
             {trendingBooks.slice(0, 8).map((book) => <BookCard key={book._id} book={book} />)}
           </div>
         ) : (
-          <p className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-600">There are no trending listings yet. Check back soon or browse all books.</p>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900">
+            <p>There are no trending listings yet. Browse all books or check back soon.</p>
+            <a href="/" className="mt-3 inline-block font-bold text-campus-700 underline underline-offset-2">Refresh listings</a>
+          </div>
         )}
       </MotionSection>
 
@@ -529,7 +551,10 @@ export default function HomePage() {
                 ...donationBooks.slice(0, 2),
               ].map((book) => <BookCard key={book._id} book={book} />)}
               {!exchangeBooks.length && !donationBooks.length && (
-                <p className="col-span-2 rounded-2xl border border-white/20 bg-white/5 p-8 text-center text-sm text-emerald-100">No exchange or donation listings are available right now.</p>
+                <p className="col-span-2 rounded-2xl border border-white/20 bg-white/5 p-8 text-center text-sm text-emerald-100">
+                  No exchange or donation listings are available right now.{' '}
+                  <a href="/" className="font-bold underline underline-offset-2">Refresh listings</a>
+                </p>
               )}
             </div>
           )}
@@ -543,7 +568,7 @@ export default function HomePage() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {smartFeatures.map(({ icon: Icon, title, description, href }) => (
-            <Link key={title} href={href} className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-campus-300 hover:shadow-md">
+            <Link key={title} href={href} className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-campus-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-campus-50 text-campus-700 group-hover:bg-campus-700 group-hover:text-white">
                 <Icon className="h-5 w-5" />
               </span>
@@ -554,7 +579,7 @@ export default function HomePage() {
         </div>
       </MotionSection>
 
-      <MotionSection className="border-y border-slate-200 bg-emerald-50/60">
+      <MotionSection className="border-y border-slate-200 bg-emerald-50/60 dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="mx-auto mb-9 max-w-2xl text-center">
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-campus-700">Student stories</p>
@@ -563,11 +588,11 @@ export default function HomePage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {sampleTestimonials.map((testimonial) => (
-              <figure key={testimonial.attribution} className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+              <figure key={testimonial.attribution} className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-950">
                 <div className="flex gap-1 text-amber-400" aria-label="Sample five-star rating">
                   {Array.from({ length: 5 }, (_, index) => <span key={index} aria-hidden="true">★</span>)}
                 </div>
-                <blockquote className="mt-4 text-sm leading-6 text-slate-700">“{testimonial.quote}”</blockquote>
+                <blockquote className="mt-4 text-sm leading-6 text-slate-700 dark:text-slate-200">“{testimonial.quote}”</blockquote>
                 <figcaption className="mt-5 flex items-center gap-2 text-xs font-bold text-campus-800">
                   <CheckCircle2 className="h-4 w-4" /> {testimonial.attribution}
                 </figcaption>

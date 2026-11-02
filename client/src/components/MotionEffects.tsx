@@ -17,24 +17,26 @@ export function MotionSection({
     <motion.section
       className={className}
       aria-label={ariaLabel}
-      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      initial={false}
       whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.08 }}
       transition={{ duration: reduceMotion ? 0 : 0.32, ease: 'easeOut' }}
-    />
+    >
+      {children}
+    </motion.section>
   );
 }
 
 export function MotionCard({ children, className }: { children: ReactNode; className?: string }) {
   const reduceMotion = useReducedMotion();
   return (
-    <motion.main
+    <motion.div
       className={className}
       whileHover={reduceMotion ? undefined : { y: -3 }}
       transition={{ duration: reduceMotion ? 0 : 0.18, ease: 'easeOut' }}
     >
       {children}
-    </motion.main>
+    </motion.div>
   );
 }
 
@@ -43,7 +45,7 @@ export function MotionPage({ children, pageKey }: { children: ReactNode; pageKey
   return (
     <motion.div
       key={pageKey}
-      initial={reduceMotion ? false : { opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
       transition={{ duration: reduceMotion ? 0 : 0.2, ease: 'easeOut' }}
       className="flex-1"
