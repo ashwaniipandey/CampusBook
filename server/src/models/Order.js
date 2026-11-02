@@ -85,6 +85,10 @@ const orderSchema = new mongoose.Schema(
       maxlength: [500, 'Notes cannot exceed 500 characters'],
       default: '',
     },
+    isDemo: {
+      type: Boolean,
+      default: false,
+    },
     completedAt: {
       type: Date,
     },
