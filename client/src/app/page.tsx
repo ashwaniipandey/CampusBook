@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -21,6 +21,11 @@ import {
   ShieldCheck,
   Tag,
 } from 'lucide-react';
+import api from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+import SearchAutocomplete from '@/components/SearchAutocomplete';
+import { Book } from '@/types';
+import { getBookPrice } from '@/lib/pricing';
 
 // Preview books matching the seed data
 const sampleBooks = [
@@ -158,14 +163,51 @@ const sampleBooks = [
 
 export default function HomePage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [filterType, setFilterType] = useState<'all' | 'sell' | 'exchange' | 'donate'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUniversity, setSelectedUniversity] = useState('all');
+  const [platformImpact, setPlatformImpact] = useState<{
+    impact: { booksReused: number; estimatedCo2SavedKg: number; treesSaved: number };
+    totalSaved: number;
+    students?: number;
+  } | null>(null);
+  const [impactLoading, setImpactLoading] = useState(true);
+  const [trendingBooks, setTrendingBooks] = useState<Book[]>([]);
+  const [trendingLoading, setTrendingLoading] = useState(true);
+  const [impactError, setImpactError] = useState('');
+  const [trendingError, setTrendingError] = useState('');
+  const [searchError, setSearchError] = useState('');
 
-  const handleHeroSearch = (e?: React.FormEvent) => {
+  useEffect(() => {
+    api.getSmartPlatformImpact()
+      .then(setPlatformImpact)
+      .catch((error: unknown) => setImpactError(error instanceof Error ? error.message : 'Unable to load platform impact.'))
+      .finally(() => setImpactLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) return;
+    setTrendingLoading(true);
+    api.getSmartTrending()
+      .then((response) => setTrendingBooks(response.books || []))
+      .catch((error: unknown) => setTrendingError(error instanceof Error ? error.message : 'Unable to load trending books.'))
+      .finally(() => setTrendingLoading(false));
+  }, [isAuthenticated]);
+
+  const handleHeroSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    const term = searchQuery.trim();
+    if (isAuthenticated && term) {
+      try {
+        await api.addRecentSearch(term);
+        setSearchError('');
+      } catch (error) {
+        setSearchError(error instanceof Error ? error.message : 'Unable to save this recent search.');
+      }
+    }
     const params = new URLSearchParams();
-    if (searchQuery.trim()) params.set('q', searchQuery.trim());
+    if (term) params.set('q', term);
     router.push(`/explore${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
@@ -212,13 +254,16 @@ export default function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
               {/* Text Search */}
               <div className="md:col-span-6 relative">
-                <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search book title, author, course code, or ISBN..."
+                <SearchAutocomplete
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-campus-500 focus:border-transparent text-sm text-slate-900 placeholder-slate-400"
+                  onChange={setSearchQuery}
+                  onSearch={(term) => {
+                    setSearchQuery(term);
+                    const params = new URLSearchParams({ q: term });
+                    router.push(`/explore?${params.toString()}`);
+                  }}
+                  inputClassName="py-3 pl-11"
+                  placeholder="Search book title, author, course code, or ISBN..."
                 />
               </div>
 
@@ -252,28 +297,68 @@ export default function HomePage() {
               </div>
             </div>
           </form>
+          {searchError && <p role="status" className="mx-auto max-w-4xl text-left text-xs text-rose-700">{searchError}</p>}
 
           {/* Quick Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto pt-6 text-left">
             <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-slate-200">
-              <div className="text-2xl font-bold text-slate-900">40+</div>
-              <div className="text-xs text-slate-500 mt-0.5">Seeded Textbooks</div>
+              <div className="text-2xl font-bold text-slate-900">{impactLoading ? <span className="block h-7 w-16 animate-pulse rounded bg-slate-200" /> : platformImpact?.impact.booksReused ?? '—'}</div>
+              <div className="text-xs text-slate-500 mt-0.5">Books Reused</div>
             </div>
             <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-slate-200">
-              <div className="text-2xl font-bold text-campus-600">6</div>
-              <div className="text-xs text-slate-500 mt-0.5">Partner Universities</div>
+              <div className="text-2xl font-bold text-campus-600">{impactLoading ? <span className="block h-7 w-20 animate-pulse rounded bg-slate-200" /> : platformImpact ? `${platformImpact.impact.estimatedCo2SavedKg.toFixed(1)} kg` : '—'}</div>
+              <div className="text-xs text-slate-500 mt-0.5">CO₂ Saved</div>
             </div>
             <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-slate-200">
-              <div className="text-2xl font-bold text-emerald-600">100%</div>
-              <div className="text-xs text-slate-500 mt-0.5">Verified .edu Students</div>
+              <div className="text-2xl font-bold text-emerald-600">{impactLoading ? <span className="block h-7 w-16 animate-pulse rounded bg-slate-200" /> : platformImpact?.students ?? '—'}</div>
+              <div className="text-xs text-slate-500 mt-0.5">Students Participating</div>
             </div>
             <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-slate-200">
-              <div className="text-2xl font-bold text-amber-600">$0</div>
-              <div className="text-xs text-slate-500 mt-0.5">Free Donations Track</div>
+              <div className="text-2xl font-bold text-amber-600">{impactLoading ? <span className="block h-7 w-20 animate-pulse rounded bg-slate-200" /> : platformImpact ? `$${platformImpact.totalSaved.toFixed(0)}` : '—'}</div>
+              <div className="text-xs text-slate-500 mt-0.5">Student Savings</div>
             </div>
           </div>
+          {impactError && <p role="status" className="mx-auto max-w-4xl text-left text-xs text-rose-700">{impactError}</p>}
         </div>
       </section>
+
+      {!isAuthenticated && (
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-bold text-campus-700"><Sparkles className="h-4 w-4" /> CAMPUSBOOK TRENDING</p>
+              <h2 className="mt-1 text-2xl font-extrabold text-slate-900">Popular with students</h2>
+            </div>
+            <Link href="/explore" className="text-sm font-bold text-campus-700 hover:underline">Explore all books</Link>
+          </div>
+          {trendingError ? (
+            <div role="status" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{trendingError}</div>
+          ) : trendingLoading ? (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              {[0, 1, 2, 3, 4, 5].map((item) => <div key={item} className="h-52 animate-pulse rounded-xl bg-slate-200" />)}
+            </div>
+          ) : trendingBooks.length ? (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              {trendingBooks.slice(0, 6).map((book) => {
+                const image = book.images?.[0];
+                const imageUrl = image ? (typeof image === 'string' ? image : image.url) : '';
+                return (
+                  <Link key={book._id} href={`/books/${book._id}`} className="overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:border-campus-300 hover:shadow-md">
+                    <div className="aspect-[4/3] bg-slate-100">
+                      {imageUrl ? <img src={imageUrl} alt={book.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center"><BookOpen className="h-9 w-9 text-slate-300" /></div>}
+                    </div>
+                    <div className="p-3">
+                      <p className="line-clamp-2 min-h-10 text-sm font-bold text-slate-900">{book.title}</p>
+                      <p className="mt-1 line-clamp-1 text-xs text-slate-500">{book.author}</p>
+                      <p className="mt-2 text-sm font-extrabold text-campus-700">{book.listingType === 'donate' ? 'Free' : `$${getBookPrice(book).toFixed(2)}`}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : <p className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">No trending listings are available right now.</p>}
+        </section>
+      )}
 
       {/* Main Browse Section */}
       <section id="browse" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -510,4 +595,3 @@ export default function HomePage() {
     </div>
   );
 }
-

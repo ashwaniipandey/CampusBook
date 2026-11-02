@@ -56,11 +56,14 @@ function ExploreContent() {
   const initialQ = searchParams.get('q') || '';
   const initialCategories = searchParams.get('category') ? searchParams.get('category')!.split(',') : [];
   const initialUniversity = searchParams.get('university') || '';
+  const initialScope = searchParams.get('scope') || 'all';
   const initialConditions = searchParams.get('condition') ? searchParams.get('condition')!.split(',') : [];
   const initialListingType = searchParams.get('listingType') || '';
   const initialMinPrice = searchParams.get('minPrice') || '';
   const initialMaxPrice = searchParams.get('maxPrice') || '';
   const initialSemester = searchParams.get('semester') || '';
+  const initialEdition = searchParams.get('edition') || '';
+  const initialCourse = searchParams.get('course') || '';
   const initialSort = searchParams.get('sort') || 'newest';
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
 
@@ -68,11 +71,14 @@ function ExploreContent() {
   const [searchInput, setSearchInput] = useState(initialQ);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
   const [selectedUniversity, setSelectedUniversity] = useState(initialUniversity);
+  const [universityScope, setUniversityScope] = useState(initialScope);
   const [selectedConditions, setSelectedConditions] = useState<string[]>(initialConditions);
   const [selectedListingType, setSelectedListingType] = useState(initialListingType);
   const [minPriceInput, setMinPriceInput] = useState(initialMinPrice);
   const [maxPriceInput, setMaxPriceInput] = useState(initialMaxPrice);
   const [semesterInput, setSemesterInput] = useState(initialSemester);
+  const [editionInput, setEditionInput] = useState(initialEdition);
+  const [courseInput, setCourseInput] = useState(initialCourse);
   const [currentSort, setCurrentSort] = useState(initialSort);
   const [currentPage, setCurrentPage] = useState(initialPage);
 
@@ -126,22 +132,48 @@ function ExploreContent() {
   const updateUrlParams = useCallback(
     (newParams: Record<string, string | number | undefined>) => {
       const params = new URLSearchParams();
-
-      if (newParams.q) params.set('q', String(newParams.q));
-      if (newParams.category) params.set('category', String(newParams.category));
-      if (newParams.university) params.set('university', String(newParams.university));
-      if (newParams.condition) params.set('condition', String(newParams.condition));
-      if (newParams.listingType) params.set('listingType', String(newParams.listingType));
-      if (newParams.minPrice) params.set('minPrice', String(newParams.minPrice));
-      if (newParams.maxPrice) params.set('maxPrice', String(newParams.maxPrice));
-      if (newParams.semester) params.set('semester', String(newParams.semester));
-      if (newParams.sort && newParams.sort !== 'newest') params.set('sort', String(newParams.sort));
-      if (newParams.page && Number(newParams.page) > 1) params.set('page', String(newParams.page));
+      const values = {
+        q: searchInput.trim(),
+        category: selectedCategories.join(','),
+        university: selectedUniversity,
+        scope: universityScope,
+        condition: selectedConditions.join(','),
+        listingType: selectedListingType,
+        minPrice: minPriceInput,
+        maxPrice: maxPriceInput,
+        semester: semesterInput,
+        edition: editionInput,
+        course: courseInput,
+        sort: currentSort,
+        page: currentPage,
+        ...newParams,
+      };
+      Object.entries(values).forEach(([key, value]) => {
+        if (value !== undefined && value !== '' && !(key === 'scope' && value === 'all') &&
+          !(key === 'sort' && value === 'newest') && !(key === 'page' && Number(value) <= 1)) {
+          params.set(key, String(value));
+        }
+      });
 
       const queryStr = params.toString();
       router.push(`/explore${queryStr ? `?${queryStr}` : ''}`, { scroll: false });
     },
-    [router]
+    [
+      router,
+      searchInput,
+      selectedCategories,
+      selectedUniversity,
+      universityScope,
+      selectedConditions,
+      selectedListingType,
+      minPriceInput,
+      maxPriceInput,
+      semesterInput,
+      editionInput,
+      courseInput,
+      currentSort,
+      currentPage,
+    ]
   );
 
   // 3. Search debouncing (400ms)
@@ -165,7 +197,7 @@ function ExploreContent() {
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, initialQ, updateUrlParams]);
 
   // 4. Fetch books whenever URL search params change
   useEffect(() => {
@@ -177,11 +209,14 @@ function ExploreContent() {
         const q = searchParams.get('q') || '';
         const category = searchParams.get('category') || '';
         const university = searchParams.get('university') || '';
+        const scope = searchParams.get('scope') || 'all';
         const condition = searchParams.get('condition') || '';
         const listingType = searchParams.get('listingType') || '';
         const minPrice = searchParams.get('minPrice') || '';
         const maxPrice = searchParams.get('maxPrice') || '';
         const semester = searchParams.get('semester') || '';
+        const edition = searchParams.get('edition') || '';
+        const course = searchParams.get('course') || '';
         const sort = searchParams.get('sort') || 'newest';
         const page = parseInt(searchParams.get('page') || '1', 10);
 
@@ -189,11 +224,14 @@ function ExploreContent() {
           q,
           category,
           university,
+          scope,
           condition,
           listingType,
           minPrice,
           maxPrice,
           semester,
+          edition,
+          course,
           sort,
           page,
           limit: 12,
@@ -217,11 +255,14 @@ function ExploreContent() {
     setSearchInput(searchParams.get('q') || '');
     setSelectedCategories(searchParams.get('category') ? searchParams.get('category')!.split(',') : []);
     setSelectedUniversity(searchParams.get('university') || '');
+    setUniversityScope(searchParams.get('scope') || 'all');
     setSelectedConditions(searchParams.get('condition') ? searchParams.get('condition')!.split(',') : []);
     setSelectedListingType(searchParams.get('listingType') || '');
     setMinPriceInput(searchParams.get('minPrice') || '');
     setMaxPriceInput(searchParams.get('maxPrice') || '');
     setSemesterInput(searchParams.get('semester') || '');
+    setEditionInput(searchParams.get('edition') || '');
+    setCourseInput(searchParams.get('course') || '');
     setCurrentSort(searchParams.get('sort') || 'newest');
     setCurrentPage(parseInt(searchParams.get('page') || '1', 10));
   }, [searchParams]);
@@ -288,6 +329,27 @@ function ExploreContent() {
       sort: currentSort,
       page: 1,
     });
+  };
+
+  const handleUniversityScopeChange = (scope: 'mine' | 'all') => {
+    if (scope === 'mine' && authLoading) return;
+    if (scope === 'mine' && !user) {
+      router.push(`/login?redirect=${encodeURIComponent('/explore?scope=mine')}`);
+      return;
+    }
+    setUniversityScope(scope);
+    if (scope === 'mine') setSelectedUniversity('');
+    setCurrentPage(1);
+    updateUrlParams({
+      scope,
+      university: scope === 'mine' ? '' : selectedUniversity,
+      page: 1,
+    });
+  };
+
+  const applyAcademicFilters = () => {
+    setCurrentPage(1);
+    updateUrlParams({ edition: editionInput.trim(), course: courseInput.trim(), semester: semesterInput.trim(), page: 1 });
   };
 
   const handleListingTypeChange = (type: string) => {
@@ -367,6 +429,9 @@ function ExploreContent() {
     setMinPriceInput('');
     setMaxPriceInput('');
     setSemesterInput('');
+    setEditionInput('');
+    setCourseInput('');
+    setUniversityScope('all');
     setCurrentSort('newest');
     setCurrentPage(1);
     router.push('/explore');
@@ -380,6 +445,9 @@ function ExploreContent() {
     Boolean(selectedListingType),
     Boolean(minPriceInput || maxPriceInput),
     Boolean(semesterInput),
+    Boolean(editionInput),
+    Boolean(courseInput),
+    universityScope === 'mine',
   ].filter(Boolean).length;
 
   const toggleWishlist = async (e: React.MouseEvent, book: Book) => {
@@ -645,6 +713,44 @@ function ExploreContent() {
           className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
         />
       </div>
+
+      <div className="space-y-3">
+        <div>
+          <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">Edition</label>
+          <input
+            type="text"
+            value={editionInput}
+            onChange={(event) => setEditionInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                applyAcademicFilters();
+              }
+            }}
+            placeholder="e.g. 3rd Edition"
+            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+          />
+        </div>
+        <div>
+          <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">Course</label>
+          <input
+            type="text"
+            value={courseInput}
+            onChange={(event) => setCourseInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                applyAcademicFilters();
+              }
+            }}
+            placeholder="e.g. Computer Science"
+            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+          />
+        </div>
+        <button type="button" onClick={applyAcademicFilters} className="w-full rounded-xl bg-campus-50 px-3 py-2 text-xs font-bold text-campus-800 hover:bg-campus-100">
+          Apply academic filters
+        </button>
+      </div>
     </div>
   );
 
@@ -677,6 +783,25 @@ function ExploreContent() {
         <p className="text-xs sm:text-sm text-slate-500 mt-1">
           Browse verified textbook listings from students across top universities.
         </p>
+        <div className="mt-4 inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm" role="group" aria-label="University listing scope">
+          <button
+            type="button"
+            onClick={() => handleUniversityScopeChange('mine')}
+            disabled={authLoading}
+            aria-pressed={universityScope === 'mine'}
+            className={`rounded-lg px-3 py-2 text-xs font-bold transition disabled:cursor-wait disabled:opacity-50 ${universityScope === 'mine' ? 'bg-campus-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            My University
+          </button>
+          <button
+            type="button"
+            onClick={() => handleUniversityScopeChange('all')}
+            aria-pressed={universityScope !== 'mine'}
+            className={`rounded-lg px-3 py-2 text-xs font-bold transition ${universityScope !== 'mine' ? 'bg-campus-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            All Universities
+          </button>
+        </div>
       </div>
 
       {/* Main Layout Grid: Left Sidebar (Desktop) + Right Content Area */}
@@ -776,6 +901,7 @@ function ExploreContent() {
                     <option value="price_asc">Price: Low to High</option>
                     <option value="price_desc">Price: High to Low</option>
                     <option value="popular">Popular</option>
+                    <option value="relevance" disabled={!searchInput.trim()}>Most relevant</option>
                   </select>
                 </div>
               </div>

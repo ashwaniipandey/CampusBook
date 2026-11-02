@@ -18,6 +18,10 @@ import {
   Notification,
   NotificationListResponse,
   StudentDashboard,
+  SmartRecommendation,
+  SmartPriceSuggestion,
+  SmartSavings,
+  ExchangeMatch,
 } from '@/types';
 
 const API_BASE_URL =
@@ -244,6 +248,76 @@ export const api = {
     request<{ status: string; results: number; books: Book[] }>(`/books/${id}/similar`, {
       method: 'GET',
     }),
+
+  getBookSuggestions: (q: string) =>
+    request<{
+      status: string;
+      suggestions: { type: 'title' | 'author' | 'isbn'; value: string }[];
+    }>(`/books/suggestions?q=${encodeURIComponent(q)}`, { method: 'GET' }),
+
+  getRecentSearches: () =>
+    request<{ status: string; searches: { term: string; searchedAt: string }[] }>(
+      '/search/recent',
+      { method: 'GET' }
+    ),
+
+  addRecentSearch: (term: string) =>
+    request<{ status: string; searches: { term: string; searchedAt: string }[] }>(
+      '/search/recent',
+      { method: 'POST', body: JSON.stringify({ term }) }
+    ),
+
+  clearRecentSearches: () =>
+    request<{ status: string; searches: [] }>('/search/recent', { method: 'DELETE' }),
+
+  getSmartRecommendations: () =>
+    request<{ status: string; results: number; recommendations: SmartRecommendation[] }>(
+      '/smart/recommendations',
+      { method: 'GET' }
+    ),
+
+  getSmartTrending: () =>
+    request<{ status: string; results: number; books: Book[] }>('/smart/trending', {
+      method: 'GET',
+    }),
+
+  getSmartPriceSuggestion: (params: {
+    category: string;
+    originalPrice: number | string;
+    condition: string;
+    edition?: string;
+    title?: string;
+  }) => {
+    const query = new URLSearchParams({
+      category: params.category,
+      originalPrice: String(params.originalPrice),
+      condition: params.condition,
+    });
+    if (params.edition) query.set('edition', params.edition);
+    if (params.title) query.set('title', params.title);
+    return request<{ status: string } & SmartPriceSuggestion>(
+      `/smart/price-suggestion?${query.toString()}`,
+      { method: 'GET' }
+    );
+  },
+
+  getSmartSavings: () =>
+    request<{ status: string } & SmartSavings>('/smart/savings', { method: 'GET' }),
+
+  getSmartPlatformImpact: () =>
+    request<{
+      status: string;
+      totalSaved: number;
+      purchases: number;
+      students?: number;
+      impact: SmartSavings['impact'];
+    }>('/smart/platform-impact', { method: 'GET' }),
+
+  getExchangeMatches: () =>
+    request<{ status: string; results: number; matches: ExchangeMatch[] }>(
+      '/smart/exchange-matches',
+      { method: 'GET' }
+    ),
 
   deleteBook: (id: string) =>
     request<{ status: string; message: string }>(`/books/${id}`, {

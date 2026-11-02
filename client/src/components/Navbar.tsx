@@ -27,10 +27,12 @@ import {
   PackageCheck,
   Star,
   Settings,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
 import { Notification } from '@/types';
+import SearchAutocomplete from '@/components/SearchAutocomplete';
 
 function relativeTime(value?: string) {
   if (!value) return '';
@@ -70,6 +72,7 @@ export default function Navbar() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [notificationToast, setNotificationToast] = useState<string | null>(null);
+  const [searchValue, setSearchValue] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
 
@@ -152,6 +155,14 @@ export default function Navbar() {
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium text-slate-700">
+            <div className="hidden xl:block w-48">
+              <SearchAutocomplete
+                value={searchValue}
+                onChange={setSearchValue}
+                inputClassName="py-2 text-xs"
+                placeholder="Search books..."
+              />
+            </div>
             <Link
               href="/explore"
               className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
@@ -180,6 +191,15 @@ export default function Navbar() {
               >
                 <BookOpen className="w-4 h-4 text-campus-600" />
                 My Books
+              </Link>
+            )}
+            {isAuthenticated && user?.role !== 'admin' && (
+              <Link
+                href="/exchange-matches"
+                className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition flex items-center gap-1.5"
+              >
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                Matches
               </Link>
             )}
             {isAuthenticated && (
@@ -499,6 +519,17 @@ export default function Navbar() {
                         Exchanges
                       </Link>
 
+                      {user.role !== 'admin' && (
+                        <Link
+                          href="/exchange-matches"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                        >
+                          <Sparkles className="w-4 h-4 text-amber-500" />
+                          Exchange Matches
+                        </Link>
+                      )}
+
                       <Link
                         href="/donations"
                         onClick={() => setUserDropdownOpen(false)}
@@ -563,6 +594,12 @@ export default function Navbar() {
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2 text-sm font-medium">
+          <SearchAutocomplete
+            value={searchValue}
+            onChange={setSearchValue}
+            inputClassName="py-3"
+            placeholder="Search books, authors, or ISBN..."
+          />
           <Link
             href="/explore"
             onClick={() => setMobileMenuOpen(false)}
@@ -697,6 +734,16 @@ export default function Navbar() {
               >
                 <ArrowLeftRight className="w-4 h-4 text-amber-500" /> Exchanges
               </Link>
+
+              {user.role !== 'admin' && (
+                <Link
+                  href="/exchange-matches"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-500" /> Exchange Matches
+                </Link>
+              )}
 
               <Link
                 href="/donations"

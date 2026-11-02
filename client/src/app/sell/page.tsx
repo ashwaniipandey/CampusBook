@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import api from '@/lib/api';
-import { University, Category, Book, BookCondition, ListingType } from '@/types';
+import { University, Category, Book, BookCondition, ListingType, SmartPriceSuggestion } from '@/types';
 import {
   BookOpen,
   GraduationCap,
@@ -72,6 +72,9 @@ function SellBookWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [priceSuggestion, setPriceSuggestion] = useState<SmartPriceSuggestion | null>(null);
+  const [priceSuggestionLoading, setPriceSuggestionLoading] = useState(false);
+  const [priceSuggestionError, setPriceSuggestionError] = useState('');
 
   // Reference data
   const [universities, setUniversities] = useState<University[]>([]);
@@ -180,6 +183,58 @@ function SellBookWizard() {
 
     init();
   }, [editId, user]);
+
+  useEffect(() => {
+    if (
+      currentStep !== 4 ||
+      formData.listingType !== 'sell' ||
+      !formData.category ||
+      Number(formData.originalPrice) <= 0
+    ) {
+      setPriceSuggestion(null);
+      setPriceSuggestionError('');
+      setPriceSuggestionLoading(false);
+      return;
+    }
+
+    let active = true;
+    setPriceSuggestionLoading(true);
+    setPriceSuggestionError('');
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await api.getSmartPriceSuggestion({
+          category: formData.category,
+          originalPrice: Number(formData.originalPrice),
+          condition: formData.condition,
+          edition: formData.edition,
+          title: formData.title,
+        });
+        if (active) setPriceSuggestion(response);
+      } catch (requestError) {
+        if (active) {
+          setPriceSuggestion(null);
+          setPriceSuggestionError(
+            requestError instanceof Error ? requestError.message : 'Unable to load a price suggestion.'
+          );
+        }
+      } finally {
+        if (active) setPriceSuggestionLoading(false);
+      }
+    }, 350);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [
+    currentStep,
+    formData.category,
+    formData.condition,
+    formData.edition,
+    formData.listingType,
+    formData.originalPrice,
+    formData.title,
+  ]);
 
   // Handle field change
   const handleChange = (
@@ -1054,6 +1109,59 @@ function SellBookWizard() {
                 )}
               </div>
             </div>
+
+            {formData.listingType === 'sell' && Number(formData.originalPrice) > 0 && (
+              <div className="rounded-2xl border border-campus-200 bg-gradient-to-r from-campus-50 to-emerald-50 p-4 sm:p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-bold text-campus-900">
+                      <Sparkles className="h-4 w-4 text-campus-600" />
+                      Suggested price
+                    </p>
+                    {priceSuggestionLoading ? (
+                      <div className="mt-3 h-5 w-56 animate-pulse rounded bg-campus-100" />
+                    ) : priceSuggestion ? (
+                      <>
+                        <p className="mt-2 text-2xl font-extrabold text-slate-900">
+                          ${priceSuggestion.suggested.toFixed(2)}
+                          <span className="ml-2 text-xs font-medium text-slate-500">
+                            range ${priceSuggestion.min.toFixed(2)}–${priceSuggestion.max.toFixed(2)}
+                          </span>
+                        </p>
+                        <p className="mt-1 text-xs text-slate-600">
+                          Based on {priceSuggestion.basedOn}
+                          {priceSuggestion.sampleSize > 0 && ` · ${priceSuggestion.sampleSize} comparable listing${priceSuggestion.sampleSize === 1 ? '' : 's'}`}
+                        </p>
+                      </>
+                    ) : priceSuggestionError ? (
+                      <p role="status" className="mt-2 text-xs text-rose-700">{priceSuggestionError}</p>
+                    ) : (
+                      <p className="mt-2 text-xs text-slate-600">Add a title, category, condition, and original price to get a market estimate.</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!priceSuggestion || priceSuggestionLoading}
+                    onClick={() => {
+                      if (priceSuggestion) {
+                        setFormData((previous) => ({
+                          ...previous,
+                          sellingPrice: priceSuggestion.suggested,
+                        }));
+                        setStepErrors((previous) => {
+                          const next = { ...previous };
+                          delete next.sellingPrice;
+                          return next;
+                        });
+                      }
+                    }}
+                    className="shrink-0 rounded-xl bg-campus-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-campus-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Apply suggestion
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Savings Indicator */}
             {formData.listingType === 'sell' &&

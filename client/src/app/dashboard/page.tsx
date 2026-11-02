@@ -7,6 +7,16 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import api from '@/lib/api';
 import { Book, BookImage, StudentDashboard } from '@/types';
 import { getBookPrice } from '@/lib/pricing';
+import { SmartRecommendation, SmartSavings } from '@/types';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import {
   User,
   GraduationCap,
@@ -43,6 +53,13 @@ export default function StudentDashboardPage() {
   const [dashboard, setDashboard] = useState<StudentDashboard | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [smartRecommendations, setSmartRecommendations] = useState<SmartRecommendation[]>([]);
+  const [smartSavings, setSmartSavings] = useState<SmartSavings | null>(null);
+  const [savingsTrend, setSavingsTrend] = useState<{ month: string; saved: number }[]>([]);
+  const [savingsGrowth, setSavingsGrowth] = useState(0);
+  const [smartLoading, setSmartLoading] = useState(true);
+  const [recommendationError, setRecommendationError] = useState('');
+  const [savingsError, setSavingsError] = useState('');
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<'overview' | 'edit-profile' | 'security'>('overview');
@@ -81,8 +98,76 @@ export default function StudentDashboardPage() {
     }
   };
 
+  const loadSmartData = async () => {
+    setSmartLoading(true);
+    setRecommendationError('');
+    setSavingsError('');
+    const [recommendationsResult, savingsResult, ordersResult] = await Promise.allSettled([
+      api.getSmartRecommendations(),
+      api.getSmartSavings(),
+      api.getOrders({ role: 'buying', status: 'completed' }),
+    ]);
+
+    if (recommendationsResult.status === 'fulfilled') {
+      setSmartRecommendations(recommendationsResult.value.recommendations || []);
+    } else {
+      setRecommendationError(recommendationsResult.reason instanceof Error ? recommendationsResult.reason.message : 'Unable to load recommendations.');
+    }
+
+    if (savingsResult.status === 'fulfilled') {
+      setSmartSavings(savingsResult.value);
+    } else {
+      setSavingsError(savingsResult.reason instanceof Error ? savingsResult.reason.message : 'Unable to load savings.');
+    }
+
+    if (ordersResult.status === 'fulfilled') {
+      const orders = ordersResult.value.orders || [];
+      const currentDate = new Date();
+      const monthly = Array.from({ length: 6 }, (_, index) => {
+        const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - (5 - index), 1);
+        const key = `${monthDate.getFullYear()}-${monthDate.getMonth()}`;
+        const saved = orders.reduce((total, order) => {
+          const created = new Date(order.completedAt || order.updatedAt || order.createdAt || '');
+          if (`${created.getFullYear()}-${created.getMonth()}` !== key) return total;
+          const originalPrice = Number(order.book?.originalPrice || 0);
+          const paid = Number(order.amount ?? order.price ?? 0);
+          return total + Math.max(0, originalPrice - paid);
+        }, 0);
+        return {
+          month: monthDate.toLocaleString(undefined, { month: 'short' }),
+          saved: Math.round(saved * 100) / 100,
+        };
+      });
+      setSavingsTrend(monthly);
+
+      const now = Date.now();
+      const periodSavings = (start: number, end: number) => orders.reduce((total, order) => {
+        const date = new Date(order.completedAt || order.updatedAt || order.createdAt || '').getTime();
+        if (date < start || date >= end) return total;
+        return total + Math.max(
+          0,
+          Number(order.book?.originalPrice || 0) - Number(order.amount ?? order.price ?? 0)
+        );
+      }, 0);
+      const last30Days = periodSavings(now - 30 * 86400000, now + 1);
+      const previous30Days = periodSavings(now - 60 * 86400000, now - 30 * 86400000);
+      setSavingsGrowth(
+        previous30Days > 0
+          ? Math.round(((last30Days - previous30Days) / previous30Days) * 100)
+          : last30Days > 0 ? 100 : 0
+      );
+    } else {
+      setSavingsError((previous) => [
+        previous,
+        ordersResult.reason instanceof Error ? ordersResult.reason.message : 'Unable to load savings history.',
+      ].filter(Boolean).join(' '));
+    }
+    setSmartLoading(false);
+  };
+
   useEffect(() => {
     void loadDashboard();
+    void loadSmartData();
   }, []);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -261,6 +346,70 @@ export default function StudentDashboardPage() {
                 ))}
               </div>
 
+              <div className="grid gap-6 lg:grid-cols-3">
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs lg:col-span-2">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-bold text-slate-900">Student Savings</h3>
+                      <p className="text-xs text-slate-500">Savings from completed purchases</p>
+                    </div>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${savingsGrowth >= 0 ? 'bg-campus-50 text-campus-800' : 'bg-rose-50 text-rose-700'}`}>
+                      {savingsGrowth >= 0 ? '+' : ''}{savingsGrowth}% vs previous 30 days
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-baseline gap-2">
+                    {smartLoading ? (
+                      <div className="h-8 w-28 animate-pulse rounded bg-slate-100" />
+                    ) : (
+                      <span className="text-2xl font-extrabold text-campus-800">${(smartSavings?.totalSaved ?? dashboard?.totalMoneySaved ?? 0).toFixed(2)}</span>
+                    )}
+                    <span className="text-xs text-slate-500">total saved</span>
+                  </div>
+                  <div className="mt-3 h-36">
+                    {smartLoading ? (
+                      <div className="h-full animate-pulse rounded-xl bg-slate-100" />
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={savingsTrend} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="studentSavingsFill" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#15803d" stopOpacity={0.28} />
+                              <stop offset="95%" stopColor="#15803d" stopOpacity={0.02} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={11} />
+                          <YAxis tickLine={false} axisLine={false} fontSize={11} width={36} />
+                          <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Saved']} />
+                          <Area type="monotone" dataKey="saved" stroke="#15803d" fill="url(#studentSavingsFill)" strokeWidth={2} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                  {savingsError && <p role="status" className="mt-2 text-xs text-rose-700">{savingsError}</p>}
+                </section>
+
+                <section className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-campus-50 to-white p-5 shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-campus-700"><Sparkles className="h-4 w-4" /></span>
+                    <div>
+                      <h3 className="font-bold text-slate-900">Environmental Impact</h3>
+                      <p className="text-xs text-slate-500">Your books in circulation</p>
+                    </div>
+                  </div>
+                  {smartLoading ? (
+                    <div className="mt-5 space-y-3">{[0, 1, 2].map((item) => <div key={item} className="h-7 animate-pulse rounded bg-white/80" />)}</div>
+                  ) : (
+                    <dl className="mt-5 space-y-4">
+                      <div className="flex items-baseline justify-between"><dt className="text-sm text-slate-600">Books reused</dt><dd className="text-xl font-extrabold text-campus-800">{smartSavings?.impact.booksReused ?? 0}</dd></div>
+                      <div className="flex items-baseline justify-between"><dt className="text-sm text-slate-600">CO₂ saved</dt><dd className="font-bold text-slate-900">{(smartSavings?.impact.estimatedCo2SavedKg ?? 0).toFixed(1)} kg</dd></div>
+                      <div className="flex items-baseline justify-between"><dt className="text-sm text-slate-600">Trees saved</dt><dd className="font-bold text-slate-900">{(smartSavings?.impact.treesSaved ?? 0).toFixed(1)}</dd></div>
+                    </dl>
+                  )}
+                  {savingsError && <p role="status" className="mt-3 text-xs text-rose-700">{savingsError}</p>}
+                </section>
+              </div>
+
               <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
                 <div className="space-y-4">
                   <Link href="/exchanges" className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 p-5 transition hover:bg-amber-100">
@@ -277,6 +426,13 @@ export default function StudentDashboardPage() {
                     </span>
                     <span className="text-2xl font-extrabold text-campus-800">{dashboardLoading ? '—' : dashboard?.unreadMessages ?? 0}</span>
                   </Link>
+                  <Link href="/exchange-matches" className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-white p-5 transition hover:bg-emerald-50">
+                    <span className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Sparkles className="h-5 w-5" /></span>
+                      <span><span className="block font-bold text-slate-900">Exchange matches</span><span className="text-xs text-slate-600">Find students with books you want</span></span>
+                    </span>
+                    <ArrowRight className="h-5 w-5 text-emerald-700" />
+                  </Link>
                   <div className="rounded-2xl border border-slate-200 bg-white p-5">
                     <h3 className="font-bold text-slate-900">Quick actions</h3>
                     <div className="mt-3 grid grid-cols-2 gap-2">
@@ -284,6 +440,7 @@ export default function StudentDashboardPage() {
                       <Link href="/explore" className="flex items-center gap-2 rounded-xl bg-campus-50 px-3 py-3 text-sm font-bold text-campus-800 hover:bg-campus-100"><Compass className="h-4 w-4" />Explore</Link>
                       <Link href="/messages" className="flex items-center gap-2 rounded-xl bg-campus-50 px-3 py-3 text-sm font-bold text-campus-800 hover:bg-campus-100"><MessageCircle className="h-4 w-4" />Messages</Link>
                       <Link href="/orders" className="flex items-center gap-2 rounded-xl bg-campus-50 px-3 py-3 text-sm font-bold text-campus-800 hover:bg-campus-100"><ClipboardList className="h-4 w-4" />Orders</Link>
+                      <Link href="/exchange-matches" className="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-3 text-sm font-bold text-amber-800 hover:bg-amber-100"><Sparkles className="h-4 w-4" />Exchange matches</Link>
                     </div>
                   </div>
                 </div>
@@ -326,13 +483,18 @@ export default function StudentDashboardPage() {
                   </div>
                   <Link href="/explore" className="text-sm font-bold text-campus-700 hover:underline">Browse all</Link>
                 </div>
-                {dashboardLoading ? (
+                {smartLoading ? (
                   <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
                     {[0, 1, 2, 3].map((item) => <div key={item} className="h-48 animate-pulse rounded-xl bg-slate-100" />)}
                   </div>
-                ) : dashboard?.recommended.length ? (
+                ) : recommendationError ? (
+                  <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                    {recommendationError}
+                    <button type="button" onClick={() => void loadSmartData()} className="ml-2 font-bold underline">Retry</button>
+                  </div>
+                ) : smartRecommendations.length ? (
                   <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                    {dashboard.recommended.map((book) => (
+                    {smartRecommendations.map((book) => (
                       <Link key={book._id} href={`/books/${book._id}`} className="overflow-hidden rounded-xl border border-slate-200 transition hover:border-campus-300 hover:shadow-md">
                         <div className="aspect-[4/3] bg-slate-100">
                           {getCover(book) ? <img src={getCover(book)} alt={book.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-slate-300"><BookOpen className="h-10 w-10" /></div>}
@@ -341,6 +503,11 @@ export default function StudentDashboardPage() {
                           <p className="line-clamp-2 min-h-10 text-sm font-bold text-slate-900">{book.title}</p>
                           <p className="mt-1 text-xs text-slate-500">{book.author}</p>
                           <p className="mt-2 text-sm font-extrabold text-campus-700">{book.listingType === 'donate' ? 'Free' : `$${getBookPrice(book).toFixed(2)}`}</p>
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {book.reasons.slice(0, 2).map((reason) => (
+                              <span key={reason} className="rounded-full bg-campus-50 px-2 py-0.5 text-[9px] font-semibold text-campus-800">{reason}</span>
+                            ))}
+                          </div>
                         </div>
                       </Link>
                     ))}

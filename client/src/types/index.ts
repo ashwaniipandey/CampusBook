@@ -240,6 +240,40 @@ export interface StudentDashboard {
   recommended: Book[];
 }
 
+export interface SmartRecommendation extends Book {
+  score: number;
+  reasons: string[];
+}
+
+export interface SmartPriceSuggestion {
+  min: number;
+  max: number;
+  suggested: number;
+  basedOn: 'similar listings' | 'condition formula';
+  sampleSize: number;
+}
+
+export interface SmartSavings {
+  totalSaved: number;
+  purchases: number;
+  impact: {
+    booksReused: number;
+    estimatedCo2SavedKg: number;
+    treesSaved: number;
+  };
+}
+
+export interface ExchangeMatch {
+  matchType: 'mutual' | 'one_way';
+  yourBook: Book;
+  theirBook: Book;
+  otherUser: Pick<User, '_id' | 'name' | 'rating' | 'totalRatings'> & {
+    university: University | string;
+  };
+  matchScore: number;
+  reason: string;
+}
+
 export interface FiltersMeta {
   totalApproved: number;
   categoryCounts: {
