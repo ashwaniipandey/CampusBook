@@ -68,7 +68,7 @@ export const errorHandler = (err, req, res, next) => {
     ? 'An unexpected error occurred.'
     : error.message || 'Internal Server Error';
 
-  if (!isProduction) {
+  if (!isProduction && process.env.NODE_ENV !== 'test') {
     console.error(`${req.method} ${req.path}: ${err.name || 'Error'}`);
   }
 
