@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Megaphone,
   Send,
@@ -10,8 +10,14 @@ import {
   AlertCircle,
   ExternalLink,
   BookOpen,
+  History,
+  Users,
+  GraduationCap,
+  Clock,
+  RefreshCw,
 } from 'lucide-react';
 import api from '@/lib/api';
+import { University } from '@/types';
 
 const templates = [
   {
@@ -22,7 +28,7 @@ const templates = [
   },
   {
     label: 'Semester Book Fair',
-    title: '🎉 CampusBook Spring Semester Fair',
+    title: '🎉 CampusBook Semester Fair',
     message: 'Find major discounts on engineering, science, economics and medical textbooks right on your campus.',
     link: '/explore',
   },
@@ -40,14 +46,54 @@ const templates = [
   },
 ];
 
+interface BroadcastHistoryItem {
+  title: string;
+  message: string;
+  link: string;
+  sentAt: string;
+  recipientCount: number;
+}
+
 export default function AdminBroadcastPage() {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [link, setLink] = useState('/');
+  const [audience, setAudience] = useState<'all' | 'verified' | 'university'>('all');
+  const [universityId, setUniversityId] = useState('');
+  const [universities, setUniversities] = useState<University[]>([]);
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const applyTemplate = (tpl: typeof templates[0]) => {
+  const [history, setHistory] = useState<BroadcastHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  const loadUniversities = async () => {
+    try {
+      const res = await api.getUniversities();
+      setUniversities(res.universities || []);
+    } catch {
+      // Non-critical
+    }
+  };
+
+  const loadHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const res = await api.getBroadcastHistory();
+      setHistory(res.history || []);
+    } catch {
+      // Non-critical
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUniversities();
+    loadHistory();
+  }, []);
+
+  const applyTemplate = (tpl: (typeof templates)[0]) => {
     setTitle(tpl.title);
     setMessage(tpl.message);
     setLink(tpl.link);
@@ -61,6 +107,11 @@ export default function AdminBroadcastPage() {
       return;
     }
 
+    if (audience === 'university' && !universityId) {
+      setFeedback({ type: 'error', text: 'Please select a university for targeted broadcast.' });
+      return;
+    }
+
     setSending(true);
     setFeedback(null);
 
@@ -69,14 +120,17 @@ export default function AdminBroadcastPage() {
         title: title.trim(),
         message: message.trim(),
         link: link.trim() || '/',
+        audience,
+        universityId: audience === 'university' ? universityId : undefined,
       });
       setFeedback({
         type: 'success',
-        text: res.message || `Announcement successfully broadcast to ${res.count} active users!`,
+        text: res.message || `Announcement successfully broadcast to ${res.count} users!`,
       });
       setTitle('');
       setMessage('');
       setLink('/');
+      loadHistory();
     } catch (err: any) {
       setFeedback({
         type: 'error',
@@ -88,7 +142,7 @@ export default function AdminBroadcastPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8">
       {/* Page Header */}
       <div>
         <div className="flex items-center gap-2">
@@ -100,10 +154,10 @@ export default function AdminBroadcastPage() {
           </p>
         </div>
         <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-          Broadcast Announcements & Notifications
+          Broadcast Announcements &amp; Notifications
         </h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          Send platform announcements directly to every registered student on CampusBook. Notifications appear in real-time in student notification drawers and live popup toasts.
+          Send platform announcements to all students, verified members, or a specific campus. Real-time push via Socket.io and instant notification bell delivery.
         </p>
       </div>
 
@@ -112,13 +166,13 @@ export default function AdminBroadcastPage() {
         <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Quick Templates
         </p>
-        <div className="grid gap-2.5 sm:grid-cols-2">
+        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
           {templates.map((tpl) => (
             <button
               key={tpl.label}
               type="button"
               onClick={() => applyTemplate(tpl)}
-              className="flex flex-col items-start rounded-xl border border-slate-200 bg-white p-3.5 text-left transition hover:border-purple-300 hover:bg-purple-50/50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-purple-700 dark:hover:bg-purple-950/30"
+              className="flex flex-col items-start rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-purple-300 hover:bg-purple-50/50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-purple-700 dark:hover:bg-purple-950/30"
             >
               <span className="text-xs font-bold text-purple-700 dark:text-purple-300">{tpl.label}</span>
               <span className="mt-1 line-clamp-1 text-xs text-slate-600 dark:text-slate-300 font-medium">
@@ -130,7 +184,7 @@ export default function AdminBroadcastPage() {
       </div>
 
       {/* Composer Grid */}
-      <div className="grid gap-8 lg:grid-cols-[1.2fr_.8fr]">
+      <div className="grid gap-8 lg:grid-cols-[1.3fr_.9fr]">
         {/* Form Card */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
@@ -138,6 +192,67 @@ export default function AdminBroadcastPage() {
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Target Audience Selector */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                Target Audience *
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAudience('all')}
+                  className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-xs font-bold transition ${
+                    audience === 'all'
+                      ? 'border-purple-600 bg-purple-50 text-purple-700 dark:border-purple-500 dark:bg-purple-950/60 dark:text-purple-300'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-850'
+                  }`}
+                >
+                  <Users className="h-3.5 w-3.5" /> All Users
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAudience('verified')}
+                  className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-xs font-bold transition ${
+                    audience === 'verified'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-950/60 dark:text-emerald-300'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-850'
+                  }`}
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Verified Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAudience('university')}
+                  className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-xs font-bold transition ${
+                    audience === 'university'
+                      ? 'border-amber-600 bg-amber-50 text-amber-700 dark:border-amber-500 dark:bg-amber-950/60 dark:text-amber-300'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-850'
+                  }`}
+                >
+                  <GraduationCap className="h-3.5 w-3.5" /> Single Campus
+                </button>
+              </div>
+
+              {audience === 'university' && (
+                <div className="mt-3">
+                  <select
+                    value={universityId}
+                    onChange={(e) => setUniversityId(e.target.value)}
+                    required
+                    aria-label="Select Target University"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  >
+                    <option value="">Select target university...</option>
+                    {universities.map((u) => (
+                      <option key={u._id} value={u._id}>
+                        {u.name} ({u.code || u.city})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
             <div>
               <label htmlFor="announcement-title" className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                 Announcement Title *
@@ -185,7 +300,7 @@ export default function AdminBroadcastPage() {
                 className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
               />
               <p className="mt-1 text-[11px] text-slate-500">
-                Students will be taken here when clicking the notification. Default is home (/).
+                Students will be navigated here upon clicking. Default is home (/).
               </p>
             </div>
 
@@ -222,14 +337,14 @@ export default function AdminBroadcastPage() {
                 </>
               ) : (
                 <>
-                  <Send className="h-4 w-4" /> Send Announcement to All Students
+                  <Send className="h-4 w-4" /> Broadcast Announcement
                 </>
               )}
             </button>
           </form>
         </div>
 
-        {/* Live Preview Box */}
+        {/* Live Preview Box & Stats */}
         <div className="space-y-4">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Bell className="h-4 w-4 text-slate-500" /> Student Preview
@@ -264,15 +379,66 @@ export default function AdminBroadcastPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
-            <p className="font-bold">⚡ Instant Real-Time Delivery</p>
-            <p className="mt-1">
-              Active students with CampusBook open in their browser will see an immediate popup banner via WebSockets, and it will be stored in their notification history.
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 text-xs text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
+            <p className="font-bold flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Real-Time Socket.io Push
+            </p>
+            <p className="mt-1 leading-relaxed text-slate-600 dark:text-slate-300">
+              Connected students receive this immediately in their notification bell without refreshing, and an unread notification is saved to their account.
             </p>
           </div>
         </div>
       </div>
+
+      {/* Sent History List */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <History className="h-5 w-5 text-purple-600" />
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Broadcast History</h2>
+          </div>
+          <button
+            type="button"
+            onClick={loadHistory}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-purple-700 hover:underline dark:text-purple-300"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${historyLoading ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+        </div>
+
+        <div className="mt-4">
+          {historyLoading ? (
+            <div className="py-8 text-center text-xs text-slate-500">Loading broadcast history...</div>
+          ) : history.length === 0 ? (
+            <div className="py-8 text-center text-xs text-slate-500">No announcements sent yet.</div>
+          ) : (
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              {history.map((item, index) => (
+                <div key={index} className="py-3.5 first:pt-0 last:pb-0">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">{item.title}</h3>
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                        <Users className="h-3 w-3" /> {item.recipientCount} recipients
+                      </span>
+                      <span>•</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> {new Date(item.sentAt).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 line-clamp-2">{item.message}</p>
+                  {item.link && item.link !== '/' && (
+                    <span className="mt-1 inline-block text-[11px] font-semibold text-purple-700 dark:text-purple-300">
+                      Target: {item.link}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
-

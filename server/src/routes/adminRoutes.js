@@ -32,8 +32,10 @@ import {
   exportUsers,
   exportOrders,
   broadcastAnnouncement,
+  getBroadcastHistory,
 } from '../controllers/adminController.js';
 import { authorize, protect } from '../middlewares/auth.js';
+import { broadcastLimiter } from '../middlewares/rateLimiter.js';
 import { validateObjectIdParam } from '../middlewares/requestSecurity.js';
 import { validateAdminQuery, validateAllowedQuery, validateBody } from '../validations/requestValidation.js';
 
@@ -76,6 +78,7 @@ router.patch('/universities/:id', validateAllowedQuery(), updateUniversity);
 router.delete('/universities/:id', validateAllowedQuery(), removeUniversity);
 router.get('/export/users', validateAllowedQuery(), exportUsers);
 router.get('/export/orders', validateAllowedQuery(), exportOrders);
-router.post('/broadcast', validateAllowedQuery(), broadcastAnnouncement);
+router.get('/broadcast/history', validateAllowedQuery(), getBroadcastHistory);
+router.post('/broadcast', validateAllowedQuery(), broadcastLimiter, broadcastAnnouncement);
 
 export default router;

@@ -230,7 +230,7 @@ export const getAllBooks = async (req, res, next) => {
     books = await Book.populate(books, [
       { path: 'category', select: 'name slug icon' },
       { path: 'university', select: 'name code domain city state' },
-      { path: 'seller', select: 'name avatar isVerified department yearOfStudy rating' },
+      { path: 'seller', select: 'name email role avatar isVerified department yearOfStudy rating' },
     ]);
 
     const totalPages = Math.ceil(total / limit) || 1;
@@ -424,6 +424,11 @@ export const createBook = async (req, res, next) => {
     const finalSellingPrice = isSellListing ? Number(sellingPrice || 0) : 0;
     const finalOriginalPrice = Number(originalPrice || 0);
 
+    // Determine status & approval: admins listing books are auto-approved as Official listings
+    const isAdmin = req.user?.role === 'admin';
+    const status = isAdmin ? 'approved' : 'pending';
+    const isApproved = isAdmin;
+
     const newBook = await Book.create({
       title,
       author,
@@ -445,18 +450,20 @@ export const createBook = async (req, res, next) => {
       description,
       images,
       exchangePreferences: exchangePreferences || '',
-      status: 'pending', // Default listing status as specified
-      isApproved: false,
+      status,
+      isApproved,
     });
 
     const populatedBook = await Book.findById(newBook._id)
-      .populate('seller', 'name email avatar rating isVerified department yearOfStudy')
+      .populate('seller', 'name email role avatar rating isVerified department yearOfStudy')
       .populate('category', 'name slug icon')
       .populate('university', 'name code domain city state');
 
     res.status(201).json({
       status: 'success',
-      message: 'Book listed successfully. It is pending administrator review.',
+      message: isAdmin
+        ? 'Official book listing published and auto-approved.'
+        : 'Book listed successfully. It is pending administrator review.',
       book: populatedBook,
     });
   } catch (error) {
@@ -494,7 +501,7 @@ export const getMyBooks = async (req, res, next) => {
 export const getBookById = async (req, res, next) => {
   try {
     const book = await Book.findById(req.params.id)
-      .populate('seller', 'name email avatar rating totalRatings isVerified department yearOfStudy')
+      .populate('seller', 'name email role avatar rating totalRatings isVerified department yearOfStudy')
       .populate('category', 'name slug description icon')
       .populate('university', 'name code domain city state campuses');
 

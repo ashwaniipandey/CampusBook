@@ -34,9 +34,12 @@ interface SocketContextValue {
 
 const SocketContext = createContext<SocketContextValue | undefined>(undefined);
 
-const configuredApiUrl =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-const socketUrl = configuredApiUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+const configuredSocketUrl =
+  process.env.NEXT_PUBLIC_SOCKET_URL ||
+  (process.env.NEXT_PUBLIC_API_URL
+    ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '')
+    : 'http://localhost:5001');
+const socketUrl = configuredSocketUrl.replace(/\/+$/, '');
 
 function getId(value: unknown): string {
   if (typeof value === 'string') return value;

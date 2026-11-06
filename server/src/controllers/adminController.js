@@ -315,52 +315,116 @@ export const exportOrders = async (req, res, next) => {
 
 export const broadcastAnnouncement = async (req, res, next) => {
   try {
-    const { title, message, link } = req.body;
-    if (!title || !message) {
+    const { title, message, link, audience, universityId } = req.body;
+    if (!title || !title.trim() || !message || !message.trim()) {
       return next(new AppError('Announcement title and message are required.', 400));
     }
 
     const User = (await import('../models/User.js')).default;
     const Notification = (await import('../models/Notification.js')).default;
 
-    // Fetch all active users
-    const users = await User.find({ isBlocked: false }).select('_id');
+    // Filter by audience:
+    // 'all' (default) -> all active non-blocked users
+    // 'verified' -> verified students
+    // 'university' -> users at a specific university
+    const filter = { isBlocked: false, status: { $ne: 'suspended' } };
+    if (audience === 'verified') {
+      filter.$or = [{ isVerified: true }, { verificationStatus: 'verified' }];
+    } else if (audience === 'university' && universityId) {
+      filter.university = universityId;
+    }
+
+    const users = await User.find(filter).select('_id');
     if (!users.length) {
       return res.status(200).json({
         status: 'success',
-        message: 'No active users found to broadcast to.',
+        message: 'No users found matching the selected audience criteria.',
         count: 0,
       });
     }
+
+    const safeTitle = title.trim().slice(0, 120);
+    const safeMessage = message.trim().slice(0, 500);
+    const safeLink = (link || '/').trim().slice(0, 500);
 
     const notifications = users.map((u) => ({
       recipient: u._id,
       sender: req.user?._id || null,
       type: 'system',
-      title: title.trim().slice(0, 120),
-      message: message.trim().slice(0, 500),
-      link: (link || '/').trim(),
+      title: safeTitle,
+      message: safeMessage,
+      link: safeLink,
       isRead: false,
     }));
 
-    await Notification.insertMany(notifications);
+    await Notification.insertMany(notifications, { ordered: false });
 
-    // Broadcast live to all connected Socket.io clients
+    // Real-time broadcast to connected clients via Socket.io
     const io = req.app.get('io');
     if (io) {
-      io.emit('notification', {
+      const payload = {
         type: 'system',
-        title: title.trim(),
-        message: message.trim(),
-        link: link || '/',
+        title: safeTitle,
+        message: safeMessage,
+        link: safeLink,
         createdAt: new Date().toISOString(),
-      });
+      };
+
+      if (!audience || audience === 'all') {
+        io.emit('notification', payload);
+      } else {
+        // Targeted real-time delivery to users in their personal socket rooms
+        for (const user of users) {
+          io.to(`user:${user._id}`).emit('notification', payload);
+        }
+      }
     }
 
     res.status(200).json({
       status: 'success',
-      message: `Announcement sent successfully to ${users.length} users.`,
+      message: `Announcement broadcast successfully to ${users.length} users.`,
       count: users.length,
+    });
+  } catch (error) {
+    handleError(error, next);
+  }
+};
+
+export const getBroadcastHistory = async (req, res, next) => {
+  try {
+    const Notification = (await import('../models/Notification.js')).default;
+
+    // Aggregate unique system notifications grouped by title + message + sender
+    const history = await Notification.aggregate([
+      { $match: { type: 'system' } },
+      {
+        $group: {
+          _id: {
+            title: '$title',
+            message: '$message',
+            link: '$link',
+          },
+          sentAt: { $max: '$createdAt' },
+          recipientCount: { $sum: 1 },
+        },
+      },
+      { $sort: { sentAt: -1 } },
+      { $limit: 20 },
+      {
+        $project: {
+          _id: 0,
+          title: '$_id.title',
+          message: '$_id.message',
+          link: '$_id.link',
+          sentAt: 1,
+          recipientCount: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      history,
     });
   } catch (error) {
     handleError(error, next);

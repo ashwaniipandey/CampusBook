@@ -43,4 +43,10 @@ export const uploadLimiter = createLimiter({
   message: 'Too many uploads. Please wait before uploading again.',
 });
 
+export const broadcastLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 15,
+  message: 'Too many broadcasts sent. Please wait before sending another announcement.',
+});
+
 export default apiLimiter;

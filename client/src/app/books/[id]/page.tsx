@@ -13,6 +13,7 @@ import {
   MapPin,
   MessageCircle,
   Share2,
+  Shield,
   ShoppingCart,
   Star,
   X,
@@ -595,11 +596,15 @@ export default function BookDetailPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-bold text-slate-900">{seller?.name || 'Campus seller'}</h2>
-                      {(seller?.isVerified || seller?.verificationStatus === 'verified') && (
+                      {seller?.role === 'admin' ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-800 dark:bg-purple-950/60 dark:text-purple-300">
+                          <Shield className="h-3.5 w-3.5" /> Official
+                        </span>
+                      ) : (seller?.isVerified || seller?.verificationStatus === 'verified') ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-campus-50 px-2 py-1 text-[11px] font-semibold text-campus-700">
                           <CheckCircle2 className="h-3.5 w-3.5" /> Verified
                         </span>
-                      )}
+                      ) : null}
                     </div>
                     <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
                       <GraduationCap className="h-4 w-4" /> {universityName}

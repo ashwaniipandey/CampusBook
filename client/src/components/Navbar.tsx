@@ -288,6 +288,23 @@ export default function Navbar() {
               )}
             </div>
 
+            {/* Messages / Chat (Logged-in users) */}
+            {isAuthenticated && (
+              <Link
+                href="/messages"
+                aria-label={`Messages, ${totalUnread} unread`}
+                title="Messages"
+                className={iconBtnClass}
+              >
+                <MessageCircle className="h-4 w-4" />
+                {totalUnread > 0 && (
+                  <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-bold text-slate-950">
+                    {totalUnread > 99 ? '99+' : totalUnread}
+                  </span>
+                )}
+              </Link>
+            )}
+
             {/* Wishlist Heart */}
             <Link href="/wishlist" aria-label="Wishlist" title="Wishlist" className={iconBtnClass}>
               <Heart className="h-4 w-4" />
@@ -372,6 +389,7 @@ export default function Navbar() {
                     id="navbar-user-menu"
                     user={user}
                     universityName={universityName}
+                    totalUnread={totalUnread}
                     close={() => setUserDropdownOpen(false)}
                     logout={logout}
                   />
@@ -390,6 +408,18 @@ export default function Navbar() {
           {/* Mobile Right Controls */}
           <div className="flex lg:hidden items-center gap-2">
             <ThemeToggle />
+            {isAuthenticated && (
+              <Link
+                href="/messages"
+                aria-label={`Messages, ${totalUnread} unread`}
+                className={iconBtnClass}
+              >
+                <MessageCircle className="h-4 w-4" />
+                {totalUnread > 0 && (
+                  <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-emerald-400" />
+                )}
+              </Link>
+            )}
             <Link href="/cart" aria-label="Shopping Cart" className={iconBtnClass}>
               <ShoppingCart className="h-4 w-4" />
               {cartCount > 0 && (
@@ -506,6 +536,20 @@ export default function Navbar() {
 
             {isAuthenticated ? (
               <div className="space-y-1 pt-2">
+                <Link
+                  href="/messages"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between rounded-lg px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5"
+                >
+                  <span className="flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4 text-emerald-400" /> Messages
+                  </span>
+                  {totalUnread > 0 && (
+                    <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-slate-950">
+                      {totalUnread}
+                    </span>
+                  )}
+                </Link>
                 <Link
                   href="/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
@@ -637,12 +681,14 @@ function UserDropdown({
   id,
   user,
   universityName,
+  totalUnread,
   close,
   logout,
 }: {
   id: string;
   user: NonNullable<ReturnType<typeof useAuth>['user']>;
   universityName: string;
+  totalUnread: number;
   close: () => void;
   logout: () => Promise<void>;
 }) {
@@ -695,6 +741,14 @@ function UserDropdown({
         </Link>
         <Link href="/donations" onClick={close} className={linkClass}>
           <HeartHandshake className="h-3.5 w-3.5 text-emerald-400" /> Donations
+        </Link>
+        <Link href="/messages" onClick={close} className={linkClass}>
+          <MessageCircle className="h-3.5 w-3.5 text-emerald-400" /> Messages
+          {totalUnread > 0 && (
+            <span className="ml-auto rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold text-slate-950">
+              {totalUnread}
+            </span>
+          )}
         </Link>
       </div>
 
