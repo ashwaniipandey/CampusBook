@@ -25,8 +25,17 @@ import {
   VerificationStatus,
 } from '@/types';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+const normalizeApiBaseUrl = (rawUrl?: string): string => {
+  let url = (rawUrl || '').trim();
+  if (!url) return 'http://localhost:5001/api';
+  url = url.replace(/\/+$/, '');
+  if (!url.endsWith('/api')) {
+    url = `${url}/api`;
+  }
+  return url;
+};
+
+const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
 
 function queryString(params: Record<string, string | number | undefined>) {
   const search = new URLSearchParams();
@@ -83,7 +92,7 @@ async function request<T>(
         error.message.toLowerCase().includes('load failed'))
     ) {
       throw new Error(
-        `Unable to connect to CampusBook server at ${API_BASE_URL}. Please verify the backend is running on http://localhost:5001.`
+        `Unable to connect to CampusBook server at ${API_BASE_URL}. Please verify the backend server is running and accessible.`
       );
     }
     throw error;
