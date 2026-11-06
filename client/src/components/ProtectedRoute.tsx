@@ -24,8 +24,10 @@ export default function ProtectedRoute({
       if (!isAuthenticated) {
         router.push('/login');
       } else if (requiredRole && user?.role !== requiredRole) {
-        if (user?.role === 'admin') {
-          router.push('/admin');
+        if (requiredRole === 'admin') {
+          router.push('/dashboard');
+        } else if (user?.role === 'admin') {
+          // Admin is allowed to view student routes (marketplace, dashboard, etc.)
         } else {
           router.push('/dashboard');
         }

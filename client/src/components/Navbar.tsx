@@ -215,11 +215,11 @@ export default function Navbar() {
 
   const navPillClass = (active: boolean) =>
     active
-      ? 'rounded-full bg-[#22c55e] px-4 py-1.5 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/20 transition-all'
-      : 'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white/70 hover:text-white dark:text-slate-300 dark:hover:text-white transition-colors';
+      ? 'rounded-full bg-[#22c55e] px-4 py-1.5 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/20 transition-all duration-200'
+      : 'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold text-white/80 hover:text-emerald-300 hover:bg-emerald-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:bg-emerald-500/15 transition-all duration-200';
 
   const iconBtnClass =
-    'relative flex h-9 w-9 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400';
+    'relative flex h-9 w-9 items-center justify-center rounded-full text-white/75 hover:bg-emerald-500/15 hover:text-emerald-300 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#02130b]/90 backdrop-blur-xl transition-colors duration-200">
@@ -416,48 +416,72 @@ export default function Navbar() {
           ref={mobilePanelRef}
           className="border-b border-white/10 bg-[#02130b] px-4 py-5 shadow-2xl lg:hidden sm:px-6"
         >
-          <nav className="space-y-2">
+          <nav className="space-y-1.5">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="block rounded-xl bg-[#22c55e] px-4 py-2.5 text-sm font-bold text-slate-950"
+              className={`block rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                isHomeActive
+                  ? 'bg-[#22c55e] text-slate-950'
+                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+              }`}
             >
               Home
             </Link>
             <Link
               href="/explore"
               onClick={() => setMobileMenuOpen(false)}
-              className="block rounded-xl px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/10"
+              className={`block rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                isExploreActive
+                  ? 'bg-[#22c55e] text-slate-950 font-bold'
+                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+              }`}
             >
               Explore
             </Link>
             <Link
               href="/explore?listingType=exchange"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/10"
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                isExchangeActive
+                  ? 'bg-[#22c55e] text-slate-950 font-bold'
+                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+              }`}
             >
-              <ArrowLeftRight className="h-4 w-4 text-emerald-400" /> Exchange
+              <ArrowLeftRight className={`h-4 w-4 ${isExchangeActive ? 'text-slate-950' : 'text-emerald-400'}`} /> Exchange
             </Link>
             <Link
               href="/explore?listingType=donate"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/10"
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                isDonateActive
+                  ? 'bg-[#22c55e] text-slate-950 font-bold'
+                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+              }`}
             >
-              <Heart className="h-4 w-4 text-rose-400" /> Free Donations
+              <Heart className={`h-4 w-4 ${isDonateActive ? 'text-slate-950' : 'text-rose-400'}`} /> Free Donations
             </Link>
             <Link
               href="/colleges"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/10"
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                isCollegesActive
+                  ? 'bg-[#22c55e] text-slate-950 font-bold'
+                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+              }`}
             >
-              <GraduationCap className="h-4 w-4 text-emerald-400" /> Colleges
+              <GraduationCap className={`h-4 w-4 ${isCollegesActive ? 'text-slate-950' : 'text-emerald-400'}`} /> Colleges
             </Link>
             <Link
               href="/events"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/10"
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                isEventsActive
+                  ? 'bg-[#22c55e] text-slate-950 font-bold'
+                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+              }`}
             >
-              <Calendar className="h-4 w-4 text-amber-400" /> Events
+              <Calendar className={`h-4 w-4 ${isEventsActive ? 'text-slate-950' : 'text-amber-400'}`} /> Events
             </Link>
 
             <div className="my-3 border-t border-white/10" />
@@ -677,6 +701,15 @@ function UserDropdown({
       <div className="mx-3 border-t border-white/10" />
 
       <div className="space-y-0.5 px-2 py-2">
+        {user.role === 'admin' && (
+          <Link
+            href="/admin"
+            onClick={close}
+            className="flex min-h-9 items-center gap-2.5 rounded-xl bg-purple-900/40 px-3 py-2 text-xs font-bold text-purple-300 hover:bg-purple-900/60 hover:text-white transition"
+          >
+            <Shield className="h-3.5 w-3.5 text-purple-400" /> Admin panel
+          </Link>
+        )}
         <Link href={dashboardHref} onClick={close} className={linkClass}>
           <LayoutDashboard className="h-3.5 w-3.5 text-purple-400" /> Dashboard
         </Link>
