@@ -178,26 +178,32 @@ const seedDatabase = async () => {
     console.log(`✅ ${createdCategories.length} categories created.`);
 
     // 4. Create 1 Admin and 10 Students
-    console.log('👥 Seeding Users (1 Admin + 10 Students)...');
+    console.log('👥 Seeding Users ( 10 Students)...');
     const salt = await bcrypt.genSalt(10);
-    const defaultPasswordHash = await bcrypt.hash('StudentPass123!', salt);
-    const adminPasswordHash = await bcrypt.hash('AdminPass123!', salt);
 
+        const seedPassword =
+      process.env.SEED_USER_PASSWORD || Math.random().toString(36).slice(2) + 'Aa1!';
+    const defaultPasswordHash = await bcrypt.hash(seedPassword, salt);
+
+    // const defaultPasswordHash = await bcrypt.hash('StudentPass123!', salt);
+
+    // const adminPasswordHash = await bcrypt.hash('AdminPass123!', salt);
+    
     const usersToCreate = [
       // 1 Admin
-      {
-        name: 'CampusBook Admin',
-        email: 'admin@campusbook.edu',
-        password: adminPasswordHash,
-        role: 'admin',
-        university: uniMap['STANFORD'],
-        department: 'Campus Administration',
-        yearOfStudy: 4,
-        isVerified: true,
-        phone: '+1-650-555-0100',
-        bio: 'Official CampusBook platform administrator for student welfare and book exchanges.',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-      },
+      // {
+      //   name: 'CampusBook Admin',
+      //   email: 'admin@campusbook.edu',
+      //   password: adminPasswordHash,
+      //   role: 'admin',
+      //   university: uniMap['STANFORD'],
+      //   department: 'Campus Administration',
+      //   yearOfStudy: 4,
+      //   isVerified: true,
+      //   phone: '+1-650-555-0100',
+      //   bio: 'Official CampusBook platform administrator for student welfare and book exchanges.',
+      //   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      // },
       // 10 Students
       {
         name: 'Alex Johnson',
@@ -1207,11 +1213,17 @@ const seedDatabase = async () => {
     console.log('--------------------------------------------------');
     console.log(`Universities : ${createdUniversities.length}`);
     console.log(`Categories   : ${createdCategories.length}`);
-    console.log(`Users        : ${createdUsers.length} (1 Admin, 10 Students)`);
+
+    // console.log(`Users        : ${createdUsers.length} (1 Admin, 10 Students)`);
+        console.log(`Users        : ${createdUsers.length} (10 Students)`);
     console.log(`Books        : ${createdBooks.length} (Sale, Exchange, Donation)`);
     console.log('--------------------------------------------------');
-    console.log('Admin Account: admin@campusbook.edu / AdminPass123!');
-    console.log('Student Account: alex.johnson@stanford.edu / StudentPass123!');
+
+
+    // console.log('Admin Account: admin@campusbook.edu / AdminPass123!');
+    // console.log('Student Account: alex.johnson@stanford.edu / StudentPass123!');
+
+
     console.log('--------------------------------------------------');
 
     await disconnectDB();
