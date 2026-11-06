@@ -52,6 +52,7 @@ if (process.env.NODE_ENV === 'production') {
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
   })
 );
 app.use(compression());

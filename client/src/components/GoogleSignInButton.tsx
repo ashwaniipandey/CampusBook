@@ -13,7 +13,7 @@ declare global {
           }) => void;
           renderButton: (
             element: HTMLElement,
-            options: { theme: string; size: string; width: number; text: string },
+            options: { theme: string; size: string; width?: number; text: string }
           ) => void;
         };
       };
@@ -32,12 +32,29 @@ export default function GoogleSignInButton({
 }: GoogleSignInButtonProps) {
   const buttonRef = useRef<HTMLDivElement>(null);
   const [scriptReady, setScriptReady] = useState(false);
+  const isRenderedRef = useRef(false);
+  const onCredentialRef = useRef(onCredential);
+  const onErrorRef = useRef(onError);
+
+  onCredentialRef.current = onCredential;
+  onErrorRef.current = onError;
+
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
+  // Load the Google GSI script once
   useEffect(() => {
     if (!clientId) return;
-    if (window.google) {
+    if (window.google?.accounts?.id) {
       setScriptReady(true);
+      return;
+    }
+
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[src="https://accounts.google.com/gsi/client"]'
+    );
+
+    if (existingScript) {
+      existingScript.addEventListener('load', () => setScriptReady(true));
       return;
     }
 
@@ -46,30 +63,42 @@ export default function GoogleSignInButton({
     script.async = true;
     script.defer = true;
     script.onload = () => setScriptReady(true);
-    script.onerror = () => onError('Google sign-in could not be loaded. Please try again.');
+    script.onerror = () =>
+      onErrorRef.current('Google sign-in could not be loaded. Please try again.');
     document.head.appendChild(script);
-  }, [clientId, onError]);
+  }, [clientId]);
 
+  // Initialize and render button exactly once
   useEffect(() => {
-    if (!scriptReady || !clientId || !buttonRef.current || !window.google) return;
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: (response) => {
-        if (!response.credential) {
-          onError('Google did not return a sign-in credential.');
-          return;
-        }
-        void onCredential(response.credential);
-      },
-    });
-    buttonRef.current.replaceChildren();
-    window.google.accounts.id.renderButton(buttonRef.current, {
-      theme: 'outline',
-      size: 'large',
-      width: Math.min(buttonRef.current.clientWidth, 360),
-      text: 'continue_with',
-    });
-  }, [clientId, onCredential, onError, scriptReady]);
+    if (!scriptReady || !clientId || !buttonRef.current || !window.google?.accounts?.id) {
+      return;
+    }
+
+    if (isRenderedRef.current) return;
+    isRenderedRef.current = true;
+
+    try {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (response) => {
+          if (!response.credential) {
+            onErrorRef.current('Google did not return a sign-in credential.');
+            return;
+          }
+          void onCredentialRef.current(response.credential);
+        },
+      });
+
+      buttonRef.current.replaceChildren();
+      window.google.accounts.id.renderButton(buttonRef.current, {
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+      });
+    } catch (err: any) {
+      console.warn('Google GSI render error:', err);
+    }
+  }, [clientId, scriptReady]);
 
   if (!clientId) {
     return (
@@ -79,5 +108,11 @@ export default function GoogleSignInButton({
     );
   }
 
-  return <div ref={buttonRef} className="flex min-h-10 justify-center" aria-label="Continue with Google" />;
+  return (
+    <div
+      ref={buttonRef}
+      className="flex min-h-11 justify-center"
+      aria-label="Continue with Google"
+    />
+  );
 }

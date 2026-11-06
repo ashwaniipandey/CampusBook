@@ -5,7 +5,12 @@ import mongoose from 'mongoose';
  * @returns {Promise<typeof mongoose>}
  */
 export const connectDB = async () => {
-  const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/campusbook';
+  let mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/CampusBook';
+
+  // Normalize casing for Atlas cluster where the database name is "CampusBook"
+  if (mongoUri.includes('.mongodb.net/campusbook')) {
+    mongoUri = mongoUri.replace('.mongodb.net/campusbook', '.mongodb.net/CampusBook');
+  }
 
   try {
     const conn = await mongoose.connect(mongoUri, {

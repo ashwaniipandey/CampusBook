@@ -64,13 +64,19 @@ export const errorHandler = (err, req, res, next) => {
   }
 
   const isProduction = process.env.NODE_ENV === 'production';
-  const responseStatusCode = error.statusCode >= 500 ? 500 : error.statusCode;
-  const message = isProduction && responseStatusCode === 500
-    ? 'An unexpected error occurred.'
-    : error.message || 'Internal Server Error';
+  const responseStatusCode = error.statusCode;
 
-  if (!isProduction && process.env.NODE_ENV !== 'test') {
-    console.error(`${req.method} ${req.path}: ${err.name || 'Error'}`);
+  // For unhandled internal server errors, mask the message in production
+  const message =
+    isProduction && responseStatusCode >= 500 && !err.isOperational
+      ? 'An unexpected error occurred.'
+      : error.message || 'Internal Server Error';
+
+  // Always log 5xx errors or unexpected errors to server logs
+  if (responseStatusCode >= 500 || !err.isOperational) {
+    console.error(`❌ [Server Error] ${req.method} ${req.originalUrl || req.path}:`, err);
+  } else if (!isProduction && process.env.NODE_ENV !== 'test') {
+    console.warn(`⚠️ [Client Error] ${req.method} ${req.originalUrl || req.path}: ${err.message}`);
   }
 
   res.status(responseStatusCode).json({

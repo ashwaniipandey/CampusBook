@@ -201,17 +201,23 @@ export const googleLogin = async (req, res, next) => {
   try {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     if (!clientId) {
-      return next(new AppError('Google sign-in is not configured.', 503));
+      return next(
+        new AppError(
+          'Google sign-in is not configured on the server. Please add GOOGLE_CLIENT_ID to the environment variables.',
+          503
+        )
+      );
     }
 
     let payload;
     try {
       const ticket = await googleClient.verifyIdToken({
-        idToken: req.body.credential,
+        idToken: req.body?.credential,
         audience: clientId,
       });
       payload = ticket.getPayload();
-    } catch {
+    } catch (verifyError) {
+      console.error('Google ID token verification failed:', verifyError.message);
       return next(new AppError('The Google credential is invalid or expired.', 401));
     }
 
@@ -222,21 +228,37 @@ export const googleLogin = async (req, res, next) => {
     const email = payload.email.trim().toLowerCase();
     let user = await User.findOne({ googleId: payload.sub }).populate('university');
     if (!user) user = await User.findOne({ email }).populate('university');
+
     if (user) {
       if (user.googleId && user.googleId !== payload.sub) {
         return next(new AppError('This account is linked to a different Google account.', 409));
       }
       if (!user.googleId) user.googleId = payload.sub;
       if (!user.avatar && payload.picture) user.avatar = payload.picture;
+      if (!user.university) {
+        const domain = email.split('@')[1];
+        if (domain) {
+          const domainCandidates = domain.split('.').map((_, index, parts) => parts.slice(index).join('.'));
+          const university = await University.findOne({ domain: { $in: domainCandidates } });
+          if (university) user.university = university._id;
+        }
+      }
       await user.save();
+      if (user.university) {
+        await user.populate('university');
+      }
     } else {
-      const domain = email.split('@')[1];
+      const domain = email.split('@')[1] || '';
       const domainCandidates = domain.split('.').map((_, index, parts) => parts.slice(index).join('.'));
       const university = await University.findOne({
         domain: { $in: domainCandidates },
       });
+
+      const rawName = String(payload.name || email.split('@')[0] || 'Student').trim();
+      const safeName = rawName.length < 2 ? `${rawName} Student` : rawName.slice(0, 60);
+
       user = await User.create({
-        name: String(payload.name || email.split('@')[0]).trim().slice(0, 60),
+        name: safeName,
         email,
         password: `${randomUUID()}${randomUUID()}`,
         role: 'student',
@@ -245,7 +267,10 @@ export const googleLogin = async (req, res, next) => {
         googleId: payload.sub,
         verificationStatus: 'unverified',
       });
-      await user.populate('university');
+
+      if (user.university) {
+        await user.populate('university');
+      }
     }
 
     if (user.isBlocked || user.status === 'suspended') {
@@ -254,6 +279,7 @@ export const googleLogin = async (req, res, next) => {
 
     sendTokenResponse(user, 200, res, 'Signed in with Google successfully.');
   } catch (error) {
+    console.error('Error in googleLogin:', error);
     next(error);
   }
 };
