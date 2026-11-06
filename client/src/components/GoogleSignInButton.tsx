@@ -10,6 +10,8 @@ declare global {
           initialize: (options: {
             client_id: string;
             callback: (response: { credential: string }) => void;
+            auto_select?: boolean;
+            itp_support?: boolean;
           }) => void;
           renderButton: (
             element: HTMLElement,
@@ -87,6 +89,8 @@ export default function GoogleSignInButton({
           }
           void onCredentialRef.current(response.credential);
         },
+        auto_select: false,
+        itp_support: true,
       });
 
       buttonRef.current.replaceChildren();

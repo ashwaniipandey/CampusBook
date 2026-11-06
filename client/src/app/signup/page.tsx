@@ -91,8 +91,8 @@ export default function SignupPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch universities
-  const loadUniversities = async () => {
+  // Fetch universities with auto-retry
+  const loadUniversities = async (retries = 2) => {
     setLoadingUnis(true);
     setUniError(null);
     try {
@@ -103,11 +103,17 @@ export default function SignupPage() {
         if (!watchedUniId) {
           setValue('universityId', res.universities[0]._id, { shouldValidate: true });
         }
+      } else if (retries > 0) {
+        setTimeout(() => void loadUniversities(retries - 1), 2500);
       } else {
-        setUniError('No university campuses returned by server.');
+        setUniError('No university campuses returned by server. Please click Retry.');
       }
     } catch (err: any) {
-      setUniError(err.message || 'Unable to connect to server to load universities.');
+      if (retries > 0) {
+        setTimeout(() => void loadUniversities(retries - 1), 3000);
+      } else {
+        setUniError(err.message || 'Unable to connect to server to load universities.');
+      }
     } finally {
       setLoadingUnis(false);
     }
@@ -246,7 +252,7 @@ export default function SignupPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={loadUniversities}
+                    onClick={() => void loadUniversities()}
                     className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg flex items-center gap-1 flex-shrink-0 transition"
                   >
                     <RotateCw className="w-3.5 h-3.5" /> Retry
