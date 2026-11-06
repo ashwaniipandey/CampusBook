@@ -52,3 +52,4 @@ run().catch((err) => {
   console.error('Error setting admin:', err.message);
   process.exit(1);
 });
+

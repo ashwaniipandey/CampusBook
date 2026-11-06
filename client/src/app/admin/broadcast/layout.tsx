@@ -10,3 +10,4 @@ export const metadata = createPageMetadata(
 export default function AdminBroadcastLayout({ children }: { children: ReactNode }) {
   return children;
 }
+
