@@ -377,3 +377,4 @@ export async function ensureInitialData() {
     console.error('Warning: could not ensure initial data:', error.message);
   }
 }
+
