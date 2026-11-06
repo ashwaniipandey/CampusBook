@@ -1,5 +1,6 @@
 import University from '../models/University.js';
 import Category from '../models/Category.js';
+import User from '../models/User.js';
 
 export const initialUniversities = [
   // Top Indian Universities & Institutes
@@ -372,6 +373,23 @@ export async function ensureInitialData() {
           await Category.create(cat);
         }
       }
+    }
+
+    // Ensure at least one admin account exists
+    const adminExists = await User.findOne({ role: 'admin' });
+    if (!adminExists) {
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@campusbook.edu';
+      const adminPassword = process.env.ADMIN_PASSWORD || 'AdminPass123!';
+      await User.create({
+        name: 'CampusBook Admin',
+        email: adminEmail,
+        password: adminPassword,
+        role: 'admin',
+        isVerified: true,
+        verificationStatus: 'verified',
+        department: 'Platform Administration',
+      });
+      console.log(`✅ Initial admin account created: ${adminEmail}`);
     }
   } catch (error) {
     console.error('Warning: could not ensure initial data:', error.message);
