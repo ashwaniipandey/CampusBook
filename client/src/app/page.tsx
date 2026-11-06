@@ -13,13 +13,18 @@ import {
   GraduationCap,
   HeartHandshake,
   Leaf,
+  Library,
   MapPin,
   MessageCircle,
+  Plus,
+  RefreshCw,
   Search,
   ShieldCheck,
   Sparkles,
   Users,
+  Wallet,
 } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 import SearchAutocomplete from '@/components/SearchAutocomplete';
 import BookCover from '@/components/BookCover';
 import { useAuth } from '@/context/AuthContext';
@@ -27,6 +32,7 @@ import api from '@/lib/api';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
 import { MotionCard, MotionSection } from '@/components/MotionEffects';
 import { Book, Category, University } from '@/types';
+import { getVerificationHref, isVerifiedStudent } from '@/lib/verification';
 
 interface PublicStats {
   students: number;
@@ -221,7 +227,8 @@ const sampleTestimonials = [
 
 export default function HomePage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const reduceMotion = useReducedMotion();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUniversity, setSelectedUniversity] = useState('');
   const [universities, setUniversities] = useState<University[]>([]);
@@ -349,6 +356,12 @@ export default function HomePage() {
     goToExplore();
   };
 
+  const sellHref = !isAuthenticated
+    ? `/login?redirect=${encodeURIComponent('/sell')}`
+    : isVerifiedStudent(user)
+      ? '/sell'
+      : getVerificationHref('/sell');
+
   const isServerStarting =
     (statsLoading || trendingLoading || categoriesLoading || highlightsLoading) &&
     !stats &&
@@ -376,83 +389,294 @@ export default function HomePage() {
           <span>CampusBook server is waking up — live listings will appear shortly. First visit may take up to 30 seconds.</span>
         </div>
       )}
-      <MotionSection className="relative isolate border-b border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-green-50 dark:border-slate-800 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950">
-        <div className="absolute -right-32 -top-32 -z-10 h-96 w-96 rounded-full bg-emerald-100/70 blur-3xl dark:bg-emerald-900/30" />
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.05fr_.95fr] lg:px-8 lg:py-24">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1.5 text-xs font-bold text-campus-800 shadow-sm dark:border-emerald-800 dark:bg-slate-900/80 dark:text-emerald-200">
-              <ShieldCheck className="h-4 w-4 text-campus-600" />
-              The student-to-student book marketplace
-            </span>
-            <h1 className="mt-6 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
-              Your Next Chapter Starts With a{' '}
-              <span className="text-campus-700 dark:text-emerald-300">Pre-Loved Book</span>
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">
-              Find affordable course books from students around your campus. Buy, exchange, or pass on the books you no longer need.
-            </p>
+      {/* HERO SECTION */}
+      <MotionSection className="relative isolate overflow-hidden bg-gradient-to-b from-[#02130b] via-[#041c11] to-[#02130b] text-white">
+        {/* Ambient blurred glow blobs */}
+        <div className="pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-emerald-500/15 blur-[120px]" />
+        <div className="pointer-events-none absolute right-0 top-1/4 h-[32rem] w-[32rem] rounded-full bg-emerald-400/10 blur-[140px]" />
+        <div className="pointer-events-none absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-teal-500/10 blur-[130px]" />
 
-            <form onSubmit={handleSearchSubmit} className="mt-8 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl shadow-emerald-900/5 dark:border-slate-700 dark:bg-slate-900 sm:p-4">
-              <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-                <SearchAutocomplete
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  onSearch={goToExplore}
-                  placeholder="Search title, author, course, or ISBN"
-                  inputClassName="py-3.5"
-                />
-                <label className="relative block">
-                  <GraduationCap className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <select
-                    value={selectedUniversity}
-                    onChange={(event) => setSelectedUniversity(event.target.value)}
-                    aria-label="Filter by university"
-                    className="w-full min-w-0 rounded-xl border border-slate-200 bg-white py-3.5 pl-10 pr-8 text-sm text-slate-800 focus:border-campus-400 focus:outline-none focus:ring-2 focus:ring-campus-500/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 md:min-w-64"
-                  >
-                    <option value="">All universities</option>
-                    {universities.map((university) => (
-                      <option key={university._id} value={university._id}>{university.name}</option>
-                    ))}
-                  </select>
-                </label>
+        {/* Subtle decorative grid overlay */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.035]"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)',
+            backgroundSize: '32px 32px',
+          }}
+        />
+
+        <div className="relative mx-auto max-w-7xl px-4 pt-10 pb-16 sm:px-6 sm:pt-14 sm:pb-20 lg:px-8 lg:pt-16 lg:pb-24">
+          <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
+            {/* Left Column: Headline, Subtext, Search, CTAs */}
+            <div className="lg:col-span-6 xl:col-span-6">
+              {/* Pill Badge */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-950/60 px-3.5 py-1.5 text-xs font-semibold text-emerald-300 shadow-inner backdrop-blur-md">
+                <GraduationCap className="h-4 w-4 text-emerald-400" />
+                <span>Student-to-Student Book Marketplace</span>
               </div>
+
+              {/* Headline */}
+              <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-[52px] lg:leading-[1.12]">
+                Your Next Chapter Starts With a{' '}
+                <span className="relative inline-block whitespace-nowrap italic text-transparent bg-clip-text bg-gradient-to-r from-[#4ade80] to-[#22c55e]">
+                  Pre-Loved Book
+                  {/* Hand-drawn curved underline */}
+                  <svg
+                    className="absolute -bottom-2.5 left-0 w-full overflow-visible text-[#22c55e]"
+                    height="12"
+                    viewBox="0 0 240 12"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M2 9.5C65 2.5 175 1.5 238 9"
+                      stroke="currentColor"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
+              </h1>
+
+              {/* Subtext */}
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                Buy, sell, exchange or donate academic books within your campus
+                community. Save money, share knowledge and make learning more
+                sustainable.
+              </p>
+
+              {/* Search Bar Pill Form */}
+              <form
+                onSubmit={handleSearchSubmit}
+                className="mt-8 rounded-3xl border border-white/15 bg-white/5 p-2 shadow-2xl backdrop-blur-xl sm:rounded-full sm:p-2 sm:pl-3"
+              >
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  {/* Autocomplete Input */}
+                  <div className="relative flex-1">
+                    <SearchAutocomplete
+                      value={searchQuery}
+                      onChange={setSearchQuery}
+                      onSearch={goToExplore}
+                      placeholder="Search books (e.g. DBMS, OS, DSA...)"
+                      inputClassName="w-full bg-transparent border-0 text-sm text-white placeholder-slate-400 focus:ring-0 focus:outline-none py-3 pl-2"
+                    />
+                  </div>
+
+                  {/* Vertical Divider */}
+                  <div className="hidden h-7 w-px bg-white/20 sm:block" />
+
+                  {/* University Campus Select */}
+                  <div className="relative min-w-[170px] sm:max-w-[210px]">
+                    <GraduationCap className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />
+                    <select
+                      value={selectedUniversity}
+                      onChange={(event) => setSelectedUniversity(event.target.value)}
+                      aria-label="All Colleges"
+                      className="w-full appearance-none truncate rounded-full border-0 bg-transparent py-2.5 pl-9 pr-8 text-xs font-semibold text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                    >
+                      <option value="" className="bg-slate-900 text-white">
+                        All Colleges
+                      </option>
+                      {universities.map((university) => (
+                        <option
+                          key={university._id}
+                          value={university._id}
+                          className="bg-slate-900 text-white"
+                        >
+                          {university.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">
+                      ▼
+                    </span>
+                  </div>
+                </div>
+              </form>
+
               {universityError && (
-                <p role="status" className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-rose-700 dark:text-rose-300">
+                <p
+                  role="status"
+                  className="mt-2.5 flex items-center gap-2 text-xs text-rose-300"
+                >
                   <span>{universityError}</span>
-                  <a href="/" className="font-bold underline underline-offset-2">Retry</a>
+                  <a href="/" className="font-bold underline underline-offset-2">
+                    Retry
+                  </a>
                 </p>
               )}
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                <button type="submit" className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-campus-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-campus-800">
-                  <Search className="h-4 w-4" /> Explore Books
+
+              {/* Action Buttons */}
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => goToExplore()}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#22c55e] px-6 py-3.5 text-sm font-bold text-slate-950 shadow-lg shadow-emerald-500/25 transition hover:bg-[#16a34a] hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  <span>Explore Books</span>
+                  <ArrowRight className="h-4 w-4" />
                 </button>
-                <Link href={isAuthenticated ? '/sell' : '/login?redirect=%2Fsell'} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-campus-200 bg-campus-50 px-5 py-3 text-sm font-bold text-campus-800 transition hover:bg-campus-100 dark:border-campus-800 dark:bg-campus-950 dark:text-campus-200 dark:hover:bg-campus-900">
-                  <BookOpen className="h-4 w-4" /> Sell a Book
+
+                <Link
+                  href={sellHref}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/10 hover:border-white/40"
+                >
+                  <Plus className="h-4 w-4 text-emerald-400" />
+                  <span>Sell a Book</span>
                 </Link>
               </div>
-            </form>
-          </div>
+            </div>
 
-          <div className="relative mx-auto w-full max-w-xl">
-            <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-campus-200/70 to-emerald-100/30 blur-xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white bg-white p-3 shadow-2xl shadow-emerald-950/10 dark:border-slate-700 dark:bg-slate-900">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-campus-700 to-emerald-950">
+            {/* Right Column: Hero Image with Floating Polaroid Cards */}
+            <div className="relative lg:col-span-6 xl:col-span-6">
+              {/* Soft Radial Green Glow behind hero image */}
+              <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-emerald-500/20 blur-3xl" />
+
+              {/* Main Campus Photo */}
+              <div className="relative aspect-[16/11] w-full overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-950 to-slate-950 shadow-2xl">
                 <Image
-                  src="/book-marketplace-hero.svg"
-                  alt="Illustration of books being shared in a campus community"
+                  src="/images/hero-campus.jpg"
+                  alt="Students studying with books outside the campus library"
                   fill
                   priority
-                  sizes="(max-width: 1024px) 90vw, 45vw"
-                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover object-center"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
               </div>
-              <div className="absolute bottom-7 left-7 flex items-center gap-3 rounded-2xl border border-slate-100 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-campus-700 dark:bg-emerald-950 dark:text-emerald-300">
-                  <HeartHandshake className="h-5 w-5" />
+
+              {/* Floating Polaroid Cards (overlapping left edge) */}
+              {/* Card 1: Campus Library (Top, rotated -6deg) */}
+              <motion.div
+                className="absolute -top-6 -left-4 sm:-top-8 sm:-left-8 z-20 w-36 sm:w-44 rounded-2xl border-4 border-white bg-white p-2 shadow-2xl"
+                style={{ rotate: -6 }}
+                animate={reduceMotion ? undefined : { y: [0, -8, 0] }}
+                transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-100">
+                  <Image
+                    src="/images/library.jpg"
+                    alt="Campus Library stacks"
+                    fill
+                    sizes="180px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="mt-2 flex items-center justify-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800">
+                  <Library className="h-3 w-3 text-emerald-600" />
+                  <span>Campus Library</span>
+                </div>
+              </motion.div>
+
+              {/* Card 2: Course Books (Middle, rotated +4deg) */}
+              <motion.div
+                className="absolute top-1/3 -left-6 sm:-left-12 z-20 w-38 sm:w-48 rounded-2xl border-4 border-white bg-white p-2 shadow-2xl"
+                style={{ rotate: 4 }}
+                animate={reduceMotion ? undefined : { y: [0, 8, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-100">
+                  <Image
+                    src="/images/books.jpg"
+                    alt="Stacked engineering course books"
+                    fill
+                    sizes="200px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="mt-2 flex items-center justify-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800">
+                  <BookOpen className="h-3 w-3 text-emerald-600" />
+                  <span>Course Books</span>
+                </div>
+              </motion.div>
+
+              {/* Card 3: Exchange / Donate (Bottom, rotated -4deg) */}
+              <motion.div
+                className="absolute -bottom-6 -left-3 sm:-bottom-8 sm:-left-6 z-20 w-40 sm:w-52 rounded-2xl border-4 border-white bg-white p-2 shadow-2xl"
+                style={{ rotate: -4 }}
+                animate={reduceMotion ? undefined : { y: [0, -6, 0] }}
+                transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 1.6 }}
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-100">
+                  <Image
+                    src="/images/exchange.jpg"
+                    alt="Handing over a pre-loved book to another student"
+                    fill
+                    sizes="220px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="mt-2 flex items-center justify-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800">
+                  <ArrowLeftRight className="h-3 w-3 text-emerald-600" />
+                  <span>Exchange / Donate</span>
+                </div>
+              </motion.div>
+
+              {/* Subtle Decorative sparkles and leaf strokes */}
+              <div className="pointer-events-none absolute -top-8 right-6 text-emerald-400/40">
+                <Sparkles className="h-8 w-8" />
+              </div>
+              <div className="pointer-events-none absolute bottom-4 -right-4 text-emerald-300/30">
+                <Leaf className="h-10 w-10 rotate-12" />
+              </div>
+            </div>
+          </div>
+
+          {/* Glassmorphism Benefits Bar */}
+          <div className="mt-16 sm:mt-20 rounded-3xl border border-white/15 bg-white/[0.06] p-6 shadow-2xl backdrop-blur-xl">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-white/15">
+              {/* Item 1: Save Money */}
+              <div className="flex items-center gap-4 lg:px-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-400/30">
+                  <Wallet className="h-6 w-6" />
                 </span>
                 <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Books find new stories</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-300">Shared locally, used again</p>
+                  <h3 className="text-sm font-bold text-white">Save Money</h3>
+                  <p className="mt-0.5 text-xs text-slate-300">
+                    Get quality books at student-friendly prices
+                  </p>
+                </div>
+              </div>
+
+              {/* Item 2: Promote Reuse */}
+              <div className="flex items-center gap-4 lg:px-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-400/30">
+                  <RefreshCw className="h-6 w-6" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Promote Reuse</h3>
+                  <p className="mt-0.5 text-xs text-slate-300">
+                    Give books a second life on campus
+                  </p>
+                </div>
+              </div>
+
+              {/* Item 3: Student Community */}
+              <div className="flex items-center gap-4 lg:px-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-400/30">
+                  <Users className="h-6 w-6" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Student Community</h3>
+                  <p className="mt-0.5 text-xs text-slate-300">
+                    Connect with peers from your college
+                  </p>
+                </div>
+              </div>
+
+              {/* Item 4: Academic Support */}
+              <div className="flex items-center gap-4 lg:px-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-400/30">
+                  <GraduationCap className="h-6 w-6" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Academic Support</h3>
+                  <p className="mt-0.5 text-xs text-slate-300">
+                    Find the right books for your course &amp; semester
+                  </p>
                 </div>
               </div>
             </div>

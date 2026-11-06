@@ -13,14 +13,42 @@ export default function ThemeToggle() {
   const isDark = mounted && resolvedTheme === 'dark';
 
   return (
-    <button
-      type="button"
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500"
+    <div
+      role="radiogroup"
+      aria-label="Theme mode"
+      className="relative inline-flex h-9 items-center rounded-full border border-emerald-500/30 bg-emerald-950/40 p-1 backdrop-blur-md dark:border-emerald-500/30 dark:bg-emerald-950/40 light:border-slate-200 light:bg-slate-100"
     >
-      {isDark ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
-    </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={!isDark}
+        onClick={() => setTheme('light')}
+        aria-label="Switch to light theme"
+        title="Light theme"
+        className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
+          !isDark
+            ? 'bg-emerald-400 text-slate-950 shadow-sm'
+            : 'text-emerald-300/70 hover:text-emerald-200'
+        }`}
+      >
+        <Sun className="h-3.5 w-3.5" aria-hidden="true" />
+      </button>
+
+      <button
+        type="button"
+        role="radio"
+        aria-checked={isDark}
+        onClick={() => setTheme('dark')}
+        aria-label="Switch to dark theme"
+        title="Dark theme"
+        className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
+          isDark
+            ? 'bg-emerald-500 text-slate-950 shadow-sm'
+            : 'text-slate-600 hover:text-slate-900 dark:text-emerald-300/70 dark:hover:text-emerald-200'
+        }`}
+      >
+        <Moon className="h-3.5 w-3.5" aria-hidden="true" />
+      </button>
+    </div>
   );
 }
