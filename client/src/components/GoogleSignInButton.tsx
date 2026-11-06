@@ -28,13 +28,16 @@ interface GoogleSignInButtonProps {
   onError: (message: string) => void;
 }
 
+// Module-level globals ensure Google Accounts ID is initialized ONLY ONCE per window session
+let isGlobalGsiInitialized = false;
+let globalCredentialCallback: ((response: { credential: string }) => void) | null = null;
+
 export default function GoogleSignInButton({
   onCredential,
   onError,
 }: GoogleSignInButtonProps) {
   const buttonRef = useRef<HTMLDivElement>(null);
   const [scriptReady, setScriptReady] = useState(false);
-  const isRenderedRef = useRef(false);
   const onCredentialRef = useRef(onCredential);
   const onErrorRef = useRef(onError);
 
@@ -70,28 +73,34 @@ export default function GoogleSignInButton({
     document.head.appendChild(script);
   }, [clientId]);
 
-  // Initialize and render button exactly once
+  // Initialize once and render button safely
   useEffect(() => {
     if (!scriptReady || !clientId || !buttonRef.current || !window.google?.accounts?.id) {
       return;
     }
 
-    if (isRenderedRef.current) return;
-    isRenderedRef.current = true;
+    globalCredentialCallback = (response) => {
+      if (!response.credential) {
+        onErrorRef.current('Google did not return a sign-in credential.');
+        return;
+      }
+      void onCredentialRef.current(response.credential);
+    };
 
     try {
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: (response) => {
-          if (!response.credential) {
-            onErrorRef.current('Google did not return a sign-in credential.');
-            return;
-          }
-          void onCredentialRef.current(response.credential);
-        },
-        auto_select: false,
-        itp_support: true,
-      });
+      if (!isGlobalGsiInitialized) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (response) => {
+            if (globalCredentialCallback) {
+              globalCredentialCallback(response);
+            }
+          },
+          auto_select: false,
+          itp_support: true,
+        });
+        isGlobalGsiInitialized = true;
+      }
 
       buttonRef.current.replaceChildren();
       window.google.accounts.id.renderButton(buttonRef.current, {
