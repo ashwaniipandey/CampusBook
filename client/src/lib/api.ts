@@ -787,6 +787,12 @@ export const api = {
   deleteAdminUniversity: (id: string) =>
     request<{ status: string; message: string }>(`/admin/universities/${id}`, { method: 'DELETE' }),
 
+  broadcastAnnouncement: (data: { title: string; message: string; link?: string }) =>
+    request<{ status: string; message: string; count: number }>('/admin/broadcast', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   downloadAdminCsv: async (kind: 'users' | 'orders') => {
     const response = await fetch(`${API_BASE_URL}/admin/export/${kind}`, { credentials: 'include' });
     if (!response.ok) {

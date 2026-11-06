@@ -9,6 +9,7 @@ import {
   GraduationCap,
   HeartHandshake,
   LayoutDashboard,
+  Megaphone,
   Menu,
   Repeat2,
   Settings,
@@ -22,6 +23,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 
 const navigation = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { label: 'Broadcast & Alerts', href: '/admin/broadcast', icon: Megaphone },
   { label: 'Users', href: '/admin/users', icon: Users },
   { label: 'Book Listings', href: '/admin/books', icon: BookOpen },
   { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },

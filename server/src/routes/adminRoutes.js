@@ -31,6 +31,7 @@ import {
   removeUniversity,
   exportUsers,
   exportOrders,
+  broadcastAnnouncement,
 } from '../controllers/adminController.js';
 import { authorize, protect } from '../middlewares/auth.js';
 import { validateObjectIdParam } from '../middlewares/requestSecurity.js';
@@ -75,5 +76,6 @@ router.patch('/universities/:id', validateAllowedQuery(), updateUniversity);
 router.delete('/universities/:id', validateAllowedQuery(), removeUniversity);
 router.get('/export/users', validateAllowedQuery(), exportUsers);
 router.get('/export/orders', validateAllowedQuery(), exportOrders);
+router.post('/broadcast', validateAllowedQuery(), broadcastAnnouncement);
 
 export default router;

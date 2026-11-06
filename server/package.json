@@ -11,6 +11,7 @@
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage",
     "seed": "node src/seeds/seed.js",
     "seed:reviews": "node src/scripts/seedReviews.js",
+    "make-admin": "node src/scripts/setAdmin.js",
     "fix:prices": "node src/scripts/fixBookPrices.js",
     "migrate:verification": "node src/scripts/migrateVerification.js",
     "lint": "eslint src/",

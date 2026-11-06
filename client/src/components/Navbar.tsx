@@ -351,6 +351,14 @@ export default function Navbar() {
             )}
             {renderIconLink('/cart', 'Cart', ShoppingCart, isAuthenticated ? cartCount : undefined)}
             <ThemeToggle />
+            {user?.role === 'admin' && (
+              <Link
+                href="/admin"
+                className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-purple-700 px-3 text-sm font-bold text-white shadow-sm transition hover:bg-purple-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 xl:px-3.5"
+              >
+                <Shield className="h-4 w-4" aria-hidden="true" /> Admin Console
+              </Link>
+            )}
             <Link
               href={sellHref}
               className="inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-campus-600 px-3 text-sm font-semibold text-white shadow-sm transition hover:bg-campus-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-campus-500 focus-visible:ring-offset-2 xl:px-4"
@@ -466,6 +474,15 @@ export default function Navbar() {
             />
           </div>
           <nav aria-label="Mobile navigation" className="space-y-1">
+            {user?.role === 'admin' && (
+              <Link
+                href="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="mb-2 flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-purple-700 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-purple-800"
+              >
+                <Shield className="h-4 w-4" aria-hidden="true" /> Open Admin Console
+              </Link>
+            )}
             {renderMenuLinks(() => setMobileMenuOpen(false))}
             {isAuthenticated && user && (
               <>

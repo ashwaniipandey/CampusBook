@@ -312,3 +312,57 @@ export const exportOrders = async (req, res, next) => {
     handleError(error, next);
   }
 };
+
+export const broadcastAnnouncement = async (req, res, next) => {
+  try {
+    const { title, message, link } = req.body;
+    if (!title || !message) {
+      return next(new AppError('Announcement title and message are required.', 400));
+    }
+
+    const User = (await import('../models/User.js')).default;
+    const Notification = (await import('../models/Notification.js')).default;
+
+    // Fetch all active users
+    const users = await User.find({ isBlocked: false }).select('_id');
+    if (!users.length) {
+      return res.status(200).json({
+        status: 'success',
+        message: 'No active users found to broadcast to.',
+        count: 0,
+      });
+    }
+
+    const notifications = users.map((u) => ({
+      recipient: u._id,
+      sender: req.user?._id || null,
+      type: 'system',
+      title: title.trim().slice(0, 120),
+      message: message.trim().slice(0, 500),
+      link: (link || '/').trim(),
+      isRead: false,
+    }));
+
+    await Notification.insertMany(notifications);
+
+    // Broadcast live to all connected Socket.io clients
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('notification', {
+        type: 'system',
+        title: title.trim(),
+        message: message.trim(),
+        link: link || '/',
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: `Announcement sent successfully to ${users.length} users.`,
+      count: users.length,
+    });
+  } catch (error) {
+    handleError(error, next);
+  }
+};
