@@ -90,6 +90,18 @@ process.on('SIGINT', () => void shutdown('SIGINT'));
 process.on('unhandledRejection', (error) => void shutdown('Unhandled rejection', error));
 process.on('uncaughtException', (error) => void shutdown('Uncaught exception', error));
 
-startServer();
+startServer().then(() => {
+  // Keep Render free-tier alive by pinging health endpoint every 14 minutes.
+  // Render automatically sets RENDER_EXTERNAL_URL for the service's public URL.
+  if (process.env.NODE_ENV === 'production' && process.env.RENDER_EXTERNAL_URL) {
+    const healthUrl = `${process.env.RENDER_EXTERNAL_URL}/api/health`;
+    setInterval(() => {
+      fetch(healthUrl, { method: 'GET' })
+        .then(() => console.log('[keep-alive] health ping OK'))
+        .catch((err) => console.warn('[keep-alive] health ping failed:', err.message));
+    }, 14 * 60 * 1000); // 14 minutes
+    console.log(`⏰  Keep-alive ping scheduled → ${healthUrl}`);
+  }
+});
 
 export { server, io };

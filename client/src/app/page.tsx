@@ -59,6 +59,37 @@ function SkeletonGrid({ count = 4 }: { count?: number }) {
 }
 
 function SectionError({ message }: { message: string }) {
+  const isConnecting =
+    message.toLowerCase().includes('starting up') ||
+    message.toLowerCase().includes('unable to connect');
+
+  if (isConnecting) {
+    return (
+      <div
+        role="status"
+        className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <span className="flex items-center gap-2">
+          {/* Spinner */}
+          <svg
+            className="h-4 w-4 shrink-0 animate-spin text-amber-600"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+          Server is starting up — content will load shortly. This can take up to 30 seconds on first visit.
+        </span>
+        <a href="/" className="w-fit whitespace-nowrap font-bold underline underline-offset-2">
+          Retry
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div role="status" className="flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200 sm:flex-row sm:items-center sm:justify-between">
       <span>{message}</span>
@@ -318,8 +349,33 @@ export default function HomePage() {
     goToExplore();
   };
 
+  const isServerStarting =
+    (statsLoading || trendingLoading || categoriesLoading || highlightsLoading) &&
+    !stats &&
+    !trendingBooks.length &&
+    !categories.length;
+
   return (
     <main className="overflow-hidden">
+      {isServerStarting && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex items-center justify-center gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+        >
+          <svg
+            className="h-4 w-4 shrink-0 animate-spin text-amber-600"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+          <span>CampusBook server is waking up — live listings will appear shortly. First visit may take up to 30 seconds.</span>
+        </div>
+      )}
       <MotionSection className="relative isolate border-b border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-green-50 dark:border-slate-800 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950">
         <div className="absolute -right-32 -top-32 -z-10 h-96 w-96 rounded-full bg-emerald-100/70 blur-3xl dark:bg-emerald-900/30" />
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.05fr_.95fr] lg:px-8 lg:py-24">

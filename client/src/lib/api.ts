@@ -47,12 +47,29 @@ function queryString(params: Record<string, string | number | undefined>) {
 }
 
 /**
- * Universal fetch wrapper ensuring httpOnly cookies are included
- * Handles JSON and FormData payloads transparently
+ * Universal fetch wrapper ensuring httpOnly cookies are included.
+ * Handles JSON and FormData payloads transparently.
+ *
+ * On transient network errors (e.g. Render free-tier cold start) it
+ * automatically retries up to MAX_RETRIES times with exponential back-off
+ * before surfacing a user-friendly error.
  */
+const MAX_RETRIES = 3;
+const RETRY_BASE_MS = 4000; // 4 s → 8 s → 16 s
+
+function isNetworkError(error: any): boolean {
+  return (
+    error?.name === 'TypeError' &&
+    (error.message.toLowerCase().includes('failed to fetch') ||
+      error.message.toLowerCase().includes('networkerror') ||
+      error.message.toLowerCase().includes('load failed'))
+  );
+}
+
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  _attempt = 1
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
@@ -85,14 +102,15 @@ async function request<T>(
 
     return data as T;
   } catch (error: any) {
-    if (
-      error.name === 'TypeError' &&
-      (error.message.toLowerCase().includes('failed to fetch') ||
-        error.message.toLowerCase().includes('networkerror') ||
-        error.message.toLowerCase().includes('load failed'))
-    ) {
+    if (isNetworkError(error)) {
+      if (_attempt < MAX_RETRIES) {
+        // Exponential back-off: 4s, 8s, 16s …
+        const delay = RETRY_BASE_MS * Math.pow(2, _attempt - 1);
+        await new Promise<void>((resolve) => setTimeout(resolve, delay));
+        return request<T>(endpoint, options, _attempt + 1);
+      }
       throw new Error(
-        `Unable to connect to CampusBook server at ${API_BASE_URL}. Please verify the backend server is running and accessible.`
+        `Unable to connect to CampusBook server. The backend may be starting up — please wait a moment and try again.`
       );
     }
     throw error;
