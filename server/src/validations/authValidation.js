@@ -6,16 +6,22 @@ const email = z.string().trim().email('Please provide a valid email address.').m
 const password = z.string().min(6, 'Password must be at least 6 characters.').max(128);
 const otp = z.string().regex(/^\d{6}$/, 'OTP must be a 6-digit code.');
 
+const indianPhoneRegex = /^[6-9]\d{9}$/;
+
 const schemas = {
   register: z.object({
-    name: z.string().trim().min(2).max(60),
+    name: z.string().trim().min(2, 'Name must be at least 2 characters').max(60, 'Name cannot exceed 60 characters'),
     email,
     password,
-    universityId: objectId,
+  }).strict(),
+  completeProfile: z.object({
+    state: z.string().trim().min(1, 'State is required').max(100),
+    phone: z.string().trim().regex(indianPhoneRegex, 'Please provide a valid 10-digit Indian mobile number starting with 6-9'),
+    city: z.string().trim().max(100).optional(),
+    universityId: objectId.optional().or(z.literal('')),
     department: z.string().trim().max(100).optional(),
+    course: z.string().trim().max(100).optional(),
     yearOfStudy: z.coerce.number().int().min(1).max(7).optional(),
-    studentId: z.string().trim().max(50).optional(),
-    phone: z.string().trim().max(30).optional(),
   }).strict(),
   login: z.object({ email, password: z.string().min(1).max(128) }).strict(),
   google: z.object({ credential: z.string().min(20).max(8192) }).strict(),
@@ -31,11 +37,15 @@ const schemas = {
   }).strict(),
   profile: z.object({
     name: z.string().trim().min(2).max(60).optional(),
+    state: z.string().trim().max(100).optional(),
+    city: z.string().trim().max(100).optional(),
+    universityId: objectId.optional().or(z.literal('')),
     department: z.string().trim().max(100).optional(),
+    course: z.string().trim().max(100).optional(),
     yearOfStudy: z.coerce.number().int().min(1).max(7).optional(),
-    phone: z.string().trim().max(30).optional(),
+    phone: z.string().trim().regex(indianPhoneRegex, 'Please provide a valid 10-digit Indian mobile number').optional().or(z.literal('')),
     bio: z.string().trim().max(500).optional(),
-    avatar: z.string().url().max(2048).optional(),
+    avatar: z.string().url().max(2048).optional().or(z.literal('')),
   }).strict().refine((value) => Object.keys(value).length > 0, 'At least one profile field is required.'),
 };
 

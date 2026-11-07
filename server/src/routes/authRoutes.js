@@ -7,6 +7,7 @@ import {
   login,
   logout,
   getMe,
+  completeProfile,
   updateProfile,
   changePassword,
   forgotPassword,
@@ -32,6 +33,7 @@ router.post('/logout', logout);
 
 // Authenticated user routes
 router.get('/me', protect, getMe);
+router.post('/complete-profile', protect, validateAuthBody('completeProfile'), completeProfile);
 router.put('/profile', protect, validateAuthBody('profile'), updateProfile);
 router.put('/change-password', protect, sensitiveAuthLimiter, validateAuthBody('changePassword'), changePassword);
 

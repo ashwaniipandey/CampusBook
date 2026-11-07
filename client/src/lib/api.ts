@@ -172,13 +172,22 @@ export const api = {
     name: string;
     email: string;
     password: string;
-    universityId: string;
-    department?: string;
-    yearOfStudy?: number;
-    studentId?: string;
-    phone?: string;
   }) =>
-    request<AuthResponse>('/auth/register', {
+    request<{ status: string; message: string; requiresVerification?: boolean; email?: string }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  completeProfile: (data: {
+    state: string;
+    phone: string;
+    city?: string;
+    universityId?: string;
+    department?: string;
+    course?: string;
+    yearOfStudy?: number;
+  }) =>
+    request<AuthResponse>('/auth/complete-profile', {
       method: 'POST',
       body: JSON.stringify(data),
     }),

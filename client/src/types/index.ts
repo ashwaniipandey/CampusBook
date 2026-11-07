@@ -22,6 +22,10 @@ export interface User {
   semester?: string;
   yearOfStudy?: number;
   phone?: string;
+  state?: string;
+  city?: string;
+  emailVerified?: boolean;
+  isProfileComplete?: boolean;
   avatar?: string;
   bio?: string;
   rating?: number;

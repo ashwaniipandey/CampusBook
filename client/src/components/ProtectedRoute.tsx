@@ -23,6 +23,8 @@ export default function ProtectedRoute({
     if (!loading) {
       if (!isAuthenticated) {
         router.push('/login');
+      } else if (user?.isProfileComplete === false && typeof window !== 'undefined' && window.location.pathname !== '/complete-profile') {
+        router.push('/complete-profile');
       } else if (requiredRole && user?.role !== requiredRole) {
         if (requiredRole === 'admin') {
           router.push('/dashboard');

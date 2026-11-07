@@ -1160,13 +1160,20 @@ const definition = {
           name: { type: 'string', minLength: 2, maxLength: 60 },
           email: { type: 'string', format: 'email' },
           password: { type: 'string', minLength: 6, maxLength: 128 },
-          universityId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
-          department: { type: 'string', maxLength: 100 },
-          yearOfStudy: { type: 'integer', minimum: 1, maximum: 7 },
-          studentId: { type: 'string', maxLength: 50 },
-          phone: { type: 'string', maxLength: 30 },
         },
-        ['name', 'email', 'password', 'universityId'],
+        ['name', 'email', 'password'],
+      ),
+      CompleteProfileRequest: bodySchema(
+        {
+          state: { type: 'string' },
+          phone: { type: 'string', pattern: '^[6-9]\\d{9}$' },
+          city: { type: 'string' },
+          universityId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+          department: { type: 'string' },
+          course: { type: 'string' },
+          yearOfStudy: { type: 'integer', minimum: 1, maximum: 7 },
+        },
+        ['state', 'phone'],
       ),
       LoginRequest: bodySchema(
         {

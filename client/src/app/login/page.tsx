@@ -48,7 +48,13 @@ export default function LoginPage() {
         redirectByRole(result.user);
       }
     } else {
-      setServerError(result.error || 'Invalid email or password');
+      const errMsg = result.error || 'Invalid email or password';
+      // If unverified email: redirect to OTP page
+      if (errMsg.toLowerCase().includes('not verified') || errMsg.toLowerCase().includes('verification code')) {
+        router.push(`/verify-otp?email=${encodeURIComponent(data.email.trim())}`);
+        return;
+      }
+      setServerError(errMsg);
     }
   };
 

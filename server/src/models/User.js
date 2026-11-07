@@ -70,6 +70,24 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    state: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    city: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    isProfileComplete: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
     avatar: {
       type: String,
       default: '',
@@ -148,6 +166,15 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    verificationOtpAttempts: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    verificationOtpLastSent: {
+      type: Date,
+      select: false,
+    },
     collegeVerificationOtp: {
       type: String,
       select: false,
@@ -208,6 +235,8 @@ userSchema.methods.toJSON = function () {
   delete user.googleId;
   delete user.verificationOtp;
   delete user.verificationOtpExpires;
+  delete user.verificationOtpAttempts;
+  delete user.verificationOtpLastSent;
   delete user.collegeVerificationOtp;
   delete user.collegeVerificationOtpExpires;
   delete user.resetPasswordOtp;

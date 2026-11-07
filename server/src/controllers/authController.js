@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import University from '../models/University.js';
 import { AppError } from '../middlewares/errorHandler.js';
@@ -46,92 +47,90 @@ export const sendTokenResponse = (user, statusCode, res, message = 'Success') =>
  */
 export const register = async (req, res, next) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      universityId,
-      department,
-      yearOfStudy,
-      studentId,
-      phone,
-    } = req.body;
+    const { name, email, password } = req.body;
 
-    // 1. Validation
-    if (!name || !email || !password || !universityId) {
-      return next(
-        new AppError('Please provide name, email, password, and university', 400)
-      );
+    if (!name || !email || !password) {
+      return next(new AppError('Please provide name, email, and password.', 400));
     }
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // 2. Check if user already exists
-    const existingUser = await User.findOne({ email: normalizedEmail });
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: normalizedEmail }).select('+verificationOtpAttempts +verificationOtpLastSent');
     if (existingUser) {
-      return next(
-        new AppError('An account with this email address already exists', 409)
-      );
+      if (!existingUser.emailVerified) {
+        // Unverified user registering again: check cooldown & resend OTP
+        if (existingUser.verificationOtpLastSent && Date.now() - existingUser.verificationOtpLastSent.getTime() < 60 * 1000) {
+          return next(new AppError('Please wait at least 60 seconds before requesting another verification code.', 429));
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const hashedOtp = await bcrypt.hash(otp, 10);
+        existingUser.verificationOtp = hashedOtp;
+        existingUser.verificationOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+        existingUser.verificationOtpAttempts = 0;
+        existingUser.verificationOtpLastSent = new Date();
+        await existingUser.save({ validateBeforeSave: false });
+
+        try {
+          await sendOtpEmail({
+            to: existingUser.email,
+            otp,
+            type: 'verification',
+            userName: existingUser.name,
+          });
+        } catch (emailErr) {
+          console.error('Failed to send verification email:', emailErr.message);
+        }
+
+        return res.status(200).json({
+          status: 'success',
+          requiresVerification: true,
+          email: existingUser.email,
+          message: 'An unverified account exists. A new verification code has been sent to your email.',
+        });
+      }
+
+      return next(new AppError('An account with this email address already exists. Please log in.', 409));
     }
 
-    // 3. Find and validate university
-    const university = await University.findById(universityId);
-    if (!university) {
-      return next(new AppError('Selected university does not exist', 404));
-    }
-
-    // Verify email belongs to the selected university domain
-    const emailDomain = normalizedEmail.split('@')[1] || '';
-    const expectedDomain = university.domain ? university.domain.toLowerCase() : '';
-    const isDomainMatch =
-      expectedDomain &&
-      (emailDomain === expectedDomain || emailDomain.endsWith('.' + expectedDomain));
-
-    if (!isDomainMatch) {
-      return next(
-        new AppError(
-          `Please use your official university email ending in @${university.domain} to register for ${university.name}`,
-          400
-        )
-      );
-    }
-
-    // 4. Generate 6-digit OTP for email verification
+    // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = await bcrypt.hash(otp, 10);
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // 5. Create user (isVerified stays false until OTP verification)
+    // Create user
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
       password,
-      university: university._id,
-      department: department ? department.trim() : '',
-      yearOfStudy: yearOfStudy ? Number(yearOfStudy) : 1,
-      studentId: studentId ? studentId.trim() : '',
-      phone: phone ? phone.trim() : '',
+      emailVerified: false,
       isVerified: false,
-      verificationOtp: otp,
+      isProfileComplete: false,
+      verificationOtp: hashedOtp,
       verificationOtpExpires: otpExpires,
+      verificationOtpAttempts: 0,
+      verificationOtpLastSent: new Date(),
     });
 
-    // Populate university reference for response
-    await user.populate('university');
+    // Send verification OTP email
+    try {
+      await sendOtpEmail({
+        to: user.email,
+        otp,
+        type: 'verification',
+        userName: user.name,
+      });
+    } catch (emailErr) {
+      console.error('Failed to send verification email:', emailErr.message);
+    }
 
-    // 6. Log/send verification OTP
-    await sendOtpEmail({
-      to: user.email,
-      otp,
-      type: 'verification',
-      userName: user.name,
+    res.status(201).json({
+      status: 'success',
+      requiresVerification: true,
+      email: user.email,
+      message: 'Registration successful. Please verify the 6-digit OTP sent to your email.',
     });
-
-    sendTokenResponse(
-      user,
-      201,
-      res,
-      'Registration successful. Please verify the OTP sent to your email.'
-    );
   } catch (error) {
     next(error);
   }
@@ -147,51 +146,70 @@ export const verifyOtp = async (req, res, next) => {
 
     const userEmail = email || (req.user && req.user.email);
     if (!userEmail || !otp) {
-      return next(new AppError('Please provide your email and OTP code', 400));
+      return next(new AppError('Please provide your email and OTP code.', 400));
     }
 
+    const normalizedEmail = userEmail.toLowerCase().trim();
+
     // Find user with secret OTP fields
-    const user = await User.findOne({
-      email: userEmail.toLowerCase().trim(),
-    })
-      .select('+verificationOtp +verificationOtpExpires')
+    const user = await User.findOne({ email: normalizedEmail })
+      .select('+verificationOtp +verificationOtpExpires +verificationOtpAttempts')
       .populate('university');
 
     if (!user) {
       return next(new AppError('Invalid or expired verification code.', 400));
     }
 
-    if (user.isVerified) {
-      return next(new AppError('Invalid or expired verification code.', 400));
+    if (user.emailVerified) {
+      return res.status(200).json({
+        status: 'success',
+        message: 'Email is already verified.',
+        user: typeof user.toJSON === 'function' ? user.toJSON() : user,
+      });
     }
 
     if (!user.verificationOtp || !user.verificationOtpExpires) {
-      return next(
-        new AppError('Invalid or expired verification code.', 400)
-      );
-    }
-
-    if (Date.now() > user.verificationOtpExpires.getTime()) {
-      return next(
-        new AppError('Invalid or expired verification code.', 400)
-      );
-    }
-
-    if (user.verificationOtp !== otp.trim()) {
       return next(new AppError('Invalid or expired verification code.', 400));
     }
 
-    // Mark student as verified
-    user.verificationStatus = 'verified';
+    // Check expiration (10 min)
+    if (Date.now() > user.verificationOtpExpires.getTime()) {
+      return next(new AppError('Verification code has expired. Please request a new one.', 400));
+    }
+
+    // Check attempts (max 5)
+    if ((user.verificationOtpAttempts || 0) >= 5) {
+      return next(new AppError('Maximum verification attempts exceeded. Please request a new code.', 429));
+    }
+
+    // Compare hashed OTP (with fallback to plaintext for any legacy unhashed OTPs)
+    let isMatch = false;
+    if (user.verificationOtp.startsWith('$2a$') || user.verificationOtp.startsWith('$2b$')) {
+      isMatch = await bcrypt.compare(otp.trim(), user.verificationOtp);
+    } else {
+      isMatch = user.verificationOtp === otp.trim();
+    }
+
+    if (!isMatch) {
+      user.verificationOtpAttempts = (user.verificationOtpAttempts || 0) + 1;
+      await user.save({ validateBeforeSave: false });
+      return next(new AppError('Invalid or expired verification code.', 400));
+    }
+
+    // Mark emailVerified
+    user.emailVerified = true;
     user.verificationOtp = undefined;
     user.verificationOtpExpires = undefined;
+    user.verificationOtpAttempts = 0;
     await user.save({ validateBeforeSave: false });
 
-    res.status(200).json({
-      status: 'success',
-      message: 'Email verified successfully! You have unlocked the Verified Student badge.',
+    // Issue JWT cookie and send response
+    sendTokenResponse(
       user,
-    });
+      200,
+      res,
+      'Email verified successfully! Please complete your profile.'
+    );
   } catch (error) {
     next(error);
   }
@@ -265,7 +283,10 @@ export const googleLogin = async (req, res, next) => {
         university: university?._id || null,
         avatar: payload.picture || '',
         googleId: payload.sub,
+        emailVerified: true,
+        isVerified: false,
         verificationStatus: 'unverified',
+        isProfileComplete: false,
       });
 
       if (user.university) {
@@ -294,14 +315,24 @@ export const resendOtp = async (req, res, next) => {
     const userEmail = email || (req.user && req.user.email);
 
     if (!userEmail) {
-      return next(new AppError('Email address is required', 400));
+      return next(new AppError('Email address is required.', 400));
     }
 
-    const user = await User.findOne({ email: userEmail.toLowerCase().trim() });
-    if (user && !user.isVerified) {
+    const normalizedEmail = userEmail.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail }).select('+verificationOtpAttempts +verificationOtpLastSent');
+
+    if (user && !user.emailVerified) {
+      // Cooldown check: 60 seconds
+      if (user.verificationOtpLastSent && Date.now() - user.verificationOtpLastSent.getTime() < 60 * 1000) {
+        return next(new AppError('Please wait at least 60 seconds before requesting another code.', 429));
+      }
+
       const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      user.verificationOtp = newOtp;
-      user.verificationOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      const hashedOtp = await bcrypt.hash(newOtp, 10);
+      user.verificationOtp = hashedOtp;
+      user.verificationOtpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      user.verificationOtpAttempts = 0; // reset attempts
+      user.verificationOtpLastSent = new Date();
       await user.save({ validateBeforeSave: false });
 
       try {
@@ -316,6 +347,7 @@ export const resendOtp = async (req, res, next) => {
       }
     }
 
+    // Always return constant message
     res.status(200).json({
       status: 'success',
       message: 'If an unverified account exists, a verification code will be sent.',
@@ -334,18 +366,24 @@ export const login = async (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return next(new AppError('Please provide an email and password', 400));
+      return next(new AppError('Please provide an email and password.', 400));
     }
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Find user with password
+    // Find user with password and OTP cooldown data
     const user = await User.findOne({ email: normalizedEmail })
-      .select('+password')
+      .select('+password +verificationOtpLastSent')
       .populate('university');
 
-    if (!user || !(await user.comparePassword(password))) {
-      return next(new AppError('Invalid email or password', 401));
+    if (!user) {
+      return next(
+        new AppError('No account found with this email. Please register first.', 404, 'ACCOUNT_NOT_FOUND')
+      );
+    }
+
+    if (!(await user.comparePassword(password))) {
+      return next(new AppError('Invalid email or password.', 401));
     }
 
     if (user.isBlocked) {
@@ -355,6 +393,49 @@ export const login = async (req, res, next) => {
     }
 
     if (user.status === 'suspended') {
+      return next(
+        new AppError('Your account has been suspended. Please contact campus admin.', 403)
+      );
+    }
+
+    // Check if email is verified
+    if (!user.emailVerified) {
+      // Check cooldown (60 seconds)
+      const canSend = !user.verificationOtpLastSent || Date.now() - user.verificationOtpLastSent.getTime() >= 60 * 1000;
+      if (canSend) {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.verificationOtp = await bcrypt.hash(otp, 10);
+        user.verificationOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+        user.verificationOtpAttempts = 0;
+        user.verificationOtpLastSent = new Date();
+        await user.save({ validateBeforeSave: false });
+
+        try {
+          await sendOtpEmail({
+            to: user.email,
+            otp,
+            type: 'verification',
+            userName: user.name,
+          });
+        } catch (emailErr) {
+          console.error('Failed to send verification email on login:', emailErr.message);
+        }
+      }
+
+      return res.status(403).json({
+        status: 'fail',
+        code: 'EMAIL_NOT_VERIFIED',
+        requiresVerification: true,
+        email: user.email,
+        message: 'Your email is not verified yet. We have sent a verification code to your email. Please verify to continue.',
+      });
+    }
+
+    sendTokenResponse(user, 200, res, 'Logged in successfully');
+  } catch (error) {
+    next(error);
+  }
+};
       return next(
         new AppError('Your account has been suspended. Please contact campus admin.', 403)
       );
@@ -400,20 +481,75 @@ export const getMe = async (req, res, next) => {
 };
 
 /**
+ * Complete user profile step (after OTP / Google sign-in)
+ * POST /api/auth/complete-profile
+ */
+export const completeProfile = async (req, res, next) => {
+  try {
+    const { state, phone, city, universityId, department, course, yearOfStudy } = req.body;
+
+    if (!state || !phone) {
+      return next(new AppError('State and phone number are required to complete your profile.', 400));
+    }
+
+    const updates = {
+      state: state.trim(),
+      phone: phone.trim(),
+      isProfileComplete: true,
+    };
+
+    if (city !== undefined) updates.city = city.trim();
+    if (department !== undefined) updates.department = department.trim();
+    if (course !== undefined) updates.course = course.trim();
+    if (yearOfStudy !== undefined && yearOfStudy !== '') updates.yearOfStudy = Number(yearOfStudy);
+
+    if (universityId) {
+      const university = await University.findById(universityId);
+      if (university) {
+        updates.university = university._id;
+        if (!updates.city && university.city) updates.city = university.city;
+        if (!updates.state && university.state) updates.state = university.state;
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(req.user._id, updates, {
+      new: true,
+      runValidators: true,
+    }).populate('university');
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Profile completed successfully!',
+      user: typeof user.toJSON === 'function' ? user.toJSON() : user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Update user profile
  * PUT /api/auth/profile
  */
 export const updateProfile = async (req, res, next) => {
   try {
-    const { name, department, yearOfStudy, phone, bio, avatar } = req.body;
+    const { name, state, city, universityId, department, course, yearOfStudy, phone, bio, avatar } = req.body;
 
     const updates = {};
     if (name !== undefined) updates.name = name.trim();
+    if (state !== undefined) updates.state = state.trim();
+    if (city !== undefined) updates.city = city.trim();
     if (department !== undefined) updates.department = department.trim();
+    if (course !== undefined) updates.course = course.trim();
     if (yearOfStudy !== undefined) updates.yearOfStudy = Number(yearOfStudy);
     if (phone !== undefined) updates.phone = phone.trim();
     if (bio !== undefined) updates.bio = bio.trim();
     if (avatar !== undefined) updates.avatar = avatar.trim();
+
+    if (universityId) {
+      const university = await University.findById(universityId);
+      if (university) updates.university = university._id;
+    }
 
     const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, {
       new: true,
@@ -575,6 +711,7 @@ export default {
   login,
   logout,
   getMe,
+  completeProfile,
   updateProfile,
   changePassword,
   forgotPassword,

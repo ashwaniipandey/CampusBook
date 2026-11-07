@@ -130,46 +130,58 @@ export default function VerifyPage() {
             </section>
           ) : (
             <div className="grid gap-5 md:grid-cols-2">
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-6">
-                <div className="flex items-center gap-3">
-                  <span className="rounded-xl bg-campus-50 p-2.5 text-campus-700 dark:bg-campus-900/40 dark:text-campus-300"><MailCheck className="h-5 w-5" /></span>
-                  <div>
-                    <h2 className="font-bold text-slate-900 dark:text-slate-100">College email</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Verify with a one-time code</p>
+              {/* Option 1: College Email OTP */}
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-xl bg-emerald-50 p-2.5 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><MailCheck className="h-5 w-5" /></span>
+                    <div>
+                      <h2 className="font-bold text-slate-900 dark:text-slate-100">College Email Verification</h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Instant verification via one-time code</p>
+                    </div>
                   </div>
-                </div>
-                <form onSubmit={sendOtp} className="mt-5 space-y-3">
-                  <label htmlFor="college-email" className="block text-sm font-semibold text-slate-700 dark:text-slate-200">College email address</label>
-                  <input id="college-email" type="email" required maxLength={254} value={collegeEmail} onChange={(event) => setCollegeEmail(event.target.value)} placeholder="you@college.edu" className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-campus-500 focus:outline-none focus:ring-2 focus:ring-campus-500/30 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400" />
-                  <button type="submit" disabled={busy || !collegeEmail.trim()} className="w-full rounded-xl bg-campus-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-50">
-                    {busy ? 'Sending code…' : otpSent ? 'Resend code' : 'Send verification code'}
-                  </button>
-                </form>
-                {otpSent && (
-                  <form onSubmit={verifyOtp} className="mt-4 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-                    <label htmlFor="college-otp" className="block text-sm font-semibold text-slate-700 dark:text-slate-200">6-digit verification code</label>
-                    <input id="college-otp" type="text" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm tracking-[0.3em] text-slate-900 focus:border-campus-500 focus:outline-none focus:ring-2 focus:ring-campus-500/30 dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
-                    <button type="submit" disabled={busy || otp.length !== 6} className="w-full rounded-xl border border-campus-600 px-4 py-2.5 text-sm font-bold text-campus-700 hover:bg-campus-50 disabled:opacity-50 dark:text-campus-300 dark:hover:bg-campus-900/30">Verify email</button>
+                  <p className="mt-3 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Enter your official university email ending in your college domain. Personal emails (Gmail, Yahoo, Outlook) are rejected.
+                  </p>
+                  <form onSubmit={sendOtp} className="mt-4 space-y-3">
+                    <label htmlFor="college-email" className="block text-xs font-semibold text-slate-700 dark:text-slate-200">Official College Email</label>
+                    <input id="college-email" type="email" required maxLength={254} value={collegeEmail} onChange={(event) => setCollegeEmail(event.target.value)} placeholder="e.g. rollno@college.ac.in" className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-400" />
+                    <button type="submit" disabled={busy || !collegeEmail.trim()} className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50 transition">
+                      {busy ? 'Sending code…' : otpSent ? 'Resend code' : 'Send college verification code'}
+                    </button>
                   </form>
-                )}
+                  {otpSent && (
+                    <form onSubmit={verifyOtp} className="mt-4 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+                      <label htmlFor="college-otp" className="block text-xs font-semibold text-slate-700 dark:text-slate-200">6-digit verification code</label>
+                      <input id="college-otp" type="text" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456" className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm tracking-[0.3em] text-center font-mono text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
+                      <button type="submit" disabled={busy || otp.length !== 6} className="w-full rounded-xl border border-emerald-600 px-4 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 dark:text-emerald-300 dark:hover:bg-emerald-900/30 transition">Verify college code</button>
+                    </form>
+                  )}
+                </div>
               </section>
 
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-6">
-                <div className="flex items-center gap-3">
-                  <span className="rounded-xl bg-emerald-50 p-2.5 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><FileImage className="h-5 w-5" /></span>
-                  <div>
-                    <h2 className="font-bold text-slate-900 dark:text-slate-100">College ID card</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Admin review, usually within a few days</p>
+              {/* Option 2: College ID Card Upload */}
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-xl bg-emerald-50 p-2.5 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><FileImage className="h-5 w-5" /></span>
+                    <div>
+                      <h2 className="font-bold text-slate-900 dark:text-slate-100">College ID Card Upload</h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Manual admin review (current or passout)</p>
+                    </div>
                   </div>
+                  <p className="mt-3 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Upload a clear photo of your student ID card or alumni pass. Perfect if your university does not provide institutional email or you are a passout student.
+                  </p>
+                  <form onSubmit={uploadIdCard} className="mt-4 space-y-4">
+                    <label htmlFor="id-card-image" className="block text-xs font-semibold text-slate-700 dark:text-slate-200">Photo of your student ID</label>
+                    <input id="id-card-image" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setSelectedImage(event.target.files?.[0] || null)} className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-3 file:py-2 file:font-semibold file:text-emerald-700 dark:text-slate-300 dark:file:bg-emerald-900/40 dark:file:text-emerald-200" />
+                    <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Upload one clear JPG, PNG, or WebP image up to 5 MB. Reviewed securely by campus admins.</p>
+                    <button type="submit" disabled={busy || !selectedImage} className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 transition">
+                      {busy ? 'Submitting…' : 'Submit ID card for review'}
+                    </button>
+                  </form>
                 </div>
-                <form onSubmit={uploadIdCard} className="mt-5 space-y-4">
-                  <label htmlFor="id-card-image" className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Photo of your student ID</label>
-                  <input id="id-card-image" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setSelectedImage(event.target.files?.[0] || null)} className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-campus-50 file:px-3 file:py-2 file:font-semibold file:text-campus-700 dark:text-slate-300 dark:file:bg-campus-900/40 dark:file:text-campus-200" />
-                  <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">Upload one clear JPG, PNG, or WebP image up to 5 MB. Only administrators can review it.</p>
-                  <button type="submit" disabled={busy || !selectedImage} className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
-                    {busy ? 'Submitting…' : 'Submit ID card for review'}
-                  </button>
-                </form>
               </section>
             </div>
           )}

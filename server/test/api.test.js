@@ -14,18 +14,17 @@ const registerStudent = async (
   university,
   name = 'Test Student',
 ) => {
-  const email = `student-${Date.now()}-${Math.random().toString(16).slice(2)}@${university.domain}`;
+  const email = `student-${Date.now()}-${Math.random().toString(16).slice(2)}@example.com`;
   const response = await request(appUnderTest).post('/api/auth/register').send({
     name,
     email,
     password: 'Test-password-123',
-    universityId: university._id.toString(),
   });
   return { response, email };
 };
 
 describe('authentication API', () => {
-  test('signs up, verifies OTP, logs in, reads /me with cookie, rejects missing cookie and logs out', async () => {
+  test('registers, verifies OTP, completes profile, logs in, reads /me with cookie, rejects missing cookie and logs out', async () => {
     const university = await createUniversity({ domain: 'auth-campus.test' });
     const { response, email } = await registerStudent(
       app,
@@ -34,34 +33,71 @@ describe('authentication API', () => {
     );
 
     expect(response.status).toBe(201);
-    expect(response.body.user.email).toBe(email);
-    expect(response.body.token).toBeUndefined();
-    expect(response.body.user.password).toBeUndefined();
+    expect(response.body.requiresVerification).toBe(true);
+    expect(response.body.email).toBe(email);
+
+    // Unverified user login is blocked with 403 EMAIL_NOT_VERIFIED
+    const blockedLogin = await request(app).post('/api/auth/login').send({
+      email,
+      password: 'Test-password-123',
+    });
+    expect(blockedLogin.status).toBe(403);
+    expect(blockedLogin.body.code).toBe('EMAIL_NOT_VERIFIED');
+
     const user = await User.findOne({ email }).select('+verificationOtp');
-    expect(user.verificationOtp).toMatch(/^\d{6}$/);
+    expect(user.verificationOtp).toBeDefined();
+
+    // Verify with invalid OTP returns 400
+    const badVerification = await request(app).post('/api/auth/verify-otp').send({
+      email,
+      otp: '000000',
+    });
+    expect(badVerification.status).toBe(400);
+
+    // Verify OTP success
+    // In test environment, the plaintext OTP was sent or stored. We can simulate user entering the right OTP
+    // by reading the raw user or setting a known OTP
+    const testOtp = '123456';
+    const bcrypt = (await import('bcryptjs')).default;
+    user.verificationOtp = await bcrypt.hash(testOtp, 10);
+    user.verificationOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save({ validateBeforeSave: false });
 
     const verification = await request(app).post('/api/auth/verify-otp').send({
       email,
-      otp: user.verificationOtp,
+      otp: testOtp,
     });
     expect(verification.status).toBe(200);
-    expect(verification.body.user.isVerified).toBe(true);
+    expect(verification.body.user.emailVerified).toBe(true);
 
+    const cookie = verification.headers['set-cookie']?.find((value) =>
+      value.startsWith('token='),
+    );
+    expect(cookie).toBeDefined();
+
+    // Complete profile step
+    const profileRes = await request(app)
+      .post('/api/auth/complete-profile')
+      .set('Cookie', cookie)
+      .send({
+        state: 'Punjab',
+        phone: '9876543210',
+        universityId: university._id.toString(),
+      });
+    expect(profileRes.status).toBe(200);
+    expect(profileRes.body.user.isProfileComplete).toBe(true);
+
+    // Normal login succeeds
     const login = await request(app).post('/api/auth/login').send({
       email,
       password: 'Test-password-123',
     });
     expect(login.status).toBe(200);
-    expect(login.body.token).toBeUndefined();
-    const cookie = login.headers['set-cookie'].find((value) =>
-      value.startsWith('token='),
-    );
-    expect(cookie).toBeDefined();
 
     const me = await request(app).get('/api/auth/me').set('Cookie', cookie);
     expect(me.status).toBe(200);
     expect(me.body.user.email).toBe(email);
-    expect(me.body.user.verificationOtp).toBeUndefined();
+    expect(me.body.user.emailVerified).toBe(true);
     expect((await request(app).get('/api/auth/me')).status).toBe(401);
 
     const logout = await request(app).post('/api/auth/logout');

@@ -14,6 +14,7 @@
     "make-admin": "node src/scripts/setAdmin.js",
     "fix:prices": "node src/scripts/fixBookPrices.js",
     "migrate:verification": "node src/scripts/migrateVerification.js",
+    "migrate:emailverified": "node src/scripts/migrateEmailVerified.js",
     "lint": "eslint src/",
     "format": "prettier --write \"src/**/*.{js,json}\""
   },

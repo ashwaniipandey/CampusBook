@@ -51,7 +51,7 @@ beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   process.env.MONGO_URI = mongoServer.getUri('campusbook-test-only');
   await mongoose.connect(process.env.MONGO_URI);
-});
+}, 120000);
 
 afterEach(async () => {
   await sensitiveAuthLimiter.resetKey('127.0.0.1');

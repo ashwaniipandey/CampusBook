@@ -31,6 +31,8 @@ export const createUser = async ({
     password,
     role,
     university: assignedUniversity._id,
+    emailVerified: true,
+    isProfileComplete: true,
     isVerified: true,
     verificationStatus: 'verified',
     ...overrides,

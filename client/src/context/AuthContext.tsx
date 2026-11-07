@@ -32,11 +32,15 @@ interface AuthContextType {
     name: string;
     email: string;
     password: string;
-    universityId: string;
+  }) => Promise<{ success: boolean; error?: string; message?: string; email?: string }>;
+  completeProfile: (data: {
+    state: string;
+    phone: string;
+    city?: string;
+    universityId?: string;
     department?: string;
+    course?: string;
     yearOfStudy?: number;
-    studentId?: string;
-    phone?: string;
   }) => Promise<{ success: boolean; error?: string; user?: User }>;
   verifyOtp: (otp: string, email?: string) => Promise<{ success: boolean; error?: string; user?: User }>;
   sendCollegeVerificationOtp: (email: string) => Promise<{ success: boolean; error?: string; message?: string }>;
@@ -280,7 +284,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Helper to redirect based on user role
+  // Helper to redirect based on user role and profile completion
   const redirectByRole = (userToRoute?: User | null) => {
     const targetUser = userToRoute || user;
     if (!targetUser) {
@@ -289,9 +293,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     if (targetUser.role === 'admin') {
       router.push('/admin');
-    } else {
-      router.push('/dashboard');
+      return;
     }
+    // If user's profile is not complete, redirect to complete-profile
+    if (targetUser.isProfileComplete === false) {
+      router.push('/complete-profile');
+      return;
+    }
+    router.push('/explore');
   };
 
   // Fetch current user on initial mount
@@ -353,20 +362,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     name: string;
     email: string;
     password: string;
-    universityId: string;
-    department?: string;
-    yearOfStudy?: number;
-    studentId?: string;
-    phone?: string;
   }) => {
     setLoading(true);
     try {
       const res = await api.register(data);
+      return { success: true, message: res.message, email: res.email || data.email };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completeProfile = async (data: {
+    state: string;
+    phone: string;
+    city?: string;
+    universityId?: string;
+    department?: string;
+    course?: string;
+    yearOfStudy?: number;
+  }) => {
+    setLoading(true);
+    try {
+      const res = await api.completeProfile(data);
       if (res.user) {
         setUser(res.user);
         return { success: true, user: res.user };
       }
-      return { success: false, error: 'Registration failed: no user data returned' };
+      return { success: false, error: 'Failed to complete profile.' };
     } catch (err: any) {
       return { success: false, error: err.message };
     } finally {
@@ -508,6 +532,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         googleLogin,
         register,
+        completeProfile,
         verifyOtp,
         sendCollegeVerificationOtp,
         verifyCollegeVerificationOtp,

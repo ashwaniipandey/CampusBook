@@ -28,12 +28,35 @@ const blockedEmailDomains = new Set([
 const getDomainCandidates = (domain) =>
   domain.split('.').map((_, index, parts) => parts.slice(index).join('.'));
 
-const hasAllowedDomain = async (domain) => {
+const hasAllowedDomain = async (domain, userUniversity) => {
   if (blockedEmailDomains.has(domain)) return false;
+
+  // If user has a selected university, check its domains
+  if (userUniversity) {
+    const uni = await University.findById(userUniversity._id || userUniversity);
+    if (uni) {
+      const uniDomains = [
+        uni.domain,
+        ...(Array.isArray(uni.emailDomains) ? uni.emailDomains : []),
+      ]
+        .filter(Boolean)
+        .map((d) => d.toLowerCase());
+
+      if (uniDomains.length > 0) {
+        return uniDomains.some((d) => domain === d || domain.endsWith('.' + d));
+      }
+    }
+  }
+
+  // Fallback to checking any active university
   const university = await University.findOne({
     isActive: true,
-    domain: { $in: getDomainCandidates(domain) },
+    $or: [
+      { domain: { $in: getDomainCandidates(domain) } },
+      { emailDomains: { $in: getDomainCandidates(domain) } },
+    ],
   }).select('_id');
+
   return Boolean(university) || /\.(edu|ac\.in|edu\.in)$/i.test(domain);
 };
 
@@ -41,8 +64,13 @@ export const sendCollegeEmailOtp = async (req, res, next) => {
   try {
     const email = req.body.email.trim().toLowerCase();
     const domain = email.split('@')[1];
-    if (!(await hasAllowedDomain(domain))) {
-      return next(new AppError('Use an eligible college email. Personal email providers are not accepted.', 400));
+
+    if (blockedEmailDomains.has(domain)) {
+      return next(new AppError('Personal email providers (Gmail, Yahoo, Outlook, etc.) are not accepted. Please use your official college email.', 400));
+    }
+
+    if (!(await hasAllowedDomain(domain, req.user.university))) {
+      return next(new AppError('The email domain does not match an eligible college or your selected university.', 400));
     }
     if (req.user.isVerified || req.user.verificationStatus === 'verified') {
       return next(new AppError('Your student status is already verified.', 409));
