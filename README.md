@@ -166,29 +166,29 @@ CampusBook/
 
 ```mermaid
 flowchart LR
-    subgraph Client["Client — Vercel"]
-        NEXT["Next.js 14\nApp Router"]
+    subgraph Client["Client - Vercel"]
+        NEXT["Next.js 14 App Router"]
     end
 
-    subgraph Server["Server — Render"]
-        API["Express REST API\n:5001/api"]
-        SOCK["Socket.io\nReal-Time"]
+    subgraph Server["Server - Render"]
+        API["Express REST API"]
+        SOCK["Socket.io Real-Time"]
     end
 
     subgraph Services["External Services"]
         DB["MongoDB Atlas"]
-        CDN["Cloudinary\nImage CDN"]
-        SMTP["SMTP\nEmail / OTP"]
-        GOOGLE["Google Identity\nOAuth 2.0"]
+        CDN["Cloudinary Image CDN"]
+        SMTP["SMTP Email and OTP"]
+        GOOG["Google Identity OAuth 2.0"]
     end
 
-    NEXT -- "REST (fetch + cookies)" --> API
+    NEXT -- "REST fetch + cookies" --> API
     NEXT -- "WebSocket" --> SOCK
     API -- "Mongoose" --> DB
-    API -- "Multer → SDK" --> CDN
+    API -- "Multer to SDK" --> CDN
     API -- "Nodemailer" --> SMTP
-    NEXT -- "GSI id_token" --> GOOGLE
-    GOOGLE -- "id_token verify" --> API
+    NEXT -- "GSI id_token" --> GOOG
+    GOOG -- "id_token verify" --> API
 ```
 
 ---
@@ -197,27 +197,41 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A([Visit CampusBook]) --> B{Have account?}
-    B -- No --> C[Register: name + email + password]
-    C --> D[Email OTP sent]
-    D --> E{OTP correct?}
-    E -- No / Expired --> D
-    E -- Yes --> F[Complete Profile\nstate + phone]
-    F --> G([/explore — Browse Access])
-    B -- Yes, unverified --> D
-    B -- Yes, verified --> G
-    A --> GOOGLE[Google Sign-In]
-    GOOGLE --> F
+    A(["Visit CampusBook"])
+    B{"Have account?"}
+    C["Register: name, email, password"]
+    D["Email OTP sent"]
+    E{"OTP correct?"}
+    F["Complete Profile: state + phone"]
+    G(["/explore - Browse Access"])
+    GOOG["Google Sign-In"]
+    H{"Want to sell, exchange, or start a chat?"}
+    V["/verify - Student Verification"]
+    V1["College Email OTP matches university domain"]
+    V2["College ID Card Upload with admin approval"]
+    FULL(["Full Access - Verified Student"])
+    BROWSE["Browse books, Wishlist, Edit profile, Notifications"]
+    SELL["List book, Cart checkout, Exchange request, Donation request, Start chat"]
 
-    G --> H{Want to sell / exchange\nor start a chat?}
-    H -- Yes --> V[/verify — Student Verification]
-    V --> V1[College Email OTP\nmatches university domain]
-    V --> V2[College ID Card Upload\nadmin approval]
-    V1 --> FULL([Full Access\n✅ Verified Student])
+    A --> B
+    B -- "No" --> C
+    C --> D
+    D --> E
+    E -- "No or Expired" --> D
+    E -- "Yes" --> F
+    F --> G
+    B -- "Yes, unverified" --> D
+    B -- "Yes, verified" --> G
+    A --> GOOG
+    GOOG --> F
+    G --> H
+    H -- "Yes" --> V
+    V --> V1
+    V --> V2
+    V1 --> FULL
     V2 --> FULL
-
-    G --> BROWSE[Browse books\nWishlist\nEdit profile\nNotifications]
-    FULL --> SELL[List book for sale\nCart checkout\nExchange request\nDonation request\nStart chat]
+    G --> BROWSE
+    FULL --> SELL
 ```
 
 ---
@@ -254,7 +268,7 @@ erDiagram
         ObjectId sellerId
         ObjectId universityId
         ObjectId categoryId
-        string[] images
+        stringArray images
     }
     ORDER {
         ObjectId _id
@@ -289,7 +303,7 @@ erDiagram
     }
     CONVERSATION {
         ObjectId _id
-        ObjectId[] participants
+        ObjectIdArray participants
         ObjectId bookId
     }
     MESSAGE {
@@ -302,7 +316,7 @@ erDiagram
         ObjectId _id
         string name
         string code
-        string[] emailDomains
+        stringArray emailDomains
         string city
         string country
     }
@@ -315,7 +329,7 @@ erDiagram
     USER }o--|| UNIVERSITY : "belongs to"
     BOOK }o--|| UNIVERSITY : "belongs to"
     BOOK }o--|| ORDER : "ordered via"
-    BOOK ||--o{ EXCHANGE_REQUEST : "offered/wanted"
+    BOOK ||--o{ EXCHANGE_REQUEST : "offered or wanted"
     BOOK ||--o{ DONATION_REQUEST : "donated via"
     ORDER ||--o| REVIEW : "has"
     CONVERSATION ||--o{ MESSAGE : "contains"
