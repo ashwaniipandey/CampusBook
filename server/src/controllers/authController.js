@@ -80,7 +80,14 @@ export const register = async (req, res, next) => {
             userName: existingUser.name,
           });
         } catch (emailErr) {
-          console.error('Failed to send verification email:', emailErr.message);
+          console.error('Failed to send verification email on register retry:', emailErr);
+          existingUser.verificationOtpLastSent = undefined;
+          await existingUser.save({ validateBeforeSave: false });
+          return res.status(502).json({
+            status: 'fail',
+            code: 'EMAIL_SEND_FAILED',
+            message: 'We could not send the verification email. Please try again in a minute.',
+          });
         }
 
         return res.status(200).json({
@@ -122,7 +129,14 @@ export const register = async (req, res, next) => {
         userName: user.name,
       });
     } catch (emailErr) {
-      console.error('Failed to send verification email:', emailErr.message);
+      console.error('Failed to send verification email on register:', emailErr);
+      user.verificationOtpLastSent = undefined;
+      await user.save({ validateBeforeSave: false });
+      return res.status(502).json({
+        status: 'fail',
+        code: 'EMAIL_SEND_FAILED',
+        message: 'We could not send the verification email. Please try again in a minute.',
+      });
     }
 
     res.status(201).json({
@@ -343,7 +357,14 @@ export const resendOtp = async (req, res, next) => {
           userName: user.name,
         });
       } catch (error) {
-        console.error('Verification email delivery failed:', error.message);
+        console.error('Verification email delivery failed on resend:', error);
+        user.verificationOtpLastSent = undefined;
+        await user.save({ validateBeforeSave: false });
+        return res.status(502).json({
+          status: 'fail',
+          code: 'EMAIL_SEND_FAILED',
+          message: 'We could not send the verification email. Please try again in a minute.',
+        });
       }
     }
 
@@ -418,7 +439,14 @@ export const login = async (req, res, next) => {
             userName: user.name,
           });
         } catch (emailErr) {
-          console.error('Failed to send verification email on login:', emailErr.message);
+          console.error('Failed to send verification email on login:', emailErr);
+          user.verificationOtpLastSent = undefined;
+          await user.save({ validateBeforeSave: false });
+          return res.status(502).json({
+            status: 'fail',
+            code: 'EMAIL_SEND_FAILED',
+            message: 'We could not send the verification email. Please try again in a minute.',
+          });
         }
       }
 

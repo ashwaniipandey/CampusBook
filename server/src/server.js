@@ -8,6 +8,7 @@ import { configureChatSockets } from './sockets/chatSocket.js';
 import { getAllowedClientOrigins } from './utils/clientOrigins.js';
 import { getJwtSecret } from './config/jwt.js';
 import { ensureInitialData } from './utils/initDatabase.js';
+import { checkEmailProviderStatus } from './utils/emailService.js';
 
 // Load environment variables
 dotenv.config();
@@ -48,6 +49,8 @@ const startServer = async () => {
     // Connect to MongoDB
     await connectDB();
     await ensureInitialData();
+
+    checkEmailProviderStatus();
 
     if (!process.env.GOOGLE_CLIENT_ID) {
       console.warn('⚠️  GOOGLE_CLIENT_ID is not configured in environment variables.');

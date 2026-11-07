@@ -72,6 +72,38 @@ describe('authentication API', () => {
     expect(res.body.message).toMatch(/Unrecognized key/i);
   });
 
+  test('returns 502 with EMAIL_SEND_FAILED when email delivery fails during register and preserves user record for retry', async () => {
+    process.env.__TEST_FAIL_EMAIL__ = 'true';
+    const email = `fail-reg-${Date.now()}@example.com`;
+
+    const res = await request(app).post('/api/auth/register').send({
+      name: 'Fail User',
+      email,
+      password: 'Test-password-123',
+    });
+
+    expect(res.status).toBe(502);
+    expect(res.body.code).toBe('EMAIL_SEND_FAILED');
+    expect(res.body.message).toMatch(/could not send the verification email/i);
+
+    // User record and OTP stay saved so a retry works
+    const savedUser = await User.findOne({ email }).select('+verificationOtp');
+    expect(savedUser).toBeTruthy();
+    expect(savedUser.verificationOtp).toBeDefined();
+    expect(savedUser.emailVerified).toBe(false);
+
+    // Resend also fails with 502 when email service is failing
+    const resendFail = await request(app).post('/api/auth/resend-otp').send({ email });
+    expect(resendFail.status).toBe(502);
+    expect(resendFail.body.code).toBe('EMAIL_SEND_FAILED');
+
+    // When email delivery is restored, resend succeeds with 200
+    delete process.env.__TEST_FAIL_EMAIL__;
+    const resendSuccess = await request(app).post('/api/auth/resend-otp').send({ email });
+    expect(resendSuccess.status).toBe(200);
+    expect(resendSuccess.body.status).toBe('success');
+  });
+
   test('registers, verifies OTP, completes profile, logs in, reads /me with cookie, rejects missing cookie and logs out', async () => {
     const university = await createUniversity({ domain: 'auth-campus.test' });
     const { response, email } = await registerStudent(

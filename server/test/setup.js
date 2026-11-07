@@ -15,7 +15,16 @@ process.env.EMAIL_FROM = 'CampusBook <test@example.invalid>';
 jest.unstable_mockModule('nodemailer', () => ({
   default: {
     createTransport: jest.fn(() => ({
-      sendMail: jest.fn(async () => ({ messageId: 'offline-test-message' })),
+      sendMail: jest.fn(async () => {
+        if (process.env.__TEST_FAIL_EMAIL__ === 'true') {
+          const err = new Error('SMTP connection failed');
+          err.code = 'ECONNREFUSED';
+          err.command = 'CONN';
+          err.response = '550 Connection refused';
+          throw err;
+        }
+        return { messageId: 'offline-test-message' };
+      }),
     })),
   },
 }));
@@ -54,6 +63,7 @@ beforeAll(async () => {
 }, 120000);
 
 afterEach(async () => {
+  delete process.env.__TEST_FAIL_EMAIL__;
   await sensitiveAuthLimiter.resetKey('127.0.0.1');
   if (mongoose.connection.readyState === 1) {
     await Promise.all(

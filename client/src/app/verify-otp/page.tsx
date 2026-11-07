@@ -43,6 +43,14 @@ function VerifyOtpContent() {
 
   // Countdown timer for resend (60s cooldown)
   useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam === 'EMAIL_SEND_FAILED' || searchParams.get('sendFailed') === 'true') {
+      setServerError('We could not send the verification email. Please try again in a minute.');
+      setCooldown(0);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     let timer: NodeJS.Timeout;
     if (cooldown > 0) {
       timer = setInterval(() => {
@@ -76,6 +84,7 @@ function VerifyOtpContent() {
   const handleResend = async () => {
     if (cooldown > 0 || isResending) return;
     setServerError(null);
+    setSuccessMessage(null);
     setIsResending(true);
 
     const result = await resendOtp(emailToVerify);
@@ -85,7 +94,8 @@ function VerifyOtpContent() {
       setSuccessMessage('A fresh verification code has been sent to your email.');
       setCooldown(60);
     } else {
-      setServerError(result.error || 'Failed to resend code.');
+      setServerError(result.error || 'We could not send the verification email. Please try again in a minute.');
+      setCooldown(0);
     }
   };
 
