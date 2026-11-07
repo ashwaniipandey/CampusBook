@@ -155,6 +155,9 @@ export default function VerifyPage() {
                       <label htmlFor="college-otp" className="block text-xs font-semibold text-slate-700 dark:text-slate-200">6-digit verification code</label>
                       <input id="college-otp" type="text" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456" className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm tracking-[0.3em] text-center font-mono text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
                       <button type="submit" disabled={busy || otp.length !== 6} className="w-full rounded-xl border border-emerald-600 px-4 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 dark:text-emerald-300 dark:hover:bg-emerald-900/30 transition">Verify college code</button>
+                      <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        Didn’t get the code? Check your Spam or Junk folder. College emails can take up to 2-3 minutes.
+                      </p>
                     </form>
                   )}
                 </div>

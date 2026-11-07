@@ -192,6 +192,11 @@ function VerifyOtpContent() {
                 {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend verification code'}
               </button>
             </div>
+
+            {/* Delivery Note */}
+            <p className="text-center text-xs text-slate-500 dark:text-slate-400 pt-1 leading-relaxed">
+              Didn’t get the code? Check your Spam or Junk folder. College emails can take up to 2-3 minutes.
+            </p>
           </>
         ) : (
           /* Verified Success Celebration */
