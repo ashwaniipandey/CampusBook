@@ -24,6 +24,53 @@ const registerStudent = async (
 };
 
 describe('authentication API', () => {
+  test('registers with a personal email (gmail) using only name, email, password', async () => {
+    const email = `personal-${Date.now()}@gmail.com`;
+    const res = await request(app).post('/api/auth/register').send({
+      name: 'Personal User',
+      email,
+      password: 'Test-password-123',
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.requiresVerification).toBe(true);
+    expect(res.body.email).toBe(email);
+
+    const user = await User.findOne({ email });
+    expect(user).toBeTruthy();
+    expect(user.emailVerified).toBe(false);
+    expect(user.university).toBeNull();
+  });
+
+  test('registers with a college email using only name, email, password', async () => {
+    const university = await createUniversity({ domain: 'college-reg.edu' });
+    const email = `student-${Date.now()}@${university.domain}`;
+    const res = await request(app).post('/api/auth/register').send({
+      name: 'College Student',
+      email,
+      password: 'Test-password-123',
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.requiresVerification).toBe(true);
+    expect(res.body.email).toBe(email);
+
+    const user = await User.findOne({ email });
+    expect(user).toBeTruthy();
+    expect(user.emailVerified).toBe(false);
+    // Register does NOT auto-assign university — that happens later at /complete-profile
+    expect(user.university).toBeNull();
+  });
+
+  test('register rejects extra fields like universityId due to strict validation', async () => {
+    const res = await request(app).post('/api/auth/register').send({
+      name: 'Extra Fields User',
+      email: `extra-${Date.now()}@test.com`,
+      password: 'Test-password-123',
+      universityId: '507f1f77bcf86cd799439011',
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/Unrecognized key/i);
+  });
+
   test('registers, verifies OTP, completes profile, logs in, reads /me with cookie, rejects missing cookie and logs out', async () => {
     const university = await createUniversity({ domain: 'auth-campus.test' });
     const { response, email } = await registerStudent(
