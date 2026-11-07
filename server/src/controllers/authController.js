@@ -436,16 +436,6 @@ export const login = async (req, res, next) => {
     next(error);
   }
 };
-      return next(
-        new AppError('Your account has been suspended. Please contact campus admin.', 403)
-      );
-    }
-
-    sendTokenResponse(user, 200, res, 'Logged in successfully');
-  } catch (error) {
-    next(error);
-  }
-};
 
 /**
  * Logout user / Clear cookie
@@ -616,29 +606,34 @@ export const forgotPassword = async (req, res, next) => {
       return next(new AppError('Please provide your account email address', 400));
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
-    if (!user) {
-      // Do not disclose user non-existence for security, still return success
-      return res.status(200).json({
-        status: 'success',
-        message: 'If an account with that email exists, a password reset code was sent.',
-      });
-    }
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail })
+      .select('+resetPasswordAttempts +resetPasswordLastSent');
 
-    const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.resetPasswordOtp = resetOtp;
-    user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
-    await user.save({ validateBeforeSave: false });
+    if (user) {
+      // Cooldown check (60 seconds)
+      if (user.resetPasswordLastSent && Date.now() - user.resetPasswordLastSent.getTime() < 60 * 1000) {
+        return next(new AppError('Please wait at least 60 seconds before requesting another reset code.', 429));
+      }
 
-    try {
-      await sendOtpEmail({
-        to: user.email,
-        otp: resetOtp,
-        type: 'password_reset',
-        userName: user.name,
-      });
-    } catch (error) {
-      console.error('Password reset email delivery failed:', error.message);
+      const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      const hashedOtp = await bcrypt.hash(resetOtp, 10);
+      user.resetPasswordOtp = hashedOtp;
+      user.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+      user.resetPasswordAttempts = 0;
+      user.resetPasswordLastSent = new Date();
+      await user.save({ validateBeforeSave: false });
+
+      try {
+        await sendOtpEmail({
+          to: user.email,
+          otp: resetOtp,
+          type: 'password_reset',
+          userName: user.name,
+        });
+      } catch (error) {
+        console.error('Password reset email delivery failed:', error.message);
+      }
     }
 
     res.status(200).json({
@@ -670,32 +665,42 @@ export const resetPassword = async (req, res, next) => {
       );
     }
 
-    const user = await User.findOne({
-      email: email.toLowerCase().trim(),
-    })
-      .select('+resetPasswordOtp +resetPasswordExpires')
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail })
+      .select('+resetPasswordOtp +resetPasswordExpires +resetPasswordAttempts')
       .populate('university');
 
-    if (!user) {
-      return next(new AppError('Invalid or expired reset request.', 400));
-    }
-
-    if (!user.resetPasswordOtp || !user.resetPasswordExpires) {
+    if (!user || !user.resetPasswordOtp || !user.resetPasswordExpires) {
       return next(new AppError('Invalid or expired reset request.', 400));
     }
 
     if (Date.now() > user.resetPasswordExpires.getTime()) {
+      return next(new AppError('Reset code has expired. Please request a new one.', 400));
+    }
+
+    if ((user.resetPasswordAttempts || 0) >= 5) {
+      return next(new AppError('Maximum reset attempts exceeded. Please request a new code.', 429));
+    }
+
+    let isMatch = false;
+    if (user.resetPasswordOtp.startsWith('$2a$') || user.resetPasswordOtp.startsWith('$2b$')) {
+      isMatch = await bcrypt.compare(otp.trim(), user.resetPasswordOtp);
+    } else {
+      isMatch = user.resetPasswordOtp === otp.trim();
+    }
+
+    if (!isMatch) {
+      user.resetPasswordAttempts = (user.resetPasswordAttempts || 0) + 1;
+      await user.save({ validateBeforeSave: false });
       return next(new AppError('Invalid or expired reset request.', 400));
     }
 
-    if (user.resetPasswordOtp !== otp.trim()) {
-      return next(new AppError('Invalid or expired reset request.', 400));
-    }
-
-    // Set new password
+    // Set new password and clear reset fields
     user.password = newPassword;
     user.resetPasswordOtp = undefined;
     user.resetPasswordExpires = undefined;
+    user.resetPasswordAttempts = 0;
+    user.resetPasswordLastSent = undefined;
     await user.save();
 
     sendTokenResponse(user, 200, res, 'Password has been reset successfully!');
@@ -707,6 +712,7 @@ export const resetPassword = async (req, res, next) => {
 export default {
   register,
   verifyOtp,
+  googleLogin,
   resendOtp,
   login,
   logout,

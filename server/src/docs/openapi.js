@@ -232,17 +232,30 @@ const paths = {
   '/api/auth/forgot-password': {
     post: operation({
       summary: 'Request a password reset OTP',
+      description:
+        'Sends a 6-digit hashed OTP to the user email if an account exists (60s cooldown, 10-minute expiry).',
       tag: 'Authentication',
       auth: false,
       requestBody: 'EmailRequest',
+      responseExample: {
+        status: 'success',
+        message:
+          'If an account with that email exists, a password reset code was sent.',
+      },
     }),
   },
   '/api/auth/reset-password': {
     post: operation({
       summary: 'Reset a password with an OTP',
+      description:
+        'Resets password using 6-digit OTP (max 5 attempts, expires in 10 minutes). Sets auth cookie on success.',
       tag: 'Authentication',
       auth: false,
       requestBody: 'ResetPasswordRequest',
+      responseExample: {
+        status: 'success',
+        message: 'Password has been reset successfully!',
+      },
     }),
   },
   '/api/auth/logout': {

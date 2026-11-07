@@ -191,6 +191,15 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    resetPasswordAttempts: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    resetPasswordLastSent: {
+      type: Date,
+      select: false,
+    },
   },
   {
     timestamps: true,
@@ -241,6 +250,8 @@ userSchema.methods.toJSON = function () {
   delete user.collegeVerificationOtpExpires;
   delete user.resetPasswordOtp;
   delete user.resetPasswordExpires;
+  delete user.resetPasswordAttempts;
+  delete user.resetPasswordLastSent;
   return user;
 };
 

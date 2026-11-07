@@ -1,4 +1,5 @@
 import request from 'supertest';
+import bcrypt from 'bcryptjs';
 import app from '../src/app.js';
 import { Book, Category, Notification, Order, User } from '../src/models/index.js';
 import {
@@ -153,12 +154,13 @@ describe('authentication API', () => {
   });
 
   test('returns 401 for a wrong password and rate-limits repeated bad logins', async () => {
-    const invalidCredentials = {
-      email: 'unknown-user@campus.test',
+    const user = await createUser({ password: 'Correct-password-123' });
+    const wrongCredentials = {
+      email: user.email,
       password: 'wrong-password',
     };
     expect(
-      (await request(app).post('/api/auth/login').send(invalidCredentials))
+      (await request(app).post('/api/auth/login').send(wrongCredentials))
         .status,
     ).toBe(401);
 
@@ -166,7 +168,7 @@ describe('authentication API', () => {
     for (let attempt = 0; attempt < 10; attempt += 1) {
       response = await request(app)
         .post('/api/auth/login')
-        .send(invalidCredentials);
+        .send(wrongCredentials);
     }
     expect(response.status).toBe(429);
   });
@@ -177,6 +179,135 @@ describe('authentication API', () => {
       .send({ credential: 'invalid-google-id-token-value' });
     expect(response.status).toBe(401);
     expect(response.body.message).toMatch(/invalid or expired/i);
+  });
+
+  describe('password reset flow', () => {
+    test('returns constant success message for non-existent email', async () => {
+      const response = await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ email: 'nonexistent@example.com' });
+      expect(response.status).toBe(200);
+      expect(response.body.message).toMatch(/If an account with that email exists/i);
+    });
+
+    test('generates hashed OTP, enforces cooldown, handles wrong/expired OTP, attempt limit, and successful reset', async () => {
+      const user = await createUser({ password: 'Old-password-123' });
+      const email = user.email;
+
+      // 1. Request password reset
+      const forgotRes = await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ email });
+      expect(forgotRes.status).toBe(200);
+      expect(forgotRes.body.message).toMatch(/If an account with that email exists/i);
+
+      // Verify OTP is hashed in DB
+      const userWithOtp = await User.findOne({ email })
+        .select('+resetPasswordOtp +resetPasswordExpires +resetPasswordAttempts +resetPasswordLastSent');
+      expect(userWithOtp.resetPasswordOtp).toBeDefined();
+      expect(userWithOtp.resetPasswordOtp).toMatch(/^\$2[ab]\$/); // bcrypt hash
+      expect(userWithOtp.resetPasswordAttempts).toBe(0);
+      expect(userWithOtp.resetPasswordExpires.getTime()).toBeGreaterThan(Date.now());
+
+      // 2. Cooldown: calling again within 60s returns 429
+      const cooldownRes = await request(app)
+        .post('/api/auth/forgot-password')
+        .send({ email });
+      expect(cooldownRes.status).toBe(429);
+      expect(cooldownRes.body.message).toMatch(/wait at least 60 seconds/i);
+
+      // Set known OTP for testing
+      const testResetOtp = '654321';
+      userWithOtp.resetPasswordOtp = await bcrypt.hash(testResetOtp, 10);
+      userWithOtp.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000);
+      userWithOtp.resetPasswordAttempts = 0;
+      await userWithOtp.save({ validateBeforeSave: false });
+
+      // 3. Wrong OTP returns 400 and increments attempts
+      const wrongOtpRes = await request(app)
+        .post('/api/auth/reset-password')
+        .send({
+          email,
+          otp: '000000',
+          newPassword: 'New-password-123',
+        });
+      expect(wrongOtpRes.status).toBe(400);
+      expect(wrongOtpRes.body.message).toMatch(/Invalid or expired/i);
+
+      const userAfterBadAttempt = await User.findOne({ email }).select('+resetPasswordAttempts');
+      expect(userAfterBadAttempt.resetPasswordAttempts).toBe(1);
+
+      // 4. Max 5 attempts exceeded returns 429
+      userWithOtp.resetPasswordAttempts = 5;
+      await userWithOtp.save({ validateBeforeSave: false });
+
+      const maxAttemptsRes = await request(app)
+        .post('/api/auth/reset-password')
+        .send({
+          email,
+          otp: testResetOtp,
+          newPassword: 'New-password-123',
+        });
+      expect(maxAttemptsRes.status).toBe(429);
+      expect(maxAttemptsRes.body.message).toMatch(/Maximum reset attempts exceeded/i);
+
+      // 5. Expired OTP returns 400
+      userWithOtp.resetPasswordAttempts = 0;
+      userWithOtp.resetPasswordExpires = new Date(Date.now() - 1000); // in the past
+      await userWithOtp.save({ validateBeforeSave: false });
+
+      const expiredRes = await request(app)
+        .post('/api/auth/reset-password')
+        .send({
+          email,
+          otp: testResetOtp,
+          newPassword: 'New-password-123',
+        });
+      expect(expiredRes.status).toBe(400);
+      expect(expiredRes.body.message).toMatch(/expired/i);
+
+      // 6. Success: resets password, clears reset fields, sets auth cookie
+      userWithOtp.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000);
+      userWithOtp.resetPasswordAttempts = 0;
+      await userWithOtp.save({ validateBeforeSave: false });
+
+      const successRes = await request(app)
+        .post('/api/auth/reset-password')
+        .send({
+          email,
+          otp: testResetOtp,
+          newPassword: 'New-password-123',
+        });
+      expect(successRes.status).toBe(200);
+      expect(successRes.body.message).toMatch(/reset successfully/i);
+
+      const cookie = successRes.headers['set-cookie']?.find((value) =>
+        value.startsWith('token='),
+      );
+      expect(cookie).toBeDefined();
+
+      // Secret reset fields should be cleared and not in response
+      expect(successRes.body.user.resetPasswordOtp).toBeUndefined();
+      expect(successRes.body.user.resetPasswordAttempts).toBeUndefined();
+
+      const userAfterSuccess = await User.findOne({ email })
+        .select('+resetPasswordOtp +resetPasswordExpires +resetPasswordAttempts');
+      expect(userAfterSuccess.resetPasswordOtp).toBeUndefined();
+      expect(userAfterSuccess.resetPasswordExpires).toBeUndefined();
+
+      // 7. Verify login with new password works and old password fails
+      const oldLogin = await request(app).post('/api/auth/login').send({
+        email,
+        password: 'Old-password-123',
+      });
+      expect(oldLogin.status).toBe(401);
+
+      const newLogin = await request(app).post('/api/auth/login').send({
+        email,
+        password: 'New-password-123',
+      });
+      expect(newLogin.status).toBe(200);
+    });
   });
 });
 
