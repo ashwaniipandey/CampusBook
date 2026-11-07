@@ -68,17 +68,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-200/80">
+    <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#ecfdf5] via-white to-slate-50 dark:from-[#02130b] dark:via-[#041f12] dark:to-[#010906]">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-white/5 dark:backdrop-blur-xl p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-200/80 dark:border-white/10">
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex p-3 rounded-2xl bg-campus-50 text-campus-600 mb-2 shadow-xs">
+          <div className="inline-flex p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 mb-2 shadow-xs">
             <BookOpen className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Welcome to CampusBook
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Sign in to trade, buy, or donate textbooks at your campus.
           </p>
         </div>
@@ -105,7 +105,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Email */}
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-700 block">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
               University / Account Email
             </label>
             <div className="relative">
@@ -114,10 +114,10 @@ export default function LoginPage() {
                 type="email"
                 {...register('email')}
                 placeholder="e.g. yourname@university.edu"
-                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${
+                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 dark:text-white dark:bg-white/5 placeholder-slate-400 focus:outline-none focus:ring-2 ${
                   errors.email
                     ? 'border-rose-300 focus:ring-rose-500'
-                    : 'border-slate-200 focus:ring-campus-500'
+                    : 'border-slate-200 dark:border-white/15 focus:ring-emerald-400 dark:focus:ring-emerald-400/50'
                 }`}
               />
             </div>
@@ -132,12 +132,12 @@ export default function LoginPage() {
           {/* Password */}
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-700 block">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
                 Password
               </label>
               <Link
                 href="/forgot-password"
-                className="text-xs font-medium text-campus-600 hover:text-campus-700 transition"
+                className="text-xs font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition"
               >
                 Forgot password?
               </Link>
@@ -148,10 +148,10 @@ export default function LoginPage() {
                 type={showPassword ? 'text' : 'password'}
                 {...register('password')}
                 placeholder="••••••••"
-                className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${
+                className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm text-slate-900 dark:text-white dark:bg-white/5 placeholder-slate-400 focus:outline-none focus:ring-2 ${
                   errors.password
                     ? 'border-rose-300 focus:ring-rose-500'
-                    : 'border-slate-200 focus:ring-campus-500'
+                    : 'border-slate-200 dark:border-white/15 focus:ring-emerald-400 dark:focus:ring-emerald-400/50'
                 }`}
               />
               <button
@@ -175,7 +175,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-campus-600 hover:bg-campus-700 disabled:bg-campus-400 text-white font-semibold py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 mt-2"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-semibold py-3 px-4 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 mt-2"
           >
             {isSubmitting ? (
               <>
@@ -192,11 +192,11 @@ export default function LoginPage() {
         </form>
 
         {/* Footer Link */}
-        <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">
+        <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-white/10">
           <span>New to CampusBook? </span>
           <Link
             href="/signup"
-            className="font-semibold text-campus-600 hover:text-campus-700 transition"
+            className="font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition"
           >
             Create student account
           </Link>

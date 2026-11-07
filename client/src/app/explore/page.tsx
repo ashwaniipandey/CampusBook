@@ -763,8 +763,8 @@ function ExploreContent() {
           role="status"
           className={`fixed right-4 top-20 z-[70] flex max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg ${
             toast.type === 'error'
-              ? 'border-rose-200 bg-rose-50 text-rose-800'
-              : 'border-campus-200 bg-campus-50 text-campus-800'
+              ? 'border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300'
+              : 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
           }`}
         >
           <span>{toast.message}</span>
@@ -775,23 +775,23 @@ function ExploreContent() {
       )}
       {/* Breadcrumb & Title */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-xs font-semibold text-campus-700 uppercase tracking-wider mb-1">
+        <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1">
           <BookOpen className="w-3.5 h-3.5" />
           <span>Campus Marketplace</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Explore Student Books
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 mt-1">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Browse verified textbook listings from students across top universities.
         </p>
-        <div className="mt-4 inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm" role="group" aria-label="University listing scope">
+        <div className="mt-4 inline-flex rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-1 shadow-sm" role="group" aria-label="University listing scope">
           <button
             type="button"
             onClick={() => handleUniversityScopeChange('mine')}
             disabled={authLoading}
             aria-pressed={universityScope === 'mine'}
-            className={`rounded-lg px-3 py-2 text-xs font-bold transition disabled:cursor-wait disabled:opacity-50 ${universityScope === 'mine' ? 'bg-campus-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`rounded-lg px-3 py-2 text-xs font-bold transition disabled:cursor-wait disabled:opacity-50 ${universityScope === 'mine' ? 'bg-emerald-600 dark:bg-emerald-500 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/10'}`}
           >
             My University
           </button>
@@ -799,7 +799,7 @@ function ExploreContent() {
             type="button"
             onClick={() => handleUniversityScopeChange('all')}
             aria-pressed={universityScope !== 'mine'}
-            className={`rounded-lg px-3 py-2 text-xs font-bold transition ${universityScope !== 'mine' ? 'bg-campus-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`rounded-lg px-3 py-2 text-xs font-bold transition ${universityScope !== 'mine' ? 'bg-emerald-600 dark:bg-emerald-500 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/10'}`}
           >
             All Universities
           </button>
@@ -809,7 +809,7 @@ function ExploreContent() {
       {/* Main Layout Grid: Left Sidebar (Desktop) + Right Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         {/* Desktop Sidebar Column */}
-        <aside className="hidden lg:block lg:col-span-1 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs sticky top-20">
+        <aside className="hidden lg:block lg:col-span-1 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-xs dark:backdrop-blur-md sticky top-20">
           <FilterSidebar />
         </aside>
 
@@ -823,10 +823,10 @@ function ExploreContent() {
             />
 
             {/* Slide-in panel */}
-            <div className="relative ml-auto w-full max-w-xs sm:max-w-sm h-full bg-white shadow-2xl p-6 overflow-y-auto flex flex-col justify-between animate-in slide-in-from-right duration-200">
+            <div className="relative ml-auto w-full max-w-xs sm:max-w-sm h-full bg-white dark:bg-slate-900 border-l dark:border-white/10 shadow-2xl p-6 overflow-y-auto flex flex-col justify-between animate-in slide-in-from-right duration-200">
               <div>
-                <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
-                  <h3 className="font-bold text-base text-slate-900">Filter Marketplace</h3>
+                <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-white/10">
+                  <h3 className="font-bold text-base text-slate-900 dark:text-white">Filter Marketplace</h3>
                   <button
                     onClick={() => setMobileFiltersOpen(false)}
                     className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500"
