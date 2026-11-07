@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeftRight,
   BadgeCheck,
@@ -65,9 +65,10 @@ function countLabel(count: number) {
   return count > 99 ? '99+' : count;
 }
 
-export default function Navbar() {
+function NavbarInner() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, isAuthenticated, logout, cartCount } = useAuth();
   const {
     socket,
@@ -206,10 +207,15 @@ export default function Navbar() {
       : getVerificationHref('/sell');
 
   // Exact matching for reference nav links
+  const listingType = searchParams.get('listingType');
   const isHomeActive = pathname === '/';
-  const isExploreActive = pathname === '/explore' && !pathname.includes('listingType');
-  const isExchangeActive = pathname.includes('listingType=exchange') || pathname.startsWith('/exchanges');
-  const isDonateActive = pathname.includes('listingType=donate') || pathname.startsWith('/donations');
+  const isExploreActive = pathname === '/explore' && !listingType;
+  const isExchangeActive =
+    (pathname === '/explore' && listingType === 'exchange') ||
+    pathname.startsWith('/exchanges');
+  const isDonateActive =
+    (pathname === '/explore' && listingType === 'donate') ||
+    pathname.startsWith('/donations');
   const isCollegesActive = pathname.startsWith('/colleges');
   const isEventsActive = pathname.startsWith('/events');
 
@@ -597,6 +603,14 @@ export default function Navbar() {
         </div>
       )}
     </header>
+  );
+}
+
+export default function Navbar() {
+  return (
+    <Suspense fallback={null}>
+      <NavbarInner />
+    </Suspense>
   );
 }
 
