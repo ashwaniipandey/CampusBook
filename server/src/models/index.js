@@ -13,6 +13,7 @@ import Cart from './Cart.js';
 import Review from './Review.js';
 import UserBookView from './UserBookView.js';
 import SearchHistory from './SearchHistory.js';
+import Address from './Address.js';
 
 export {
   University,
@@ -30,6 +31,7 @@ export {
   Review,
   UserBookView,
   SearchHistory,
+  Address,
 };
 
 export default {
@@ -48,4 +50,5 @@ export default {
   Review,
   UserBookView,
   SearchHistory,
+  Address,
 };

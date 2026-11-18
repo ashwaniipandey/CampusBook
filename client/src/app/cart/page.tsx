@@ -14,10 +14,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import BookCover from '@/components/BookCover';
-import { BookImage, User } from '@/types';
+import { BookImage, User, Address } from '@/types';
 import api from '@/lib/api';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
 import { getVerificationHref, isVerifiedStudent } from '@/lib/verification';
+import DeliveryAddressSelector from '@/components/DeliveryAddressSelector';
 
 type Toast = { message: string; type: 'success' | 'error' };
 
@@ -42,6 +43,7 @@ export default function CartPage() {
   } = useAuth();
   const [meetingLocation, setMeetingLocation] = useState('');
   const [notes, setNotes] = useState('');
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [pendingBook, setPendingBook] = useState<Record<string, boolean>>({});
   const [clearingCart, setClearingCart] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
@@ -93,16 +95,22 @@ export default function CartPage() {
       router.push(getVerificationHref('/cart'));
       return;
     }
-    if (!meetingLocation.trim()) {
-      showToast('Meeting location is required.', 'error');
+
+    if (!selectedAddress) {
+      showToast('Please select or add a delivery address to place your order.', 'error');
       return;
     }
+
+    const effectiveLocation =
+      meetingLocation.trim() ||
+      `${selectedAddress.houseNo}, ${selectedAddress.area}, ${selectedAddress.city} - ${selectedAddress.pincode}`;
 
     setPlacingOrder(true);
     try {
       const response = await api.createOrder({
         fromCart: true,
-        meetingLocation: meetingLocation.trim(),
+        addressId: selectedAddress._id,
+        meetingLocation: effectiveLocation,
         notes: notes.trim(),
       });
       emptyCart();
@@ -203,52 +211,60 @@ export default function CartPage() {
           </section>
         ) : (
           <div className="grid items-start gap-8 lg:grid-cols-[1fr_360px]">
-            <section aria-label="Cart items" className="space-y-4">
-              {cartItems.map((item) => {
-                const book = item.book;
-                const cover = book.images?.[0];
-                const seller = typeof book.seller === 'string' ? 'Campus seller' : (book.seller as User).name;
-                const price = getBookPrice(book);
-                const priceLabel = book.listingType === 'donate' ? 'Free' : formatPrice(price);
+            <div className="space-y-6">
+              <section aria-label="Cart items" className="space-y-4">
+                {cartItems.map((item) => {
+                  const book = item.book;
+                  const cover = book.images?.[0];
+                  const seller = typeof book.seller === 'string' ? 'Campus seller' : (book.seller as User).name;
+                  const price = getBookPrice(book);
+                  const priceLabel = book.listingType === 'donate' ? 'Free' : formatPrice(price);
 
-                return (
-                  <article key={item._id || book._id} className="flex flex-col gap-4 rounded-2xl border border-card-border bg-card p-4 shadow-sm sm:flex-row">
-                    <Link href={`/books/${book._id}`} className="relative block h-44 shrink-0 overflow-hidden rounded-xl bg-card/60 sm:h-32 sm:w-32">
-                      <BookCover src={cover ? getImageUrl(cover) : ''} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
-                    </Link>
-                    <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 sm:flex-row sm:items-start">
-                      <div className="min-w-0 space-y-2">
-                        <Link href={`/books/${book._id}`} className="line-clamp-2 font-bold leading-snug text-heading hover:text-accent">
-                          {book.title}
-                        </Link>
-                        <p className="truncate text-sm text-muted">By {book.author}</p>
-                        <div className="flex flex-wrap items-center gap-2 text-xs">
-                          <span className="rounded-full bg-chip px-2.5 py-1 font-semibold text-heading">{book.condition}</span>
-                          <span className="inline-flex items-center gap-1 text-muted">
-                            <GraduationCap className="h-3.5 w-3.5 text-accent" />
-                            {seller}
-                          </span>
+                  return (
+                    <article key={item._id || book._id} className="flex flex-col gap-4 rounded-2xl border border-card-border bg-card p-4 shadow-sm sm:flex-row">
+                      <Link href={`/books/${book._id}`} className="relative block h-44 shrink-0 overflow-hidden rounded-xl bg-card/60 sm:h-32 sm:w-32">
+                        <BookCover src={cover ? getImageUrl(cover) : ''} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
+                      </Link>
+                      <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                        <div className="min-w-0 space-y-2">
+                          <Link href={`/books/${book._id}`} className="line-clamp-2 font-bold leading-snug text-heading hover:text-accent">
+                            {book.title}
+                          </Link>
+                          <p className="truncate text-sm text-muted">By {book.author}</p>
+                          <div className="flex flex-wrap items-center gap-2 text-xs">
+                            <span className="rounded-full bg-chip px-2.5 py-1 font-semibold text-heading">{book.condition}</span>
+                            <span className="inline-flex items-center gap-1 text-muted">
+                              <GraduationCap className="h-3.5 w-3.5 text-accent" />
+                              {seller}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end">
+                          <span className="text-lg font-extrabold text-heading">{priceLabel}</span>
+                          <button
+                            type="button"
+                            disabled={pendingBook[book._id] || placingOrder}
+                            onClick={() => removeItem(book._id)}
+                            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-muted hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"
+                          >
+                            {pendingBook[book._id] ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            Remove
+                          </button>
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end">
-                        <span className="text-lg font-extrabold text-heading">{priceLabel}</span>
-                        <button
-                          type="button"
-                          disabled={pendingBook[book._id] || placingOrder}
-                          onClick={() => removeItem(book._id)}
-                          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-muted hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"
-                        >
-                          {pendingBook[book._id] ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </section>
+                    </article>
+                  );
+                })}
+              </section>
 
-            <aside className="space-y-5 rounded-3xl border border-card-border bg-card p-5 shadow-sm sm:p-6">
+              {/* Delivery Address Selection Step */}
+              <DeliveryAddressSelector
+                selectedAddressId={selectedAddress?._id || null}
+                onSelectAddress={setSelectedAddress}
+              />
+            </div>
+
+            <aside className="space-y-5 rounded-3xl border border-card-border bg-card p-5 shadow-sm sm:p-6 lg:sticky lg:top-24">
               <div>
                 <h2 className="text-lg font-extrabold text-heading">Order summary</h2>
                 <div className="mt-4 flex justify-between border-b border-card-border pb-3 text-sm">
@@ -261,18 +277,43 @@ export default function CartPage() {
                 </div>
               </div>
 
+              {/* Delivery Address Summary in Sidebar */}
+              {selectedAddress ? (
+                <div className="rounded-2xl border border-card-border bg-card/60 p-3.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-text">Deliver to:</span>
+                    <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-bold text-accent">
+                      {selectedAddress.addressType}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 font-bold text-heading truncate">
+                    {selectedAddress.fullName} ({selectedAddress.phone})
+                  </p>
+                  <p className="mt-0.5 text-muted leading-relaxed line-clamp-2">
+                    {selectedAddress.houseNo}, {selectedAddress.area}, {selectedAddress.city} - {selectedAddress.pincode}
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-rose-500/40 bg-rose-500/10 p-3 text-center text-xs text-rose-500 font-medium">
+                  Please select or add a delivery address to place your order.
+                </div>
+              )}
+
               <form onSubmit={checkout} className="space-y-4 border-t border-card-border pt-5">
-                <h3 className="text-sm font-bold text-heading">Checkout details</h3>
+                <h3 className="text-sm font-bold text-heading">Delivery & Handover notes</h3>
                 <label className="block text-sm font-semibold text-text">
-                  Meeting location <span className="text-rose-600">*</span>
+                  Meeting landmark / Instructions <span className="font-normal text-muted">(optional)</span>
                   <span className="relative mt-1.5 block">
                     <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted" />
                     <input
-                      required
                       value={meetingLocation}
                       onChange={(event) => setMeetingLocation(event.target.value)}
                       maxLength={200}
-                      placeholder="e.g. Main library entrance"
+                      placeholder={
+                        selectedAddress
+                          ? `e.g. Near main gate, or leave blank to use address`
+                          : 'e.g. Main library entrance'
+                      }
                       className="w-full rounded-xl border border-card-border bg-card/60 py-2.5 pl-10 pr-3 text-sm text-heading placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
                     />
                   </span>
@@ -283,15 +324,15 @@ export default function CartPage() {
                     value={notes}
                     onChange={(event) => setNotes(event.target.value)}
                     maxLength={500}
-                    rows={3}
+                    rows={2}
                     placeholder="Add any details for the sellers"
                     className="mt-1.5 w-full resize-y rounded-xl border border-card-border bg-card/60 px-3 py-2.5 text-sm text-heading placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
                   />
                 </label>
                 <button
                   type="submit"
-                  disabled={placingOrder || cartCount === 0}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-btn-primary px-4 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={placingOrder || cartCount === 0 || !selectedAddress}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-btn-primary px-4 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {placingOrder && <LoaderCircle className="h-4 w-4 animate-spin" />}
                   {placingOrder ? 'Placing order…' : 'Place Order'}

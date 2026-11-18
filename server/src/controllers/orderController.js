@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import Book from '../models/Book.js';
 import Cart from '../models/Cart.js';
+import Address from '../models/Address.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { createNotification } from '../utils/notifications.js';
 
@@ -28,7 +29,41 @@ const populateOrder = (query) => {
  */
 export const createOrder = async (req, res, next) => {
   try {
-    const { bookId, fromCart, meetingLocation, notes } = req.body;
+    const { bookId, fromCart, meetingLocation, notes, addressId, shippingAddress } = req.body;
+
+    let addressSnapshot = null;
+    if (addressId) {
+      const addressDoc = await Address.findOne({ _id: addressId, user: req.user._id });
+      if (addressDoc) {
+        addressSnapshot = {
+          fullName: addressDoc.fullName,
+          phone: addressDoc.phone,
+          pincode: addressDoc.pincode,
+          houseNo: addressDoc.houseNo,
+          area: addressDoc.area,
+          landmark: addressDoc.landmark || '',
+          city: addressDoc.city,
+          state: addressDoc.state,
+          addressType: addressDoc.addressType,
+        };
+      }
+    } else if (shippingAddress && typeof shippingAddress === 'object') {
+      addressSnapshot = {
+        fullName: shippingAddress.fullName || '',
+        phone: shippingAddress.phone || '',
+        pincode: shippingAddress.pincode || '',
+        houseNo: shippingAddress.houseNo || '',
+        area: shippingAddress.area || '',
+        landmark: shippingAddress.landmark || '',
+        city: shippingAddress.city || '',
+        state: shippingAddress.state || '',
+        addressType: shippingAddress.addressType || 'Home',
+      };
+    }
+
+    const resolvedLocation =
+      meetingLocation ||
+      (addressSnapshot ? `${addressSnapshot.houseNo}, ${addressSnapshot.area}, ${addressSnapshot.city}` : '');
 
     // A. Checkout entire cart into individual orders
     if (fromCart) {
@@ -85,9 +120,10 @@ export const createOrder = async (req, res, next) => {
           amount: price,
           status: 'placed',
           orderStatus: 'placed',
-          meetingLocation: meetingLocation || '',
-          pickupLocation: meetingLocation || '',
+          meetingLocation: resolvedLocation,
+          pickupLocation: resolvedLocation,
           notes: notes || '',
+          shippingAddress: addressSnapshot,
         });
 
         // Notify seller
@@ -179,9 +215,10 @@ export const createOrder = async (req, res, next) => {
       amount: price,
       status: 'placed',
       orderStatus: 'placed',
-      meetingLocation: meetingLocation || '',
-      pickupLocation: meetingLocation || '',
+      meetingLocation: resolvedLocation,
+      pickupLocation: resolvedLocation,
       notes: notes || '',
+      shippingAddress: addressSnapshot,
     });
 
     // Remove book from buyer's cart if it was added

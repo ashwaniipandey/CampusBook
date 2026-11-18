@@ -6,6 +6,8 @@ import {
   Book,
   FiltersMeta,
   Order,
+  Address,
+  ShippingAddressSnapshot,
   Cart,
   CartItem,
   Review,
@@ -506,10 +508,35 @@ export const api = {
     fromCart?: boolean;
     meetingLocation?: string;
     notes?: string;
+    addressId?: string;
+    shippingAddress?: ShippingAddressSnapshot;
   }) =>
     request<{ status: string; message: string; order?: Order; orders?: Order[] }>('/orders', {
       method: 'POST',
       body: JSON.stringify(data),
+    }),
+
+  // Addresses
+  getAddresses: () =>
+    request<{ status: string; results: number; addresses: Address[] }>('/addresses', {
+      method: 'GET',
+    }),
+
+  createAddress: (data: Omit<Address, '_id' | 'user' | 'createdAt' | 'updatedAt'>) =>
+    request<{ status: string; message: string; address: Address }>('/addresses', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateAddress: (id: string, data: Partial<Omit<Address, '_id' | 'user' | 'createdAt' | 'updatedAt'>>) =>
+    request<{ status: string; message: string; address: Address }>(`/addresses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteAddress: (id: string) =>
+    request<{ status: string; message: string }>(`/addresses/${id}`, {
+      method: 'DELETE',
     }),
 
   updateOrderStatus: (id: string, status: 'confirmed' | 'completed' | 'cancelled') =>

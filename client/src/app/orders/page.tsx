@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   LoaderCircle,
   MapPin,
+  Home,
   MessageCircle,
   MessageSquare,
   Star,
@@ -336,6 +337,28 @@ export default function OrdersPage() {
                         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                         {order.meetingLocation || order.pickupLocation || 'Meeting location not set'}
                       </p>
+                      {order.shippingAddress && (
+                        <div className="flex items-start gap-2 rounded-xl border border-card-border/80 bg-card/60 p-2.5 text-xs text-text">
+                          <Home className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="font-bold text-heading">{order.shippingAddress.fullName}</span>
+                              <span className="text-muted">({order.shippingAddress.phone})</span>
+                              {order.shippingAddress.addressType && (
+                                <span className="rounded-full bg-accent/20 px-1.5 py-0.2 text-[10px] font-bold text-accent">
+                                  {order.shippingAddress.addressType}
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-0.5 text-muted leading-relaxed">
+                              {order.shippingAddress.houseNo}, {order.shippingAddress.area}
+                              {order.shippingAddress.landmark ? `, Near ${order.shippingAddress.landmark}` : ''},{' '}
+                              {order.shippingAddress.city}, {order.shippingAddress.state} -{' '}
+                              <span className="font-semibold text-heading">{order.shippingAddress.pincode}</span>
+                            </p>
+                          </div>
+                        </div>
+                      )}
                       {order.notes && (
                         <p className="flex items-start gap-1.5 text-sm text-muted">
                           <MessageSquare className="mt-0.5 h-4 w-4 shrink-0" />

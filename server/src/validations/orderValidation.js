@@ -24,6 +24,13 @@ export const createOrderSchema = z
       .max(500, 'Notes cannot exceed 500 characters')
       .optional()
       .default(''),
+    addressId: z
+      .string()
+      .refine((val) => objectIdRegex.test(val), {
+        message: 'Invalid address ID format',
+      })
+      .optional(),
+    shippingAddress: z.any().optional(),
   })
   .strict()
   .refine((data) => data.bookId || data.fromCart, {

@@ -118,6 +118,37 @@ export interface Book {
 
 export type OrderStatus = 'placed' | 'confirmed' | 'ready_for_pickup' | 'completed' | 'cancelled';
 
+export type AddressType = 'Home' | 'Work' | 'Campus';
+
+export interface Address {
+  _id: string;
+  user?: string;
+  fullName: string;
+  phone: string;
+  pincode: string;
+  houseNo: string;
+  area: string;
+  landmark?: string;
+  city: string;
+  state: string;
+  addressType: AddressType;
+  isDefault: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ShippingAddressSnapshot {
+  fullName: string;
+  phone: string;
+  pincode: string;
+  houseNo: string;
+  area: string;
+  landmark?: string;
+  city: string;
+  state: string;
+  addressType?: AddressType;
+}
+
 export interface Order {
   _id: string;
   orderNumber: string;
@@ -131,6 +162,7 @@ export interface Order {
   meetingLocation?: string;
   pickupLocation?: string;
   notes?: string;
+  shippingAddress?: ShippingAddressSnapshot;
   completedAt?: string;
   cancelledAt?: string;
   createdAt?: string;

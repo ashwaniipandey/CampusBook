@@ -85,6 +85,17 @@ const orderSchema = new mongoose.Schema(
       maxlength: [500, 'Notes cannot exceed 500 characters'],
       default: '',
     },
+    shippingAddress: {
+      fullName: { type: String, trim: true },
+      phone: { type: String, trim: true },
+      pincode: { type: String, trim: true },
+      houseNo: { type: String, trim: true },
+      area: { type: String, trim: true },
+      landmark: { type: String, trim: true, default: '' },
+      city: { type: String, trim: true },
+      state: { type: String, trim: true },
+      addressType: { type: String, enum: ['Home', 'Work', 'Campus'], default: 'Home' },
+    },
     isDemo: {
       type: Boolean,
       default: false,
