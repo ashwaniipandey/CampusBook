@@ -29,7 +29,25 @@ const populateOrder = (query) => {
  */
 export const createOrder = async (req, res, next) => {
   try {
-    const { bookId, fromCart, meetingLocation, notes, addressId, shippingAddress } = req.body;
+    const {
+      bookId,
+      fromCart,
+      meetingLocation,
+      notes,
+      addressId,
+      shippingAddress,
+      paymentMethod = 'COD',
+    } = req.body;
+
+    // Validate payment method (only COD is supported now)
+    if (paymentMethod && paymentMethod !== 'COD') {
+      return next(
+        new AppError(
+          'Online payment will be available soon. Please select Cash on Delivery (COD).',
+          400
+        )
+      );
+    }
 
     let addressSnapshot = null;
     if (addressId) {
@@ -124,6 +142,8 @@ export const createOrder = async (req, res, next) => {
           pickupLocation: resolvedLocation,
           notes: notes || '',
           shippingAddress: addressSnapshot,
+          paymentMethod: 'COD',
+          paymentStatus: 'Pending',
         });
 
         // Notify seller
@@ -219,6 +239,8 @@ export const createOrder = async (req, res, next) => {
       pickupLocation: resolvedLocation,
       notes: notes || '',
       shippingAddress: addressSnapshot,
+      paymentMethod: 'COD',
+      paymentStatus: 'Pending',
     });
 
     // Remove book from buyer's cart if it was added

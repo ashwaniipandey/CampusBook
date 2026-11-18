@@ -31,6 +31,12 @@ export const createOrderSchema = z
       })
       .optional(),
     shippingAddress: z.any().optional(),
+    paymentMethod: z
+      .enum(['COD', 'ONLINE'], {
+        errorMap: () => ({ message: 'Payment method must be COD or ONLINE' }),
+      })
+      .optional()
+      .default('COD'),
   })
   .strict()
   .refine((data) => data.bookId || data.fromCart, {

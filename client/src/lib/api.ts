@@ -510,6 +510,7 @@ export const api = {
     notes?: string;
     addressId?: string;
     shippingAddress?: ShippingAddressSnapshot;
+    paymentMethod?: 'COD' | 'ONLINE';
   }) =>
     request<{ status: string; message: string; order?: Order; orders?: Order[] }>('/orders', {
       method: 'POST',

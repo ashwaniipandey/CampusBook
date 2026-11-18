@@ -10,6 +10,7 @@ import {
   LoaderCircle,
   MapPin,
   Home,
+  Banknote,
   MessageCircle,
   MessageSquare,
   Star,
@@ -359,6 +360,25 @@ export default function OrdersPage() {
                           </div>
                         </div>
                       )}
+                      {/* Payment Method & Status */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                        <span className="font-semibold text-text">Payment:</span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-card-border bg-card/60 px-2.5 py-0.5 text-[11px] font-bold text-heading">
+                          <Banknote className="h-3.5 w-3.5 text-accent" />
+                          {order.paymentMethod === 'ONLINE' ? 'Online Payment' : 'Cash on Delivery (COD)'}
+                        </span>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                            order.paymentStatus === 'Paid' || order.paymentStatus === 'completed'
+                              ? 'bg-emerald-50 text-emerald-800'
+                              : order.paymentStatus === 'Failed' || order.paymentStatus === 'failed'
+                              ? 'bg-rose-50 text-rose-800'
+                              : 'bg-amber-50 text-amber-800'
+                          }`}
+                        >
+                          {order.paymentStatus || 'Pending'}
+                        </span>
+                      </div>
                       {order.notes && (
                         <p className="flex items-start gap-1.5 text-sm text-muted">
                           <MessageSquare className="mt-0.5 h-4 w-4 shrink-0" />

@@ -11,14 +11,21 @@ import {
   ShoppingCart,
   Trash2,
   X,
+  CreditCard,
+  Banknote,
+  CheckCircle2,
+  PackageCheck,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import BookCover from '@/components/BookCover';
-import { BookImage, User, Address } from '@/types';
+import { BookImage, User, Address, Order } from '@/types';
 import api from '@/lib/api';
 import { formatPrice, getBookPrice } from '@/lib/pricing';
 import { getVerificationHref, isVerifiedStudent } from '@/lib/verification';
 import DeliveryAddressSelector from '@/components/DeliveryAddressSelector';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
+import Chip from '@/components/Chip';
 
 type Toast = { message: string; type: 'success' | 'error' };
 
@@ -44,6 +51,12 @@ export default function CartPage() {
   const [meetingLocation, setMeetingLocation] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'ONLINE'>('COD');
+  const [orderSuccess, setOrderSuccess] = useState<{
+    orders: Order[];
+    totalAmount: number;
+    address: Address | null;
+  } | null>(null);
   const [pendingBook, setPendingBook] = useState<Record<string, boolean>>({});
   const [clearingCart, setClearingCart] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
@@ -101,6 +114,11 @@ export default function CartPage() {
       return;
     }
 
+    if (paymentMethod !== 'COD') {
+      showToast('Online payment will be available soon. Please select Cash on Delivery.', 'error');
+      return;
+    }
+
     const effectiveLocation =
       meetingLocation.trim() ||
       `${selectedAddress.houseNo}, ${selectedAddress.area}, ${selectedAddress.city} - ${selectedAddress.pincode}`;
@@ -112,15 +130,104 @@ export default function CartPage() {
         addressId: selectedAddress._id,
         meetingLocation: effectiveLocation,
         notes: notes.trim(),
+        paymentMethod: 'COD',
       });
+      const placed = response.orders || (response.order ? [response.order] : []);
+      const total = cartTotalAmount;
+      const addr = selectedAddress;
       emptyCart();
+      setOrderSuccess({
+        orders: placed,
+        totalAmount: total,
+        address: addr,
+      });
       showToast(response.message || 'Order placed successfully.');
-      window.setTimeout(() => router.push('/orders'), 700);
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Unable to place your order.', 'error');
       setPlacingOrder(false);
     }
   };
+
+  if (orderSuccess) {
+    return (
+      <main className="min-h-screen px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl">
+          <Card className="text-center py-10 px-6 sm:px-10">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/20 text-accent">
+              <CheckCircle2 className="h-10 w-10" />
+            </div>
+            <h1 className="mt-5 text-2xl font-extrabold tracking-tight text-heading sm:text-3xl">
+              Order Placed Successfully!
+            </h1>
+            <p className="mt-2 text-sm text-muted">
+              Thank you for your order. We have notified the campus seller(s) to prepare your books.
+            </p>
+
+            <div className="mt-6 rounded-2xl border border-card-border bg-card/60 p-5 text-left space-y-3.5 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-card-border/60 pb-3">
+                <span className="font-semibold text-text">Order Number(s):</span>
+                <span className="font-bold text-heading">
+                  {orderSuccess.orders.map((o) => o.orderNumber || o._id).join(', ')}
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-card-border/60 pb-3">
+                <span className="font-semibold text-text">Payment Method:</span>
+                <div className="flex items-center gap-1.5">
+                  <Banknote className="h-3.5 w-3.5 text-accent" />
+                  <span className="font-bold text-heading">Cash on Delivery (COD)</span>
+                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                    Pending handover
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-card-border/60 pb-3">
+                <span className="font-semibold text-text">Amount to Pay on Delivery:</span>
+                <span className="text-base font-extrabold text-accent">
+                  {formatPrice(orderSuccess.totalAmount)}
+                </span>
+              </div>
+
+              {orderSuccess.address && (
+                <div>
+                  <span className="font-semibold text-text block mb-1">Delivering to:</span>
+                  <p className="font-bold text-heading">
+                    {orderSuccess.address.fullName} ({orderSuccess.address.phone})
+                  </p>
+                  <p className="text-muted leading-relaxed">
+                    {orderSuccess.address.houseNo}, {orderSuccess.address.area},{' '}
+                    {orderSuccess.address.city}, {orderSuccess.address.state} -{' '}
+                    {orderSuccess.address.pincode}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => router.push('/orders')}
+                className="w-full sm:w-auto"
+              >
+                <PackageCheck className="h-4 w-4" />
+                View My Orders
+              </Button>
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => router.push('/explore')}
+                className="w-full sm:w-auto"
+              >
+                Continue Shopping
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </main>
+    );
+  }
 
   if (authLoading || !user || cartLoading) {
     return (
@@ -262,6 +369,96 @@ export default function CartPage() {
                 selectedAddressId={selectedAddress?._id || null}
                 onSelectAddress={setSelectedAddress}
               />
+
+              {/* Payment Method Step */}
+              <section aria-labelledby="payment-method-heading" className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/20 text-accent">
+                    <CreditCard className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 id="payment-method-heading" className="text-base font-bold text-heading sm:text-lg">
+                      Payment Method
+                    </h2>
+                    <p className="text-xs text-muted">Choose how you want to pay for your books</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3.5 sm:grid-cols-2">
+                  {/* Cash on Delivery Card */}
+                  <div
+                    onClick={() => setPaymentMethod('COD')}
+                    className={`relative cursor-pointer rounded-2xl border p-4.5 transition-all duration-200 backdrop-blur-md ${
+                      paymentMethod === 'COD'
+                        ? 'border-accent bg-card/90 shadow-sm ring-1 ring-accent'
+                        : 'border-card-border bg-card/60 hover:border-card-border hover:bg-card'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          checked={paymentMethod === 'COD'}
+                          onChange={() => setPaymentMethod('COD')}
+                          className="mt-0.5 h-4 w-4 cursor-pointer accent-accent"
+                          aria-label="Cash on Delivery"
+                        />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Banknote className="h-4 w-4 text-accent" />
+                            <span className="font-bold text-sm text-heading">Cash on Delivery</span>
+                          </div>
+                          <p className="mt-1 text-xs text-muted leading-relaxed">
+                            Pay in cash or UPI directly when the book is handed over.
+                          </p>
+                        </div>
+                      </div>
+                      {paymentMethod === 'COD' && (
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-accent" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Online Payment Card */}
+                  <div
+                    onClick={() => setPaymentMethod('ONLINE')}
+                    className={`relative cursor-pointer rounded-2xl border p-4.5 transition-all duration-200 backdrop-blur-md ${
+                      paymentMethod === 'ONLINE'
+                        ? 'border-accent bg-card/90 shadow-sm ring-1 ring-accent'
+                        : 'border-card-border bg-card/60 hover:border-card-border hover:bg-card'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          checked={paymentMethod === 'ONLINE'}
+                          onChange={() => setPaymentMethod('ONLINE')}
+                          className="mt-0.5 h-4 w-4 cursor-pointer accent-accent"
+                          aria-label="Online Payment"
+                        />
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <CreditCard className="h-4 w-4 text-accent" />
+                            <span className="font-bold text-sm text-heading">Online Payment</span>
+                            <Chip className="text-[10px] py-0.5 px-2 bg-amber-500/20 text-amber-300 border-amber-500/30">
+                              Coming soon
+                            </Chip>
+                          </div>
+                          <p className="mt-1 text-xs text-muted leading-relaxed">
+                            UPI, Credit/Debit Cards, NetBanking (via Razorpay).
+                          </p>
+                        </div>
+                      </div>
+                      {paymentMethod === 'ONLINE' && (
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-accent" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
             </div>
 
             <aside className="space-y-5 rounded-3xl border border-card-border bg-card p-5 shadow-sm sm:p-6 lg:sticky lg:top-24">
@@ -299,6 +496,27 @@ export default function CartPage() {
                 </div>
               )}
 
+              {/* Payment Method in Sidebar */}
+              <div className="rounded-2xl border border-card-border bg-card/60 p-3.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-text">Payment:</span>
+                  <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-bold text-accent">
+                    {paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online'}
+                  </span>
+                </div>
+                <p className="mt-1 text-muted text-[11px]">
+                  {paymentMethod === 'COD'
+                    ? 'Pay with cash or UPI on handover'
+                    : 'Online payment via UPI / Card (Razorpay)'}
+                </p>
+              </div>
+
+              {paymentMethod === 'ONLINE' && (
+                <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-center text-xs text-amber-300 font-medium">
+                  Online payment will be available soon. Please switch to Cash on Delivery to place your order.
+                </div>
+              )}
+
               <form onSubmit={checkout} className="space-y-4 border-t border-card-border pt-5">
                 <h3 className="text-sm font-bold text-heading">Delivery & Handover notes</h3>
                 <label className="block text-sm font-semibold text-text">
@@ -331,11 +549,15 @@ export default function CartPage() {
                 </label>
                 <button
                   type="submit"
-                  disabled={placingOrder || cartCount === 0 || !selectedAddress}
+                  disabled={placingOrder || cartCount === 0 || !selectedAddress || paymentMethod !== 'COD'}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-btn-primary px-4 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {placingOrder && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                  {placingOrder ? 'Placing order…' : 'Place Order'}
+                  {placingOrder
+                    ? 'Placing order…'
+                    : paymentMethod === 'ONLINE'
+                    ? 'Select Cash on Delivery'
+                    : 'Place Order (COD)'}
                 </button>
                 <p className="text-center text-xs leading-5 text-muted">
                   Confirm your handoff with each seller and meet in a public campus location.

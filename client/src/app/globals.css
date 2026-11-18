@@ -18,6 +18,13 @@
   --accent: #C8EBA5;
   --chip-bg: rgba(255, 255, 255, 0.18);
 
+  --popover-bg: #F2F6EA;
+  --popover-text: #1B2E22;
+  --popover-heading: #10200F;
+  --popover-muted: #3F5A45;
+  --popover-border: rgba(22, 39, 28, 0.15);
+  --popover-hover: rgba(22, 39, 28, 0.08);
+
   --scrollbar-track: rgba(0, 0, 0, 0.05);
   --scrollbar-thumb: rgba(27, 46, 34, 0.35);
 }
@@ -38,6 +45,13 @@ html.dark {
   --btn-secondary-text: #F2F6EA;
   --accent: #4ADE80;
   --chip-bg: rgba(255, 255, 255, 0.08);
+
+  --popover-bg: #12241A;
+  --popover-text: #D5E3D6;
+  --popover-heading: #F2F6EA;
+  --popover-muted: #8FA593;
+  --popover-border: rgba(255, 255, 255, 0.14);
+  --popover-hover: rgba(255, 255, 255, 0.08);
 
   --scrollbar-track: rgba(0, 0, 0, 0.2);
   --scrollbar-thumb: rgba(184, 201, 186, 0.25);
@@ -61,6 +75,11 @@ textarea {
   border-color: var(--card-border);
   color: var(--heading);
   backdrop-filter: blur(8px);
+}
+
+select option {
+  background-color: var(--popover-bg);
+  color: var(--popover-text);
 }
 
 input:not([type='checkbox']):not([type='radio']):focus,

@@ -228,7 +228,7 @@ function NavbarInner() {
     'relative flex h-9 w-9 items-center justify-center rounded-full text-heading/85 hover:bg-card hover:text-heading transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent border border-transparent hover:border-card-border';
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-card-border bg-card/80 backdrop-blur-xl transition-colors duration-200">
+    <header className="sticky top-0 z-[100] w-full border-b border-card-border bg-card/80 backdrop-blur-xl transition-colors duration-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
@@ -281,7 +281,7 @@ function NavbarInner() {
               {searchOpen && (
                 <div
                   id="navbar-search-panel"
-                  className="absolute right-0 top-full z-[70] mt-2 w-[min(24rem,calc(100vw-2rem))] rounded-2xl border border-card-border bg-card p-3.5 shadow-2xl backdrop-blur-2xl"
+                  className="absolute right-0 top-full z-[110] mt-2 w-[min(24rem,calc(100vw-2rem))] rounded-2xl border border-popover-border bg-popover p-3.5 shadow-2xl"
                 >
                   <SearchAutocomplete
                     value={searchValue}
@@ -450,7 +450,7 @@ function NavbarInner() {
         <div
           id="navbar-mobile-menu"
           ref={mobilePanelRef}
-          className="border-b border-card-border bg-card px-4 py-5 shadow-2xl backdrop-blur-2xl lg:hidden sm:px-6"
+          className="border-b border-popover-border bg-popover text-popover-text px-4 py-5 shadow-2xl lg:hidden sm:px-6"
         >
           <nav className="space-y-1.5">
             <Link
@@ -459,7 +459,7 @@ function NavbarInner() {
               className={`block rounded-xl px-4 py-2.5 text-sm font-bold transition ${
                 isHomeActive
                   ? 'bg-accent text-btn-primary-text'
-                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
+                  : 'text-popover-text hover:bg-popover-hover hover:text-popover-heading'
               }`}
             >
               Home
@@ -470,7 +470,7 @@ function NavbarInner() {
               className={`block rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 isExploreActive
                   ? 'bg-accent text-btn-primary-text font-bold'
-                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
+                  : 'text-popover-text hover:bg-popover-hover hover:text-popover-heading'
               }`}
             >
               Explore
@@ -481,7 +481,7 @@ function NavbarInner() {
               className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 isExchangeActive
                   ? 'bg-accent text-btn-primary-text font-bold'
-                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
+                  : 'text-popover-text hover:bg-popover-hover hover:text-popover-heading'
               }`}
             >
               <ArrowLeftRight className={`h-4 w-4 ${isExchangeActive ? 'text-btn-primary-text' : 'text-accent'}`} /> Exchange
@@ -492,10 +492,10 @@ function NavbarInner() {
               className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 isDonateActive
                   ? 'bg-accent text-btn-primary-text font-bold'
-                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
+                  : 'text-popover-text hover:bg-popover-hover hover:text-popover-heading'
               }`}
             >
-              <Heart className={`h-4 w-4 ${isDonateActive ? 'text-btn-primary-text' : 'text-rose-400'}`} /> Free Donations
+              <Heart className={`h-4 w-4 ${isDonateActive ? 'text-btn-primary-text' : 'text-rose-500'}`} /> Free Donations
             </Link>
             <Link
               href="/colleges"
@@ -503,7 +503,7 @@ function NavbarInner() {
               className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 isCollegesActive
                   ? 'bg-accent text-btn-primary-text font-bold'
-                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
+                  : 'text-popover-text hover:bg-popover-hover hover:text-popover-heading'
               }`}
             >
               <GraduationCap className={`h-4 w-4 ${isCollegesActive ? 'text-btn-primary-text' : 'text-accent'}`} /> Colleges
@@ -514,21 +514,21 @@ function NavbarInner() {
               className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 isEventsActive
                   ? 'bg-accent text-btn-primary-text font-bold'
-                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
+                  : 'text-popover-text hover:bg-popover-hover hover:text-popover-heading'
               }`}
             >
-              <Calendar className={`h-4 w-4 ${isEventsActive ? 'text-btn-primary-text' : 'text-amber-400'}`} /> Events
+              <Calendar className={`h-4 w-4 ${isEventsActive ? 'text-btn-primary-text' : 'text-amber-500'}`} /> Events
             </Link>
 
-            <div className="my-3 border-t border-card-border" />
+            <div className="my-3 border-t border-popover-border" />
 
             {user?.role === 'admin' && (
               <Link
                 href="/admin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 rounded-xl bg-purple-700 px-4 py-2.5 text-sm font-bold text-white"
+                className="flex items-center gap-2 rounded-xl bg-purple-600/15 text-purple-700 dark:text-purple-300 hover:bg-purple-600/25 px-4 py-2.5 text-sm font-bold"
               >
-                <Shield className="h-4 w-4" /> Open Admin Console
+                <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400" /> Open Admin Console
               </Link>
             )}
 
@@ -545,7 +545,7 @@ function NavbarInner() {
                 <Link
                   href="/messages"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between rounded-lg px-4 py-2 text-xs font-semibold text-text hover:bg-card/80"
+                  className="flex items-center justify-between rounded-lg px-4 py-2 text-xs font-semibold text-popover-text hover:bg-popover-hover hover:text-popover-heading"
                 >
                   <span className="flex items-center gap-2">
                     <MessageCircle className="h-4 w-4 text-accent" /> Messages
@@ -559,14 +559,14 @@ function NavbarInner() {
                 <Link
                   href="/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-lg px-4 py-2 text-xs font-semibold text-text hover:bg-card/80"
+                  className="block rounded-lg px-4 py-2 text-xs font-semibold text-popover-text hover:bg-popover-hover hover:text-popover-heading"
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/profile"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-lg px-4 py-2 text-xs font-semibold text-text hover:bg-card/80"
+                  className="block rounded-lg px-4 py-2 text-xs font-semibold text-popover-text hover:bg-popover-hover hover:text-popover-heading"
                 >
                   Profile
                 </Link>
@@ -576,7 +576,7 @@ function NavbarInner() {
                     setMobileMenuOpen(false);
                     void logout();
                   }}
-                  className="block w-full text-left rounded-lg px-4 py-2 text-xs font-semibold text-rose-400 hover:bg-card/80"
+                  className="block w-full text-left rounded-lg px-4 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10"
                 >
                   Sign Out
                 </button>
@@ -585,7 +585,7 @@ function NavbarInner() {
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-center rounded-xl border border-card-border px-4 py-2 text-sm font-semibold text-heading hover:bg-card"
+                className="block text-center rounded-xl border border-popover-border px-4 py-2 text-sm font-semibold text-popover-heading hover:bg-popover-hover"
               >
                 Sign In
               </Link>
@@ -597,7 +597,7 @@ function NavbarInner() {
       {notificationToast && (
         <div
           role="status"
-          className="fixed right-4 top-20 z-[80] max-w-sm rounded-2xl border border-card-border bg-card p-4 text-xs font-semibold text-heading shadow-2xl backdrop-blur-xl"
+          className="fixed right-4 top-20 z-[110] max-w-sm rounded-2xl border border-popover-border bg-popover p-4 text-xs font-semibold text-popover-heading shadow-2xl"
         >
           {notificationToast}
         </div>
@@ -632,11 +632,11 @@ function NotificationDropdown({
   return (
     <div
       id={id}
-      className="absolute right-0 top-full z-[70] mt-2 w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-3xl border border-card-border bg-card shadow-2xl backdrop-blur-2xl"
+      className="absolute right-0 top-full z-[110] mt-2 w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-popover-border bg-popover text-popover-text shadow-2xl"
     >
-      <div className="flex items-center justify-between border-b border-card-border px-4 py-3">
+      <div className="flex items-center justify-between border-b border-popover-border px-4 py-3">
         <div>
-          <h2 className="font-bold text-heading">Notifications</h2>
+          <h2 className="font-bold text-popover-heading">Notifications</h2>
           <p className="text-[11px] text-accent font-semibold">{unreadCount} unread</p>
         </div>
         <button
@@ -657,8 +657,8 @@ function NotificationDropdown({
                 key={notification._id}
                 type="button"
                 onClick={() => void openNotification(notification)}
-                className={`flex w-full gap-3 border-b border-card-border/60 px-4 py-3 text-left transition hover:bg-card/80 ${
-                  notification.isRead ? 'opacity-70' : 'bg-card/40'
+                className={`flex w-full gap-3 border-b border-popover-border/60 px-4 py-3 text-left transition hover:bg-popover-hover ${
+                  notification.isRead ? 'opacity-70' : 'bg-popover-hover/50'
                 }`}
               >
                 <span className="relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent/20 text-accent">
@@ -666,10 +666,10 @@ function NotificationDropdown({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-start justify-between gap-2">
-                    <span className="line-clamp-1 text-xs font-bold text-heading">{notification.title}</span>
-                    <span className="shrink-0 text-[10px] text-muted">{relativeTime(notification.createdAt)}</span>
+                    <span className="line-clamp-1 text-xs font-bold text-popover-heading">{notification.title}</span>
+                    <span className="shrink-0 text-[10px] text-popover-muted">{relativeTime(notification.createdAt)}</span>
                   </span>
-                  <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-text">
+                  <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-popover-text">
                     {notification.message}
                   </span>
                 </span>
@@ -677,13 +677,13 @@ function NotificationDropdown({
             );
           })
         ) : (
-          <div className="px-5 py-8 text-center text-xs text-muted">You’re all caught up!</div>
+          <div className="px-5 py-8 text-center text-xs text-popover-muted">You’re all caught up!</div>
         )}
       </div>
       <Link
         href="/notifications"
         onClick={close}
-        className="block border-t border-card-border px-4 py-2.5 text-center text-xs font-bold text-accent hover:underline"
+        className="block border-t border-popover-border px-4 py-2.5 text-center text-xs font-bold text-accent hover:underline"
       >
         View all notifications
       </Link>
@@ -708,31 +708,31 @@ function UserDropdown({
 }) {
   const dashboardHref = user.role === 'admin' ? '/admin' : '/dashboard';
   const linkClass =
-    'flex min-h-9 items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-text hover:bg-card/80 hover:text-heading transition';
+    'flex min-h-9 items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-popover-text hover:bg-popover-hover hover:text-popover-heading transition';
 
   return (
     <div
       id={id}
-      className="absolute right-0 top-full z-[70] mt-2 w-64 overflow-hidden rounded-2xl border border-card-border bg-card py-2 shadow-2xl backdrop-blur-2xl"
+      className="absolute right-0 top-full z-[110] mt-2 w-64 overflow-hidden rounded-2xl border border-popover-border bg-popover text-popover-text py-2 shadow-2xl"
     >
-      <div className="border-b border-card-border px-4 py-3">
-        <p className="truncate font-bold text-heading text-sm">{user.name}</p>
-        <p className="truncate text-xs text-muted">{user.email}</p>
+      <div className="border-b border-popover-border px-4 py-3">
+        <p className="truncate font-bold text-popover-heading text-sm">{user.name}</p>
+        <p className="truncate text-xs text-popover-muted">{user.email}</p>
         <p className="mt-0.5 truncate text-[11px] font-semibold text-accent">{universityName}</p>
         <div className="mt-2">
           {user.role === 'admin' ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-2.5 py-0.5 text-[10px] font-bold text-purple-300">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-2.5 py-0.5 text-[10px] font-bold text-purple-700 dark:text-purple-300">
               <Shield className="h-3 w-3" /> Administrator
             </span>
           ) : isVerifiedStudent(user) ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/20 px-2.5 py-0.5 text-[10px] font-bold text-heading">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/20 px-2.5 py-0.5 text-[10px] font-bold text-popover-heading">
               <BadgeCheck className="h-3 w-3 text-accent" /> Verified Student
             </span>
           ) : (
             <Link
               href="/verify"
               onClick={close}
-              className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-300 hover:underline"
+              className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 hover:underline"
             >
               <ShieldAlert className="h-3 w-3" /> Verify Student Status
             </Link>
@@ -748,10 +748,10 @@ function UserDropdown({
           <ClipboardList className="h-3.5 w-3.5 text-accent" /> Orders
         </Link>
         <Link href="/wishlist" onClick={close} className={linkClass}>
-          <Heart className="h-3.5 w-3.5 text-rose-400" /> Wishlist
+          <Heart className="h-3.5 w-3.5 text-rose-500" /> Wishlist
         </Link>
         <Link href="/exchanges" onClick={close} className={linkClass}>
-          <ArrowLeftRight className="h-3.5 w-3.5 text-amber-400" /> Exchanges
+          <ArrowLeftRight className="h-3.5 w-3.5 text-amber-500" /> Exchanges
         </Link>
         <Link href="/donations" onClick={close} className={linkClass}>
           <HeartHandshake className="h-3.5 w-3.5 text-accent" /> Donations
@@ -766,30 +766,30 @@ function UserDropdown({
         </Link>
       </div>
 
-      <div className="mx-3 border-t border-card-border" />
+      <div className="mx-3 border-t border-popover-border" />
 
       <div className="space-y-0.5 px-2 py-2">
         {user.role === 'admin' && (
           <Link
             href="/admin"
             onClick={close}
-            className="flex min-h-9 items-center gap-2.5 rounded-xl bg-purple-900/40 px-3 py-2 text-xs font-bold text-purple-300 hover:bg-purple-900/60 hover:text-white transition"
+            className="flex min-h-9 items-center gap-2.5 rounded-xl bg-purple-600/15 px-3 py-2 text-xs font-bold text-purple-700 dark:text-purple-300 hover:bg-purple-600/25 hover:text-purple-900 dark:hover:text-purple-100 transition"
           >
-            <Shield className="h-3.5 w-3.5 text-purple-400" /> Admin panel
+            <Shield className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" /> Admin panel
           </Link>
         )}
         <Link href={dashboardHref} onClick={close} className={linkClass}>
-          <LayoutDashboard className="h-3.5 w-3.5 text-purple-400" /> Dashboard
+          <LayoutDashboard className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" /> Dashboard
         </Link>
         <Link href="/profile" onClick={close} className={linkClass}>
-          <UserIcon className="h-3.5 w-3.5 text-muted" /> Profile
+          <UserIcon className="h-3.5 w-3.5 text-popover-muted" /> Profile
         </Link>
         <Link href="/settings" onClick={close} className={linkClass}>
-          <Settings className="h-3.5 w-3.5 text-muted" /> Settings
+          <Settings className="h-3.5 w-3.5 text-popover-muted" /> Settings
         </Link>
       </div>
 
-      <div className="mx-3 border-t border-card-border" />
+      <div className="mx-3 border-t border-popover-border" />
 
       <div className="px-2 pt-2">
         <button
@@ -798,7 +798,7 @@ function UserDropdown({
             close();
             void logout();
           }}
-          className="flex min-h-9 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-400 hover:bg-rose-950/30 transition"
+          className="flex min-h-9 w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition"
         >
           <LogOut className="h-3.5 w-3.5" /> Logout
         </button>

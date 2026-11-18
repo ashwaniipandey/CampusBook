@@ -149,6 +149,9 @@ export interface ShippingAddressSnapshot {
   addressType?: AddressType;
 }
 
+export type PaymentMethod = 'COD' | 'ONLINE';
+export type PaymentStatus = 'Pending' | 'Paid' | 'Failed';
+
 export interface Order {
   _id: string;
   orderNumber: string;
@@ -163,6 +166,10 @@ export interface Order {
   pickupLocation?: string;
   notes?: string;
   shippingAddress?: ShippingAddressSnapshot;
+  paymentMethod?: PaymentMethod | string;
+  paymentStatus?: PaymentStatus | string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
   completedAt?: string;
   cancelledAt?: string;
   createdAt?: string;

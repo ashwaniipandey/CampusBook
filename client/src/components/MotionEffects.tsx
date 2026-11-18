@@ -138,7 +138,7 @@ export function MotionDialog({
         aria-modal="true"
         aria-labelledby={labelledBy}
         tabIndex={-1}
-        className={`max-h-[90vh] w-full overflow-y-auto rounded-3xl border border-card-border bg-card shadow-2xl backdrop-blur-2xl text-text focus:outline-none ${panelClassName}`}
+        className={`max-h-[90vh] w-full overflow-y-auto rounded-2xl border border-popover-border bg-popover shadow-2xl text-popover-text focus:outline-none ${panelClassName}`}
         initial={reduceMotion ? false : { opacity: 0, y: 12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={reduceMotion ? undefined : { opacity: 0, y: 8, scale: 0.99 }}

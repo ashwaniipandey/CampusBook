@@ -28,6 +28,21 @@ const config: Config = {
           bg: 'var(--chip-bg)',
         },
         'chip-bg': 'var(--chip-bg)',
+        popover: {
+          DEFAULT: 'var(--popover-bg)',
+          bg: 'var(--popover-bg)',
+          border: 'var(--popover-border)',
+          text: 'var(--popover-text)',
+          heading: 'var(--popover-heading)',
+          muted: 'var(--popover-muted)',
+          hover: 'var(--popover-hover)',
+        },
+        'popover-bg': 'var(--popover-bg)',
+        'popover-border': 'var(--popover-border)',
+        'popover-text': 'var(--popover-text)',
+        'popover-heading': 'var(--popover-heading)',
+        'popover-muted': 'var(--popover-muted)',
+        'popover-hover': 'var(--popover-hover)',
         btn: {
           primary: {
             DEFAULT: 'var(--btn-primary-bg)',

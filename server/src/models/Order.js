@@ -48,18 +48,33 @@ const orderSchema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       enum: {
-        values: ['cash_on_delivery', 'upi', 'card', 'campus_wallet', 'handover'],
+        values: ['COD', 'ONLINE', 'cash_on_delivery', 'upi', 'card', 'campus_wallet', 'handover'],
         message: '{VALUE} is not a supported payment method',
       },
-      default: 'handover',
+      default: 'COD',
     },
     paymentStatus: {
       type: String,
       enum: {
-        values: ['pending', 'completed', 'failed', 'refunded'],
+        values: ['Pending', 'Paid', 'Failed', 'pending', 'completed', 'failed', 'refunded'],
         message: '{VALUE} is not a valid payment status',
       },
-      default: 'pending',
+      default: 'Pending',
+    },
+    razorpayOrderId: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    razorpayPaymentId: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    razorpaySignature: {
+      type: String,
+      trim: true,
+      default: '',
     },
     deliveryMethod: {
       type: String,

@@ -179,13 +179,13 @@ export default function SearchAutocomplete({
         </button>
       )}
       {open && (showRecent || showSuggestions || loading || Boolean(error)) && (
-        <div className="absolute left-0 right-0 top-full z-[70] mt-2 overflow-hidden rounded-xl border border-card-border bg-card shadow-xl backdrop-blur-xl">
+        <div className="absolute left-0 right-0 top-full z-[110] mt-2 overflow-hidden rounded-2xl border border-popover-border bg-popover text-popover-text shadow-xl">
           {loading && (
-            <div className="flex items-center gap-2 px-4 py-3 text-xs text-muted">
+            <div className="flex items-center gap-2 px-4 py-3 text-xs text-popover-muted">
               <Loader2 className="h-4 w-4 animate-spin" /> Finding suggestions...
             </div>
           )}
-          {error && <p role="status" className="px-4 py-3 text-xs text-rose-400">{error}</p>}
+          {error && <p role="status" className="px-4 py-3 text-xs text-rose-500 dark:text-rose-400">{error}</p>}
           {showSuggestions && (
             <div id={listId} role="listbox" aria-label="Search suggestions">
               {suggestions.map((suggestion, index) => (
@@ -197,20 +197,20 @@ export default function SearchAutocomplete({
                   key={`${suggestion.type}-${suggestion.value}`}
                   onMouseEnter={() => setActiveSuggestion(index)}
                   onClick={() => void submitSearch(suggestion.value)}
-                  className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm text-text hover:bg-card/80 ${
-                    activeSuggestion === index ? 'bg-card/80 font-semibold text-heading' : ''
+                  className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm text-popover-text hover:bg-popover-hover ${
+                    activeSuggestion === index ? 'bg-popover-hover font-semibold text-popover-heading' : ''
                   }`}
                 >
                   <span className="truncate">{suggestion.value}</span>
-                  <span className="shrink-0 rounded-full bg-chip border border-card-border/60 px-2 py-0.5 text-[10px] capitalize text-heading">{suggestion.type}</span>
+                  <span className="shrink-0 rounded-full bg-popover-hover border border-popover-border px-2 py-0.5 text-[10px] capitalize text-popover-heading font-medium">{suggestion.type}</span>
                 </button>
               ))}
             </div>
           )}
           {showRecent && (
             <>
-              <div className="flex items-center justify-between border-b border-card-border px-4 py-2">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Recent searches</span>
+              <div className="flex items-center justify-between border-b border-popover-border px-4 py-2">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-popover-muted">Recent searches</span>
                 <button type="button" onClick={() => void clearRecent()} className="text-[11px] font-semibold text-accent hover:underline">
                   Clear
                 </button>
@@ -220,16 +220,16 @@ export default function SearchAutocomplete({
                   type="button"
                   key={`${search.term}-${search.searchedAt}`}
                   onClick={() => void submitSearch(search.term)}
-                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-text hover:bg-card/80"
+                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-popover-text hover:bg-popover-hover"
                 >
-                  <Clock3 className="h-3.5 w-3.5 text-muted" />
+                  <Clock3 className="h-3.5 w-3.5 text-popover-muted" />
                   <span className="truncate">{search.term}</span>
                 </button>
               ))}
             </>
           )}
           {open && value.trim().length >= 2 && !loading && !error && !suggestions.length && (
-            <p className="px-4 py-3 text-xs text-muted">No matching suggestions.</p>
+            <p className="px-4 py-3 text-xs text-popover-muted">No matching suggestions.</p>
           )}
         </div>
       )}

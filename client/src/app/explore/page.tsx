@@ -823,13 +823,13 @@ function ExploreContent() {
             />
 
             {/* Slide-in panel */}
-            <div className="relative ml-auto w-full max-w-xs sm:max-w-sm h-full bg-card border-l border-card-border shadow-2xl p-6 overflow-y-auto flex flex-col justify-between backdrop-blur-2xl animate-in slide-in-from-right duration-200">
+            <div className="relative ml-auto w-full max-w-xs sm:max-w-sm h-full bg-popover text-popover-text border-l border-popover-border shadow-2xl p-6 overflow-y-auto flex flex-col justify-between animate-in slide-in-from-right duration-200">
               <div>
-                <div className="flex items-center justify-between pb-4 mb-4 border-b border-card-border">
-                  <h3 className="font-bold text-base text-heading">Filter Marketplace</h3>
+                <div className="flex items-center justify-between pb-4 mb-4 border-b border-popover-border">
+                  <h3 className="font-bold text-base text-popover-heading">Filter Marketplace</h3>
                   <button
                     onClick={() => setMobileFiltersOpen(false)}
-                    className="p-1.5 rounded-xl hover:bg-card text-muted hover:text-heading"
+                    className="p-1.5 rounded-xl hover:bg-popover-hover text-popover-muted hover:text-popover-heading"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -837,7 +837,7 @@ function ExploreContent() {
                 <FilterSidebar />
               </div>
 
-              <div className="pt-6 border-t border-card-border mt-6">
+              <div className="pt-6 border-t border-popover-border mt-6">
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
                   className="w-full bg-btn-primary hover:opacity-90 text-btn-primary-text font-bold py-2.5 rounded-xl text-sm shadow-sm"

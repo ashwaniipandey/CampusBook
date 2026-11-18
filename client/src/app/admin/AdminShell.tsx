@@ -73,26 +73,26 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
  />
  )}
 
- <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-card border-r border-card-border text-text transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 ${
- sidebarOpen ? 'translate-x-0' : '-translate-x-full'
- }`}>
- <div className="flex h-20 items-center justify-between border-b border-card-border px-6">
+  <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-popover border-r border-popover-border text-popover-text shadow-2xl lg:shadow-none transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 ${
+    sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+  }`}>
+ <div className="flex h-20 items-center justify-between border-b border-popover-border px-6">
  <Link href="/admin" className="flex items-center gap-3">
- <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white">
+ <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-btn-primary-text">
  <BookOpen className="h-5 w-5" />
  </span>
  <span>
- <span className="block text-lg font-extrabold tracking-tight text-heading">CampusBook</span>
+ <span className="block text-lg font-extrabold tracking-tight text-popover-heading">CampusBook</span>
  <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Admin console</span>
  </span>
  </Link>
- <button type="button" onClick={() => setSidebarOpen(false)} className="rounded-lg p-2 text-muted hover:bg-card/60 hover:text-heading lg:hidden" aria-label="Close menu">
+ <button type="button" onClick={() => setSidebarOpen(false)} className="rounded-lg p-2 text-popover-muted hover:bg-popover-hover hover:text-popover-heading lg:hidden" aria-label="Close menu">
  <X className="h-5 w-5" />
  </button>
  </div>
 
  <nav aria-label="Admin navigation" className="flex-1 space-y-1 overflow-y-auto px-3 py-5">
- <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">Management</p>
+ <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-popover-muted">Management</p>
  {navigation.map(({ label, href, icon: Icon }) => {
  const active = href === '/admin' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
  return (
@@ -102,28 +102,28 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
  aria-current={active ? 'page' : undefined}
  className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${
  active
- ? 'bg-emerald-500/15 text-accent ring-1 ring-inset ring-emerald-500/20'
- : 'text-muted hover:bg-card/60 hover:text-heading'
+ ? 'bg-accent/15 text-accent ring-1 ring-inset ring-accent/20'
+ : 'text-popover-muted hover:bg-popover-hover hover:text-popover-heading'
  }`}
  >
- <Icon className={`h-4 w-4 ${active ? 'text-accent' : 'text-muted'}`} />
+ <Icon className={`h-4 w-4 ${active ? 'text-accent' : 'text-popover-muted'}`} />
  {label}
  </Link>
  );
  })}
  </nav>
 
- <div className="border-t border-card-border p-4">
+ <div className="border-t border-popover-border p-4">
  <Link
  href="/admin/profile"
- className="flex items-center gap-3 rounded-xl bg-card/60 p-3 transition hover:ring-1 hover:ring-emerald-500/30"
+ className="flex items-center gap-3 rounded-xl bg-popover-hover/50 p-3 transition hover:bg-popover-hover"
  >
- <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-emerald-900 font-bold text-emerald-300">
+ <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-accent/20 font-bold text-accent">
  {user.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : user.name.slice(0, 1).toUpperCase()}
  </div>
  <div className="min-w-0 flex-1">
- <p className="truncate text-sm font-bold text-heading">{user.name}</p>
- <p className="truncate text-xs text-muted">Administrator</p>
+ <p className="truncate text-sm font-bold text-popover-heading">{user.name}</p>
+ <p className="truncate text-xs text-popover-muted">Administrator</p>
  </div>
  </Link>
  </div>
