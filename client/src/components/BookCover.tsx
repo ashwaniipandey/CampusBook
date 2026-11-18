@@ -17,7 +17,7 @@ export default function BookCover({ src, alt, className = '' }: BookCoverProps) 
       <div
         role="img"
         aria-label={`${alt} cover unavailable`}
-        className={`flex items-center justify-center bg-gradient-to-br from-emerald-50 via-green-100 to-teal-100 text-emerald-700 dark:from-slate-800 dark:via-emerald-950 dark:to-slate-900 dark:text-emerald-300 ${className}`}
+        className={`flex items-center justify-center bg-card/60 border border-card-border text-muted ${className}`}
       >
         <BookOpen className="h-10 w-10 drop-shadow-sm" aria-hidden="true" />
       </div>

@@ -116,23 +116,23 @@ export default function CartPage() {
 
   if (authLoading || !user || cartLoading) {
     return (
-      <main className="min-h-[65vh] bg-slate-50 px-4 py-10 sm:px-6">
+      <main className="min-h-[65vh] px-4 py-10 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-6 h-8 w-48 animate-pulse rounded-lg bg-slate-200" />
+          <div className="mb-6 h-8 w-48 animate-pulse rounded-lg bg-card/60" />
           <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
             <div className="space-y-4">
               {[0, 1, 2].map((item) => (
-                <div key={item} className="flex animate-pulse gap-4 rounded-2xl border border-slate-200 bg-white p-4">
-                  <div className="h-28 w-28 shrink-0 rounded-xl bg-slate-200" />
+                <div key={item} className="flex animate-pulse gap-4 rounded-2xl border border-card-border bg-card p-4">
+                  <div className="h-28 w-28 shrink-0 rounded-xl bg-card/60" />
                   <div className="flex-1 space-y-3 py-2">
-                    <div className="h-4 w-3/4 rounded bg-slate-200" />
-                    <div className="h-3 w-1/2 rounded bg-slate-200" />
-                    <div className="h-3 w-1/3 rounded bg-slate-200" />
+                    <div className="h-4 w-3/4 rounded bg-card/60" />
+                    <div className="h-3 w-1/2 rounded bg-card/60" />
+                    <div className="h-3 w-1/3 rounded bg-card/60" />
                   </div>
                 </div>
               ))}
             </div>
-            <div className="h-72 animate-pulse rounded-3xl bg-slate-200" />
+            <div className="h-72 animate-pulse rounded-3xl bg-card/60" />
           </div>
         </div>
       </main>
@@ -140,7 +140,7 @@ export default function CartPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="min-h-screen px-4 py-8 sm:px-6 lg:px-8">
       {toast && (
         <div
           role="status"
@@ -160,17 +160,17 @@ export default function CartPage() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-campus-700">
+            <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent">
               <ShoppingCart className="h-4 w-4" /> Your selections
             </div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Shopping Cart</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight text-heading sm:text-3xl">Shopping Cart</h1>
           </div>
           {cartCount > 0 && (
             <button
               type="button"
               onClick={clearAll}
               disabled={clearingCart || placingOrder}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:border-rose-200 hover:text-rose-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-card-border bg-card px-4 py-2.5 text-sm font-semibold text-text hover:border-rose-200 hover:text-rose-700 disabled:opacity-50"
             >
               {clearingCart ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               Clear cart
@@ -179,25 +179,25 @@ export default function CartPage() {
         </div>
 
         {cartError ? (
-          <section className="rounded-3xl border border-rose-200 bg-white px-6 py-14 text-center shadow-sm">
-            <h2 className="text-xl font-bold text-slate-900">Unable to load your cart</h2>
-            <p className="mt-2 text-sm text-slate-600">{cartError}</p>
+          <section className="rounded-3xl border border-rose-200 bg-card px-6 py-14 text-center shadow-sm">
+            <h2 className="text-xl font-bold text-heading">Unable to load your cart</h2>
+            <p className="mt-2 text-sm text-text">{cartError}</p>
             <button
               type="button"
               onClick={() => void refreshCart()}
-              className="mt-6 rounded-xl bg-campus-600 px-5 py-3 text-sm font-bold text-white hover:bg-campus-700"
+              className="mt-6 rounded-xl bg-btn-primary px-5 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90"
             >
               Try again
             </button>
           </section>
         ) : cartItems.length === 0 ? (
-          <section className="rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-campus-50 text-campus-600">
+          <section className="rounded-3xl border border-card-border bg-card px-6 py-16 text-center shadow-sm">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-campus-50 text-accent">
               <ShoppingCart className="h-8 w-8" />
             </div>
-            <h2 className="mt-5 text-xl font-bold text-slate-900">Your cart is empty</h2>
-            <p className="mt-2 text-sm text-slate-500">Explore the marketplace and find your next course book.</p>
-            <Link href="/explore" className="mt-6 inline-flex rounded-xl bg-campus-600 px-5 py-3 text-sm font-bold text-white hover:bg-campus-700">
+            <h2 className="mt-5 text-xl font-bold text-heading">Your cart is empty</h2>
+            <p className="mt-2 text-sm text-muted">Explore the marketplace and find your next course book.</p>
+            <Link href="/explore" className="mt-6 inline-flex rounded-xl bg-btn-primary px-5 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90">
               Explore books
             </Link>
           </section>
@@ -212,31 +212,31 @@ export default function CartPage() {
                 const priceLabel = book.listingType === 'donate' ? 'Free' : formatPrice(price);
 
                 return (
-                  <article key={item._id || book._id} className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row">
-                    <Link href={`/books/${book._id}`} className="relative block h-44 shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-32 sm:w-32">
+                  <article key={item._id || book._id} className="flex flex-col gap-4 rounded-2xl border border-card-border bg-card p-4 shadow-sm sm:flex-row">
+                    <Link href={`/books/${book._id}`} className="relative block h-44 shrink-0 overflow-hidden rounded-xl bg-card/60 sm:h-32 sm:w-32">
                       <BookCover src={cover ? getImageUrl(cover) : ''} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
                     </Link>
                     <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 sm:flex-row sm:items-start">
                       <div className="min-w-0 space-y-2">
-                        <Link href={`/books/${book._id}`} className="line-clamp-2 font-bold leading-snug text-slate-900 hover:text-campus-700">
+                        <Link href={`/books/${book._id}`} className="line-clamp-2 font-bold leading-snug text-heading hover:text-accent">
                           {book.title}
                         </Link>
-                        <p className="truncate text-sm text-slate-500">By {book.author}</p>
+                        <p className="truncate text-sm text-muted">By {book.author}</p>
                         <div className="flex flex-wrap items-center gap-2 text-xs">
-                          <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-700">{book.condition}</span>
-                          <span className="inline-flex items-center gap-1 text-slate-500">
-                            <GraduationCap className="h-3.5 w-3.5 text-campus-600" />
+                          <span className="rounded-full bg-chip px-2.5 py-1 font-semibold text-heading">{book.condition}</span>
+                          <span className="inline-flex items-center gap-1 text-muted">
+                            <GraduationCap className="h-3.5 w-3.5 text-accent" />
                             {seller}
                           </span>
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end">
-                        <span className="text-lg font-extrabold text-slate-900">{priceLabel}</span>
+                        <span className="text-lg font-extrabold text-heading">{priceLabel}</span>
                         <button
                           type="button"
                           disabled={pendingBook[book._id] || placingOrder}
                           onClick={() => removeItem(book._id)}
-                          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-500 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-muted hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"
                         >
                           {pendingBook[book._id] ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                           Remove
@@ -248,55 +248,55 @@ export default function CartPage() {
               })}
             </section>
 
-            <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <aside className="space-y-5 rounded-3xl border border-card-border bg-card p-5 shadow-sm sm:p-6">
               <div>
-                <h2 className="text-lg font-extrabold text-slate-900">Order summary</h2>
-                <div className="mt-4 flex justify-between border-b border-slate-100 pb-3 text-sm">
-                  <span className="text-slate-500">Items ({cartCount})</span>
-                  <span className="font-semibold text-slate-800">{formatPrice(cartTotalAmount)}</span>
+                <h2 className="text-lg font-extrabold text-heading">Order summary</h2>
+                <div className="mt-4 flex justify-between border-b border-card-border pb-3 text-sm">
+                  <span className="text-muted">Items ({cartCount})</span>
+                  <span className="font-semibold text-heading">{formatPrice(cartTotalAmount)}</span>
                 </div>
                 <div className="flex justify-between pt-3">
-                  <span className="font-bold text-slate-900">Total</span>
-                  <span className="text-lg font-extrabold text-campus-700">{formatPrice(cartTotalAmount)}</span>
+                  <span className="font-bold text-heading">Total</span>
+                  <span className="text-lg font-extrabold text-accent">{formatPrice(cartTotalAmount)}</span>
                 </div>
               </div>
 
-              <form onSubmit={checkout} className="space-y-4 border-t border-slate-100 pt-5">
-                <h3 className="text-sm font-bold text-slate-900">Checkout details</h3>
-                <label className="block text-sm font-semibold text-slate-700">
+              <form onSubmit={checkout} className="space-y-4 border-t border-card-border pt-5">
+                <h3 className="text-sm font-bold text-heading">Checkout details</h3>
+                <label className="block text-sm font-semibold text-text">
                   Meeting location <span className="text-rose-600">*</span>
                   <span className="relative mt-1.5 block">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted" />
                     <input
                       required
                       value={meetingLocation}
                       onChange={(event) => setMeetingLocation(event.target.value)}
                       maxLength={200}
                       placeholder="e.g. Main library entrance"
-                      className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-3 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100"
+                      className="w-full rounded-xl border border-card-border bg-card/60 py-2.5 pl-10 pr-3 text-sm text-heading placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
                     />
                   </span>
                 </label>
-                <label className="block text-sm font-semibold text-slate-700">
-                  Notes <span className="font-normal text-slate-400">(optional)</span>
+                <label className="block text-sm font-semibold text-text">
+                  Notes <span className="font-normal text-muted">(optional)</span>
                   <textarea
                     value={notes}
                     onChange={(event) => setNotes(event.target.value)}
                     maxLength={500}
                     rows={3}
                     placeholder="Add any details for the sellers"
-                    className="mt-1.5 w-full resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100"
+                    className="mt-1.5 w-full resize-y rounded-xl border border-card-border bg-card/60 px-3 py-2.5 text-sm text-heading placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
                   />
                 </label>
                 <button
                   type="submit"
                   disabled={placingOrder || cartCount === 0}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-btn-primary px-4 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {placingOrder && <LoaderCircle className="h-4 w-4 animate-spin" />}
                   {placingOrder ? 'Placing order…' : 'Place Order'}
                 </button>
-                <p className="text-center text-xs leading-5 text-slate-500">
+                <p className="text-center text-xs leading-5 text-muted">
                   Confirm your handoff with each seller and meet in a public campus location.
                 </p>
               </form>

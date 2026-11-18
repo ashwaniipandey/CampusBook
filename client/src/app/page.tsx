@@ -51,12 +51,12 @@ function SkeletonGrid({ count = 4 }: { count?: number }) {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {Array.from({ length: count }, (_, index) => (
-        <div key={index} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <div className="aspect-[4/3] animate-pulse bg-slate-200" />
+        <div key={index} className="overflow-hidden rounded-2xl border border-card-border bg-card">
+          <div className="aspect-[4/3] animate-pulse bg-card/60" />
           <div className="space-y-2 p-4">
-            <div className="h-4 w-4/5 animate-pulse rounded bg-slate-200" />
-            <div className="h-3 w-2/3 animate-pulse rounded bg-slate-100" />
-            <div className="h-4 w-1/3 animate-pulse rounded bg-slate-100" />
+            <div className="h-4 w-4/5 animate-pulse rounded bg-card/80" />
+            <div className="h-3 w-2/3 animate-pulse rounded bg-card/60" />
+            <div className="h-4 w-1/3 animate-pulse rounded bg-card/60" />
           </div>
         </div>
       ))}
@@ -73,12 +73,12 @@ function SectionError({ message }: { message: string }) {
     return (
       <div
         role="status"
-        className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between"
+        className="flex flex-col gap-3 rounded-2xl border border-card-border bg-card px-5 py-4 text-sm text-heading sm:flex-row sm:items-center sm:justify-between"
       >
         <span className="flex items-center gap-2">
           {/* Spinner */}
           <svg
-            className="h-4 w-4 shrink-0 animate-spin text-amber-600"
+            className="h-4 w-4 shrink-0 animate-spin text-accent"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -89,7 +89,7 @@ function SectionError({ message }: { message: string }) {
           </svg>
           Server is starting up — content will load shortly. This can take up to 30 seconds on first visit.
         </span>
-        <a href="/" className="w-fit whitespace-nowrap font-bold underline underline-offset-2">
+        <a href="/" className="w-fit whitespace-nowrap font-bold text-accent underline underline-offset-2">
           Retry
         </a>
       </div>
@@ -97,9 +97,9 @@ function SectionError({ message }: { message: string }) {
   }
 
   return (
-    <div role="status" className="flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200 sm:flex-row sm:items-center sm:justify-between">
+    <div role="status" className="flex flex-col gap-3 rounded-2xl border border-rose-400/30 bg-card px-5 py-4 text-sm text-rose-300 sm:flex-row sm:items-center sm:justify-between">
       <span>{message}</span>
-      <a href="/" className="w-fit whitespace-nowrap font-bold underline underline-offset-2 hover:text-rose-950">
+      <a href="/" className="w-fit whitespace-nowrap font-bold text-rose-300 underline underline-offset-2 hover:text-heading">
         Try again
       </a>
     </div>
@@ -121,51 +121,51 @@ function BookCard({ book }: { book: Book }) {
     <MotionCard className="h-full">
       <Link
         href={`/books/${book._id}`}
-          className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-campus-300 hover:shadow-[0_16px_36px_-18px_rgba(21,128,61,0.42)] dark:border-slate-700 dark:bg-slate-900"
+        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-card-border bg-card shadow-sm transition duration-200 hover:-translate-y-1 hover:border-accent"
       >
-      <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-        <BookCover
-          src={imageUrl}
-          alt={`Cover of ${book.title}`}
-          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-        />
-        <span className="absolute left-3 top-3 rounded-full border border-white/80 bg-white/95 px-2.5 py-1 text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-100">
-          {book.condition}
-        </span>
-        {book.listingType === 'donate' && (
-          <span className="absolute right-3 top-3 rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white shadow">
-            Free
+        <div className="relative aspect-[4/3] overflow-hidden bg-card/40">
+          <BookCover
+            src={imageUrl}
+            alt={`Cover of ${book.title}`}
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+          <span className="absolute left-3 top-3 rounded-full border border-card-border bg-card/90 px-2.5 py-1 text-[10px] font-bold text-heading shadow-sm backdrop-blur">
+            {book.condition}
           </span>
-        )}
-        {book.listingType === 'exchange' && (
-          <span className="absolute right-3 top-3 rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white shadow">
-            Exchange
-          </span>
-        )}
-        {discount > 0 && book.listingType === 'sell' && (
-          <span className="absolute right-3 top-3 rounded-full bg-campus-700 px-2.5 py-1 text-[10px] font-bold text-white shadow">
-            {discount}% off
-          </span>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col p-4">
-        {categoryName && <p className="text-[11px] font-bold uppercase tracking-wide text-campus-700">{categoryName}</p>}
-        <h3 className="mt-1 line-clamp-2 min-h-10 text-sm font-bold text-slate-900">{book.title}</h3>
-        <p className="mt-1 line-clamp-1 text-xs text-slate-500">{book.author}</p>
-        <div className="mt-auto flex items-end justify-between gap-2 pt-4">
-          <span className="font-extrabold text-campus-800">
-            {book.listingType === 'donate' ? 'Free' : book.listingType === 'exchange' ? 'Trade' : formatPrice(price)}
-          </span>
-          <span className="max-w-[55%] truncate text-right text-[11px] text-slate-500">
-            {universityName || book.condition}
-          </span>
+          {book.listingType === 'donate' && (
+            <span className="absolute right-3 top-3 rounded-full bg-accent px-3 py-1 text-xs font-bold text-btn-primary-text shadow">
+              Free
+            </span>
+          )}
+          {book.listingType === 'exchange' && (
+            <span className="absolute right-3 top-3 rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-btn-primary-text shadow">
+              Exchange
+            </span>
+          )}
+          {discount > 0 && book.listingType === 'sell' && (
+            <span className="absolute right-3 top-3 rounded-full bg-accent px-2.5 py-1 text-[10px] font-bold text-btn-primary-text shadow">
+              {discount}% off
+            </span>
+          )}
         </div>
-        {discount > 0 && book.listingType === 'sell' && (
-          <span className="mt-1 text-right text-[11px] text-slate-400 line-through">
-            {formatPrice(originalPrice)}
-          </span>
-        )}
-      </div>
+        <div className="flex flex-1 flex-col p-4">
+          {categoryName && <p className="text-[11px] font-bold uppercase tracking-wide text-accent">{categoryName}</p>}
+          <h3 className="mt-1 line-clamp-2 min-h-10 text-sm font-bold text-heading">{book.title}</h3>
+          <p className="mt-1 line-clamp-1 text-xs text-muted">{book.author}</p>
+          <div className="mt-auto flex items-end justify-between gap-2 pt-4">
+            <span className="font-extrabold text-heading">
+              {book.listingType === 'donate' ? 'Free' : book.listingType === 'exchange' ? 'Trade' : formatPrice(price)}
+            </span>
+            <span className="max-w-[55%] truncate text-right text-[11px] text-muted">
+              {universityName || book.condition}
+            </span>
+          </div>
+          {discount > 0 && book.listingType === 'sell' && (
+            <span className="mt-1 text-right text-[11px] text-muted line-through">
+              {formatPrice(originalPrice)}
+            </span>
+          )}
+        </div>
       </Link>
     </MotionCard>
   );
@@ -390,11 +390,11 @@ export default function HomePage() {
         </div>
       )}
       {/* HERO SECTION */}
-      <MotionSection className="relative isolate overflow-hidden bg-gradient-to-b from-[#02130b] via-[#041c11] to-[#02130b] text-white">
+      <MotionSection className="relative isolate overflow-hidden text-heading">
         {/* Ambient blurred glow blobs */}
-        <div className="pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-emerald-500/15 blur-[120px]" />
-        <div className="pointer-events-none absolute right-0 top-1/4 h-[32rem] w-[32rem] rounded-full bg-emerald-400/10 blur-[140px]" />
-        <div className="pointer-events-none absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-teal-500/10 blur-[130px]" />
+        <div className="pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-accent/15 blur-[120px]" />
+        <div className="pointer-events-none absolute right-0 top-1/4 h-[32rem] w-[32rem] rounded-full bg-accent/10 blur-[140px]" />
+        <div className="pointer-events-none absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-accent/10 blur-[130px]" />
 
         {/* Subtle decorative grid overlay */}
         <div
@@ -411,19 +411,19 @@ export default function HomePage() {
             {/* Left Column: Headline, Subtext, Search, CTAs */}
             <div className="lg:col-span-6 xl:col-span-6">
               {/* Pill Badge */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-950/60 px-3.5 py-1.5 text-xs font-semibold text-emerald-300 shadow-inner backdrop-blur-md">
-                <GraduationCap className="h-4 w-4 text-emerald-400" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-card-border bg-card/60 px-3.5 py-1.5 text-xs font-semibold text-heading shadow-inner backdrop-blur-md">
+                <GraduationCap className="h-4 w-4 text-accent" />
                 <span>Student-to-Student Book Marketplace</span>
               </div>
 
               {/* Headline */}
-              <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-[52px] lg:leading-[1.12]">
+              <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-heading sm:text-5xl lg:text-[52px] lg:leading-[1.12]">
                 Your Next Chapter Starts With a{' '}
-                <span className="relative inline-block whitespace-nowrap italic text-transparent bg-clip-text bg-gradient-to-r from-[#4ade80] to-[#22c55e]">
+                <span className="relative inline-block whitespace-nowrap italic text-accent">
                   Pre-Loved Book
                   {/* Hand-drawn curved underline */}
                   <svg
-                    className="absolute -bottom-2.5 left-0 w-full overflow-visible text-[#22c55e]"
+                    className="absolute -bottom-2.5 left-0 w-full overflow-visible text-accent"
                     height="12"
                     viewBox="0 0 240 12"
                     fill="none"
@@ -441,7 +441,7 @@ export default function HomePage() {
               </h1>
 
               {/* Subtext */}
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-text sm:text-lg">
                 Buy, sell, exchange or donate academic books within your campus
                 community. Save money, share knowledge and make learning more
                 sustainable.
@@ -450,7 +450,7 @@ export default function HomePage() {
               {/* Search Bar Pill Form */}
               <form
                 onSubmit={handleSearchSubmit}
-                className="mt-8 rounded-3xl border border-white/15 bg-white/5 p-2 shadow-2xl backdrop-blur-xl sm:rounded-full sm:p-2 sm:pl-3"
+                className="mt-8 rounded-3xl border border-card-border bg-card/60 p-2 shadow-2xl backdrop-blur-xl sm:rounded-full sm:p-2 sm:pl-3"
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   {/* Autocomplete Input */}
@@ -460,36 +460,36 @@ export default function HomePage() {
                       onChange={setSearchQuery}
                       onSearch={goToExplore}
                       placeholder="Search books (e.g. DBMS, OS, DSA...)"
-                      inputClassName="w-full bg-transparent border-0 text-sm text-white placeholder-slate-400 focus:ring-0 focus:outline-none py-3 pl-2"
+                      inputClassName="w-full bg-transparent border-0 text-sm text-heading placeholder:text-muted focus:ring-0 focus:outline-none py-3 pl-2"
                     />
                   </div>
 
                   {/* Vertical Divider */}
-                  <div className="hidden h-7 w-px bg-white/20 sm:block" />
+                  <div className="hidden h-7 w-px bg-card-border sm:block" />
 
                   {/* University Campus Select */}
                   <div className="relative min-w-[170px] sm:max-w-[210px]">
-                    <GraduationCap className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />
+                    <GraduationCap className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
                     <select
                       value={selectedUniversity}
                       onChange={(event) => setSelectedUniversity(event.target.value)}
                       aria-label="All Colleges"
-                      className="w-full appearance-none truncate rounded-full border-0 bg-transparent py-2.5 pl-9 pr-8 text-xs font-semibold text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                      className="w-full appearance-none truncate rounded-full border-0 bg-transparent py-2.5 pl-9 pr-8 text-xs font-semibold text-heading focus:outline-none focus:ring-1 focus:ring-accent"
                     >
-                      <option value="" className="bg-slate-900 text-white">
+                      <option value="" className="bg-card text-heading">
                         All Colleges
                       </option>
                       {universities.map((university) => (
                         <option
                           key={university._id}
                           value={university._id}
-                          className="bg-slate-900 text-white"
+                          className="bg-card text-heading"
                         >
                           {university.name}
                         </option>
                       ))}
                     </select>
-                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted text-[10px]">
                       ▼
                     </span>
                   </div>
@@ -513,7 +513,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={() => goToExplore()}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#22c55e] px-6 py-3.5 text-sm font-bold text-slate-950 shadow-lg shadow-emerald-500/25 transition hover:bg-[#16a34a] hover:scale-[1.02] active:scale-[0.98]"
+                  className="inline-flex items-center gap-2 rounded-full bg-btn-primary px-6 py-3.5 text-sm font-bold text-btn-primary-text shadow-md transition hover:opacity-90 active:scale-[0.98]"
                 >
                   <BookOpen className="h-4 w-4" />
                   <span>Explore Books</span>
@@ -522,9 +522,9 @@ export default function HomePage() {
 
                 <Link
                   href={sellHref}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/10 hover:border-white/40"
+                  className="inline-flex items-center gap-2 rounded-full border border-card-border/60 bg-btn-secondary px-6 py-3.5 text-sm font-bold text-btn-secondary-text shadow-sm transition hover:opacity-90 active:scale-[0.98]"
                 >
-                  <Plus className="h-4 w-4 text-emerald-400" />
+                  <Plus className="h-4 w-4" />
                   <span>Sell a Book</span>
                 </Link>
               </div>
@@ -533,10 +533,10 @@ export default function HomePage() {
             {/* Right Column: Hero Image with Floating Polaroid Cards */}
             <div className="relative lg:col-span-6 xl:col-span-6">
               {/* Soft Radial Green Glow behind hero image */}
-              <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-emerald-500/20 blur-3xl" />
+              <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-accent/20 blur-3xl" />
 
               {/* Main Campus Photo */}
-              <div className="relative aspect-[16/11] w-full overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-950 to-slate-950 shadow-2xl">
+              <div className="relative aspect-[16/11] w-full overflow-hidden rounded-3xl border border-card-border bg-card shadow-2xl">
                 <Image
                   src="/images/hero-campus.jpg"
                   alt="Students studying with books outside the campus library"
@@ -545,18 +545,18 @@ export default function HomePage() {
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover object-center"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
               </div>
 
               {/* Floating Polaroid Cards (overlapping left edge) */}
               {/* Card 1: Campus Library (Top, rotated -6deg) */}
               <motion.div
-                className="absolute -top-6 -left-4 sm:-top-8 sm:-left-8 z-20 w-36 sm:w-44 rounded-2xl border-4 border-white bg-white p-2 shadow-2xl"
+                className="absolute -top-6 -left-4 sm:-top-8 sm:-left-8 z-20 w-36 sm:w-44 rounded-2xl border-2 border-card-border bg-card p-2 shadow-2xl backdrop-blur-md"
                 style={{ rotate: -6 }}
                 animate={reduceMotion ? undefined : { y: [0, -8, 0] }}
                 transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-100">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-card/40">
                   <Image
                     src="/images/library.jpg"
                     alt="Campus Library stacks"
@@ -565,20 +565,20 @@ export default function HomePage() {
                     className="object-cover"
                   />
                 </div>
-                <div className="mt-2 flex items-center justify-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800">
-                  <Library className="h-3 w-3 text-emerald-600" />
+                <div className="mt-2 flex items-center justify-center gap-1 rounded-md bg-chip px-2 py-1 text-[11px] font-bold text-heading">
+                  <Library className="h-3 w-3 text-accent" />
                   <span>Campus Library</span>
                 </div>
               </motion.div>
 
               {/* Card 2: Course Books (Middle, rotated +4deg) */}
               <motion.div
-                className="absolute top-1/3 -left-6 sm:-left-12 z-20 w-38 sm:w-48 rounded-2xl border-4 border-white bg-white p-2 shadow-2xl"
+                className="absolute top-1/3 -left-6 sm:-left-12 z-20 w-38 sm:w-48 rounded-2xl border-2 border-card-border bg-card p-2 shadow-2xl backdrop-blur-md"
                 style={{ rotate: 4 }}
                 animate={reduceMotion ? undefined : { y: [0, 8, 0] }}
                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
               >
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-100">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-card/40">
                   <Image
                     src="/images/books.jpg"
                     alt="Stacked engineering course books"
@@ -587,20 +587,20 @@ export default function HomePage() {
                     className="object-cover"
                   />
                 </div>
-                <div className="mt-2 flex items-center justify-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800">
-                  <BookOpen className="h-3 w-3 text-emerald-600" />
+                <div className="mt-2 flex items-center justify-center gap-1 rounded-md bg-chip px-2 py-1 text-[11px] font-bold text-heading">
+                  <BookOpen className="h-3 w-3 text-accent" />
                   <span>Course Books</span>
                 </div>
               </motion.div>
 
               {/* Card 3: Exchange / Donate (Bottom, rotated -4deg) */}
               <motion.div
-                className="absolute -bottom-6 -left-3 sm:-bottom-8 sm:-left-6 z-20 w-40 sm:w-52 rounded-2xl border-4 border-white bg-white p-2 shadow-2xl"
+                className="absolute -bottom-6 -left-3 sm:-bottom-8 sm:-left-6 z-20 w-40 sm:w-52 rounded-2xl border-2 border-card-border bg-card p-2 shadow-2xl backdrop-blur-md"
                 style={{ rotate: -4 }}
                 animate={reduceMotion ? undefined : { y: [0, -6, 0] }}
                 transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 1.6 }}
               >
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-100">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-card/40">
                   <Image
                     src="/images/exchange.jpg"
                     alt="Handing over a pre-loved book to another student"
@@ -609,33 +609,33 @@ export default function HomePage() {
                     className="object-cover"
                   />
                 </div>
-                <div className="mt-2 flex items-center justify-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800">
-                  <ArrowLeftRight className="h-3 w-3 text-emerald-600" />
+                <div className="mt-2 flex items-center justify-center gap-1 rounded-md bg-chip px-2 py-1 text-[11px] font-bold text-heading">
+                  <ArrowLeftRight className="h-3 w-3 text-accent" />
                   <span>Exchange / Donate</span>
                 </div>
               </motion.div>
 
               {/* Subtle Decorative sparkles and leaf strokes */}
-              <div className="pointer-events-none absolute -top-8 right-6 text-emerald-400/40">
+              <div className="pointer-events-none absolute -top-8 right-6 text-accent/40">
                 <Sparkles className="h-8 w-8" />
               </div>
-              <div className="pointer-events-none absolute bottom-4 -right-4 text-emerald-300/30">
+              <div className="pointer-events-none absolute bottom-4 -right-4 text-accent/30">
                 <Leaf className="h-10 w-10 rotate-12" />
               </div>
             </div>
           </div>
 
           {/* Glassmorphism Benefits Bar */}
-          <div className="mt-16 sm:mt-20 rounded-3xl border border-white/15 bg-white/[0.06] p-6 shadow-2xl backdrop-blur-xl">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-white/15">
+          <div className="mt-16 sm:mt-20 rounded-3xl border border-card-border bg-card p-6 shadow-2xl backdrop-blur-xl">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-card-border">
               {/* Item 1: Save Money */}
               <div className="flex items-center gap-4 lg:px-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-400/30">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent/20 text-accent ring-1 ring-card-border">
                   <Wallet className="h-6 w-6" />
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Save Money</h3>
-                  <p className="mt-0.5 text-xs text-slate-300">
+                  <h3 className="text-sm font-bold text-heading">Save Money</h3>
+                  <p className="mt-0.5 text-xs text-muted">
                     Get quality books at student-friendly prices
                   </p>
                 </div>
@@ -643,12 +643,12 @@ export default function HomePage() {
 
               {/* Item 2: Promote Reuse */}
               <div className="flex items-center gap-4 lg:px-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-400/30">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent/20 text-accent ring-1 ring-card-border">
                   <RefreshCw className="h-6 w-6" />
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Promote Reuse</h3>
-                  <p className="mt-0.5 text-xs text-slate-300">
+                  <h3 className="text-sm font-bold text-heading">Promote Reuse</h3>
+                  <p className="mt-0.5 text-xs text-muted">
                     Give books a second life on campus
                   </p>
                 </div>
@@ -656,12 +656,12 @@ export default function HomePage() {
 
               {/* Item 3: Student Community */}
               <div className="flex items-center gap-4 lg:px-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-400/30">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent/20 text-accent ring-1 ring-card-border">
                   <Users className="h-6 w-6" />
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Student Community</h3>
-                  <p className="mt-0.5 text-xs text-slate-300">
+                  <h3 className="text-sm font-bold text-heading">Student Community</h3>
+                  <p className="mt-0.5 text-xs text-muted">
                     Connect with peers from your college
                   </p>
                 </div>
@@ -669,12 +669,12 @@ export default function HomePage() {
 
               {/* Item 4: Academic Support */}
               <div className="flex items-center gap-4 lg:px-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-400/30">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent/20 text-accent ring-1 ring-card-border">
                   <GraduationCap className="h-6 w-6" />
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Academic Support</h3>
-                  <p className="mt-0.5 text-xs text-slate-300">
+                  <h3 className="text-sm font-bold text-heading">Academic Support</h3>
+                  <p className="mt-0.5 text-xs text-muted">
                     Find the right books for your course &amp; semester
                   </p>
                 </div>
@@ -684,11 +684,11 @@ export default function HomePage() {
         </div>
       </MotionSection>
 
-      <MotionSection aria-label="Live CampusBook community statistics" className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-        <h2 className="mx-auto max-w-7xl px-4 pt-5 text-sm font-bold text-slate-700 dark:text-slate-200 sm:px-6 lg:px-8">
+      <MotionSection aria-label="Live CampusBook community statistics" className="border-b border-card-border bg-transparent">
+        <h2 className="mx-auto max-w-7xl px-4 pt-5 text-sm font-bold text-heading sm:px-6 lg:px-8">
           A campus community growing together
         </h2>
-        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-y divide-slate-100 px-4 sm:px-6 md:grid-cols-3 md:divide-y-0 lg:grid-cols-5 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-y divide-card-border px-4 sm:px-6 md:grid-cols-3 md:divide-y-0 lg:grid-cols-5 lg:px-8">
           {[
             { label: 'Students', value: stats?.students, icon: Users },
             { label: 'Books listed', value: stats?.booksListed, icon: BookOpen },
@@ -697,22 +697,22 @@ export default function HomePage() {
             { label: 'CO₂ saved', value: stats ? `${stats.co2SavedKg.toFixed(1)} kg` : undefined, icon: Leaf },
           ].map(({ label, value, icon: Icon }) => (
             <div key={label} className="flex items-center gap-3 px-4 py-5 sm:justify-center sm:px-6 lg:py-7">
-              <span className="hidden h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-campus-700 sm:flex">
+              <span className="hidden h-10 w-10 items-center justify-center rounded-xl bg-accent/20 text-accent sm:flex">
                 <Icon className="h-5 w-5" aria-hidden="true" />
               </span>
               <div>
                 {statsLoading ? (
-                  <div className="h-7 w-16 animate-pulse rounded bg-slate-100" />
+                  <div className="h-7 w-16 animate-pulse rounded bg-card/60" />
                 ) : (
-                  <p className="text-xl font-extrabold text-slate-900 sm:text-2xl">{statsError ? '—' : value ?? '—'}</p>
+                  <p className="text-xl font-extrabold text-heading sm:text-2xl">{statsError ? '—' : value ?? '—'}</p>
                 )}
-                <p className="mt-0.5 text-xs font-medium text-slate-500">{label}</p>
+                <p className="mt-0.5 text-xs font-medium text-muted">{label}</p>
               </div>
             </div>
           ))}
         </div>
         {statsError && (
-          <p role="status" className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 px-4 pb-3 text-xs text-rose-700 dark:text-rose-300 sm:px-6 lg:px-8">
+          <p role="status" className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 px-4 pb-3 text-xs text-rose-300 sm:px-6 lg:px-8">
             <span>{statsError} Showing neutral placeholders until live counts are available.</span>
             <a href="/" className="font-bold underline underline-offset-2">Retry</a>
           </p>
@@ -721,9 +721,9 @@ export default function HomePage() {
 
       <MotionSection className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <div className="mx-auto mb-10 max-w-2xl text-center">
-          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-campus-700">A better way to find your books</p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">How CampusBook works</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">A simple, local loop that keeps useful course books moving between students.</p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-accent">A better way to find your books</p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">How CampusBook works</h2>
+          <p className="mt-3 text-sm leading-6 text-text">A simple, local loop that keeps useful course books moving between students.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -732,30 +732,30 @@ export default function HomePage() {
             { icon: MessageCircle, title: 'Connect and chat', text: 'Message students to ask questions and agree on the details.' },
             { icon: MapPin, title: 'Meet on campus', text: 'Arrange a convenient handover at a familiar campus spot.' },
           ].map(({ icon: Icon, title, text }, index) => (
-            <article key={title} className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-campus-50 text-campus-700"><Icon className="h-5 w-5" /></span>
-              <span className="absolute right-5 top-5 text-3xl font-black text-emerald-100">0{index + 1}</span>
-              <h3 className="mt-5 text-base font-bold text-slate-900">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+            <article key={title} className="relative rounded-2xl border border-card-border bg-card p-5 shadow-sm backdrop-blur-md">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/20 text-accent"><Icon className="h-5 w-5" /></span>
+              <span className="absolute right-5 top-5 text-3xl font-black text-card-border">0{index + 1}</span>
+              <h3 className="mt-5 text-base font-bold text-heading">{title}</h3>
+              <p className="mt-2 text-sm leading-6 text-text">{text}</p>
             </article>
           ))}
         </div>
       </MotionSection>
 
-      <MotionSection className="border-y border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900">
+      <MotionSection className="border-y border-card-border bg-transparent">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-campus-700">Browse by subject</p>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">Explore categories</h2>
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-accent">Browse by subject</p>
+              <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-heading">Explore categories</h2>
             </div>
-            <Link href="/explore" className="inline-flex items-center gap-1 text-sm font-bold text-campus-700 hover:text-campus-900">
+            <Link href="/explore" className="inline-flex items-center gap-1 text-sm font-bold text-accent hover:underline">
               Browse all books <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
           {categoriesLoading ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl bg-slate-200" />)}
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl bg-card/60" />)}
             </div>
           ) : categoriesError ? (
             <SectionError message={categoriesError} />
@@ -765,22 +765,22 @@ export default function HomePage() {
                 <Link
                   key={category._id}
                   href={`/explore?category=${encodeURIComponent(category._id)}`}
-                  className="group flex items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-campus-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-950 sm:p-5"
+                  className="group flex items-center justify-between gap-2 rounded-2xl border border-card-border bg-card p-4 transition hover:-translate-y-0.5 hover:border-accent sm:p-5"
                 >
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-bold text-slate-900 group-hover:text-campus-800">{category.name}</span>
-                    <span className="mt-1 block text-xs text-slate-500">{categoryCountById.get(category._id) ?? 0} books</span>
+                    <span className="block truncate text-sm font-bold text-heading group-hover:text-accent">{category.name}</span>
+                    <span className="mt-1 block text-xs text-muted">{categoryCountById.get(category._id) ?? 0} books</span>
                   </span>
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-campus-700 transition group-hover:bg-campus-700 group-hover:text-white">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/20 text-accent transition group-hover:bg-accent group-hover:text-btn-primary-text">
                     <BookOpen className="h-4 w-4" />
                   </span>
                 </Link>
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950">
+            <div className="rounded-2xl border border-card-border bg-card p-8 text-center text-sm text-muted">
               <p>Categories will appear here as they become available.</p>
-              <a href="/" className="mt-3 inline-block font-bold text-campus-700 underline underline-offset-2">Refresh categories</a>
+              <a href="/" className="mt-3 inline-block font-bold text-accent underline underline-offset-2">Refresh categories</a>
             </div>
           )}
         </div>
@@ -789,11 +789,11 @@ export default function HomePage() {
       <MotionSection className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-campus-700">Popular on campus</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">Featured and trending books</h2>
-            <p className="mt-2 text-sm text-slate-600">Real listings students are browsing right now.</p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-accent">Popular on campus</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-heading">Featured and trending books</h2>
+            <p className="mt-2 text-sm text-text">Real listings students are browsing right now.</p>
           </div>
-          <Link href="/explore" className="inline-flex items-center gap-1 text-sm font-bold text-campus-700 hover:text-campus-900">
+          <Link href="/explore" className="inline-flex items-center gap-1 text-sm font-bold text-accent hover:underline">
             See all listings <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -806,31 +806,31 @@ export default function HomePage() {
             {trendingBooks.slice(0, 8).map((book) => <BookCard key={book._id} book={book} />)}
           </div>
         ) : (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900">
+          <div className="rounded-2xl border border-card-border bg-card p-8 text-center text-sm text-muted">
             <p>There are no trending listings yet. Browse all books or check back soon.</p>
-            <a href="/" className="mt-3 inline-block font-bold text-campus-700 underline underline-offset-2">Refresh listings</a>
+            <a href="/" className="mt-3 inline-block font-bold text-accent underline underline-offset-2">Refresh listings</a>
           </div>
         )}
       </MotionSection>
 
-      <MotionSection className="bg-campus-950">
+      <MotionSection className="border-y border-card-border bg-transparent">
         <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-20">
           <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-300">Give books another chapter</p>
-            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Exchange or pass one on for free</h2>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-emerald-100/80">Find a different book through a trade, or help another student by donating a title you’ve finished.</p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-accent">Give books another chapter</p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Exchange or pass one on for free</h2>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-text">Find a different book through a trade, or help another student by donating a title you’ve finished.</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/explore?listingType=exchange" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-campus-900 hover:bg-emerald-50">
+              <Link href="/explore?listingType=exchange" className="inline-flex items-center gap-2 rounded-xl bg-btn-primary px-4 py-3 text-sm font-bold text-btn-primary-text shadow-sm hover:opacity-90">
                 <ArrowLeftRight className="h-4 w-4" /> Browse exchanges
               </Link>
-              <Link href="/explore?listingType=donate" className="inline-flex items-center gap-2 rounded-xl border border-white/30 px-4 py-3 text-sm font-bold text-white hover:bg-white/10">
+              <Link href="/explore?listingType=donate" className="inline-flex items-center gap-2 rounded-xl border border-card-border/60 bg-btn-secondary px-4 py-3 text-sm font-bold text-btn-secondary-text shadow-sm hover:opacity-90">
                 <HeartHandshake className="h-4 w-4" /> Find free books
               </Link>
             </div>
           </div>
           {highlightsLoading ? (
             <div className="grid grid-cols-2 gap-3">
-              {[0, 1, 2, 3].map((item) => <div key={item} className="h-52 animate-pulse rounded-2xl bg-white/10" />)}
+              {[0, 1, 2, 3].map((item) => <div key={item} className="h-52 animate-pulse rounded-2xl bg-card/60" />)}
             </div>
           ) : highlightsError ? (
             <SectionError message={highlightsError} />
@@ -841,9 +841,9 @@ export default function HomePage() {
                 ...donationBooks.slice(0, 2),
               ].map((book) => <BookCard key={book._id} book={book} />)}
               {!exchangeBooks.length && !donationBooks.length && (
-                <p className="col-span-2 rounded-2xl border border-white/20 bg-white/5 p-8 text-center text-sm text-emerald-100">
+                <p className="col-span-2 rounded-2xl border border-card-border bg-card p-8 text-center text-sm text-muted">
                   No exchange or donation listings are available right now.{' '}
-                  <a href="/" className="font-bold underline underline-offset-2">Refresh listings</a>
+                  <a href="/" className="font-bold text-accent underline underline-offset-2">Refresh listings</a>
                 </p>
               )}
             </div>
@@ -853,37 +853,37 @@ export default function HomePage() {
 
       <MotionSection className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <div className="mx-auto mb-10 max-w-2xl text-center">
-          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-campus-700">Built for student book sharing</p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Smarter tools for every chapter</h2>
+          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-accent">Built for student book sharing</p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Smarter tools for every chapter</h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {smartFeatures.map(({ icon: Icon, title, description, href }) => (
-            <Link key={title} href={href} className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-campus-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-campus-50 text-campus-700 group-hover:bg-campus-700 group-hover:text-white">
+            <Link key={title} href={href} className="group rounded-2xl border border-card-border bg-card p-5 transition hover:border-accent hover:shadow-md">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/20 text-accent group-hover:bg-accent group-hover:text-btn-primary-text">
                 <Icon className="h-5 w-5" />
               </span>
-              <h3 className="mt-4 font-bold text-slate-900">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+              <h3 className="mt-4 font-bold text-heading">{title}</h3>
+              <p className="mt-2 text-sm leading-6 text-text">{description}</p>
             </Link>
           ))}
         </div>
       </MotionSection>
 
-      <MotionSection className="border-y border-slate-200 bg-emerald-50/60 dark:border-slate-800 dark:bg-slate-900">
+      <MotionSection className="border-y border-card-border bg-transparent">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="mx-auto mb-9 max-w-2xl text-center">
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-campus-700">Student stories</p>
-            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">A community built around sharing</h2>
-            <p className="mt-2 text-xs text-slate-500">Sample testimonials for demonstration; not verified user reviews.</p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-accent">Student stories</p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-heading">A community built around sharing</h2>
+            <p className="mt-2 text-xs text-muted">Sample testimonials for demonstration; not verified user reviews.</p>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {sampleTestimonials.map((testimonial) => (
-              <figure key={testimonial.attribution} className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-950">
+              <figure key={testimonial.attribution} className="rounded-2xl border border-card-border bg-card p-6 shadow-sm backdrop-blur-md">
                 <div className="flex gap-1 text-amber-400" aria-label="Sample five-star rating">
                   {Array.from({ length: 5 }, (_, index) => <span key={index} aria-hidden="true">★</span>)}
                 </div>
-                <blockquote className="mt-4 text-sm leading-6 text-slate-700 dark:text-slate-200">“{testimonial.quote}”</blockquote>
-                <figcaption className="mt-5 flex items-center gap-2 text-xs font-bold text-campus-800">
+                <blockquote className="mt-4 text-sm leading-6 text-text">“{testimonial.quote}”</blockquote>
+                <figcaption className="mt-5 flex items-center gap-2 text-xs font-bold text-accent">
                   <CheckCircle2 className="h-4 w-4" /> {testimonial.attribution}
                 </figcaption>
               </figure>
@@ -893,17 +893,17 @@ export default function HomePage() {
       </MotionSection>
 
       <MotionSection className="px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 rounded-[2rem] bg-gradient-to-r from-campus-800 to-emerald-950 p-7 text-white shadow-xl sm:p-10 md:flex-row md:items-center">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 rounded-[2rem] border border-card-border bg-card p-7 text-heading shadow-xl backdrop-blur-xl sm:p-10 md:flex-row md:items-center">
           <div className="max-w-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200">Your campus book community</p>
-            <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">Ready to find your next read?</h2>
-            <p className="mt-3 text-sm leading-6 text-emerald-100">Explore student listings or give a book a new home on campus.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">Your campus book community</p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Ready to find your next read?</h2>
+            <p className="mt-3 text-sm leading-6 text-text">Explore student listings or give a book a new home on campus.</p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <Link href="/explore" className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-campus-900 hover:bg-emerald-50">
+            <Link href="/explore" className="inline-flex items-center justify-center gap-2 rounded-xl bg-btn-primary px-5 py-3 text-sm font-bold text-btn-primary-text shadow-sm hover:opacity-90">
               Explore Books <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href={isAuthenticated ? '/sell' : '/login?redirect=%2Fsell'} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 px-5 py-3 text-sm font-bold text-white hover:bg-white/10">
+            <Link href={isAuthenticated ? '/sell' : '/login?redirect=%2Fsell'} className="inline-flex items-center justify-center gap-2 rounded-xl border border-card-border/60 bg-btn-secondary px-5 py-3 text-sm font-bold text-btn-secondary-text shadow-sm hover:opacity-90">
               Sell a Book <BookOpen className="h-4 w-4" />
             </Link>
           </div>

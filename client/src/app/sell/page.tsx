@@ -8,6 +8,9 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import api from '@/lib/api';
 import { formatPrice } from '@/lib/pricing';
 import { University, Category, Book, BookCondition, ListingType, SmartPriceSuggestion } from '@/types';
+import { Card } from '@/components/Card';
+import { Button } from '@/components/Button';
+import { Chip } from '@/components/Chip';
 import {
   BookOpen,
   GraduationCap,
@@ -471,8 +474,8 @@ function SellBookWizard() {
   if (loadingData) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="w-10 h-10 animate-spin text-campus-600" />
-        <p className="text-slate-600 font-medium">Preparing book listing studio...</p>
+        <Loader2 className="w-10 h-10 animate-spin text-accent" />
+        <p className="text-text font-medium">Preparing book listing studio...</p>
       </div>
     );
   }
@@ -489,14 +492,14 @@ function SellBookWizard() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-campus-700 bg-campus-50 border border-campus-200 px-3 py-1 rounded-full w-fit mb-2">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent border border-card-border bg-card px-3 py-1 rounded-full w-fit mb-2">
           <Sparkles className="w-3.5 h-3.5" />
           {isEditing ? 'Update Listing' : 'Student Textbook Marketplace'}
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-heading tracking-tight">
           {isEditing ? 'Edit Your Book Listing' : 'List a Textbook for Campus Students'}
         </h1>
-        <p className="text-slate-600 text-sm mt-1">
+        <p className="text-text text-sm mt-1">
           {isEditing
             ? 'Update the details, adjust pricing, or refresh photo attachments.'
             : 'Pass down your study material to fellow students in 5 simple steps.'}
@@ -504,7 +507,7 @@ function SellBookWizard() {
       </div>
 
       {/* Progress Stepper */}
-      <div className="mb-10 bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs">
+      <Card className="mb-10 p-4 sm:p-6">
         <div className="grid grid-cols-5 gap-2 sm:gap-4 relative">
           {steps.map((s) => {
             const Icon = s.icon;
@@ -529,17 +532,17 @@ function SellBookWizard() {
                 <div
                   className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold text-sm transition shadow-2xs ${
                     isCompleted
-                      ? 'bg-campus-600 text-white'
+                      ? 'bg-btn-primary text-btn-primary-text'
                       : isCurrent
-                      ? 'bg-campus-100 text-campus-800 ring-2 ring-campus-600 ring-offset-2'
-                      : 'bg-slate-100 text-slate-500'
+                      ? 'bg-accent text-btn-primary-text ring-2 ring-accent ring-offset-2 ring-offset-transparent'
+                      : 'border border-card-border bg-card/60 text-muted'
                   }`}
                 >
                   {isCompleted ? <Check className="w-5 h-5 stroke-[2.5]" /> : <Icon className="w-5 h-5" />}
                 </div>
                 <span
                   className={`text-xs mt-2 font-medium hidden sm:block ${
-                    isCurrent ? 'text-campus-900 font-bold' : isCompleted ? 'text-slate-800' : 'text-slate-400'
+                    isCurrent ? 'text-heading font-bold' : isCompleted ? 'text-text' : 'text-muted'
                   }`}
                 >
                   {s.title}
@@ -548,12 +551,12 @@ function SellBookWizard() {
             );
           })}
         </div>
-      </div>
+      </Card>
 
       {/* Alert Banners */}
       {errorMsg && (
-        <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+        <div className="mb-6 p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
           <div className="text-sm">
             <span className="font-semibold">Attention: </span>
             {errorMsg}
@@ -562,20 +565,20 @@ function SellBookWizard() {
       )}
 
       {successMsg && (
-        <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+        <div className="mb-6 p-4 rounded-xl bg-card border border-accent/40 text-accent flex items-center gap-3">
+          <CheckCircle2 className="w-5 h-5 text-accent shrink-0" />
           <div className="text-sm font-semibold">{successMsg}</div>
         </div>
       )}
 
       {/* Wizard Step Forms */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs">
+      <Card className="p-6 sm:p-8">
         {/* STEP 1: Details */}
         {currentStep === 1 && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Step 1: Book Details</h2>
-              <p className="text-sm text-slate-500 mt-1">
+              <h2 className="text-xl font-bold text-heading">Step 1: Book Details</h2>
+              <p className="text-sm text-text mt-1">
                 Provide essential information so students can find and identify your textbook.
               </p>
             </div>
@@ -583,8 +586,8 @@ function SellBookWizard() {
             <div className="space-y-4">
               {/* Title */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Book Title <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
+                  Book Title <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -592,19 +595,19 @@ function SellBookWizard() {
                   value={formData.title}
                   onChange={handleChange}
                   placeholder="e.g. Introduction to Algorithms (CLRS)"
-                  className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500 ${
-                    stepErrors.title ? 'border-rose-400 bg-rose-50/20' : 'border-slate-300'
+                  className={`w-full px-4 py-2.5 rounded-xl border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30 ${
+                    stepErrors.title ? 'border-rose-400 bg-rose-950/20' : 'border-card-border'
                   }`}
                 />
                 {stepErrors.title && (
-                  <p className="text-xs text-rose-600 mt-1 font-medium">{stepErrors.title}</p>
+                  <p className="text-xs text-rose-400 mt-1 font-medium">{stepErrors.title}</p>
                 )}
               </div>
 
               {/* Author */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Author(s) <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
+                  Author(s) <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -612,19 +615,19 @@ function SellBookWizard() {
                   value={formData.author}
                   onChange={handleChange}
                   placeholder="e.g. Thomas H. Cormen, Charles E. Leiserson"
-                  className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500 ${
-                    stepErrors.author ? 'border-rose-400 bg-rose-50/20' : 'border-slate-300'
+                  className={`w-full px-4 py-2.5 rounded-xl border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30 ${
+                    stepErrors.author ? 'border-rose-400 bg-rose-950/20' : 'border-card-border'
                   }`}
                 />
                 {stepErrors.author && (
-                  <p className="text-xs text-rose-600 mt-1 font-medium">{stepErrors.author}</p>
+                  <p className="text-xs text-rose-400 mt-1 font-medium">{stepErrors.author}</p>
                 )}
               </div>
 
               {/* ISBN & Edition */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
                     ISBN (10 or 13 digits)
                   </label>
                   <input
@@ -633,11 +636,11 @@ function SellBookWizard() {
                     value={formData.isbn}
                     onChange={handleChange}
                     placeholder="e.g. 9780262046305"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+                    className="w-full px-4 py-2.5 rounded-xl border border-card-border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
                     Edition
                   </label>
                   <input
@@ -646,7 +649,7 @@ function SellBookWizard() {
                     value={formData.edition}
                     onChange={handleChange}
                     placeholder="e.g. 4th Edition"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+                    className="w-full px-4 py-2.5 rounded-xl border border-card-border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </div>
               </div>
@@ -654,7 +657,7 @@ function SellBookWizard() {
               {/* Publisher & Year */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
                     Publisher (Optional)
                   </label>
                   <input
@@ -663,11 +666,11 @@ function SellBookWizard() {
                     value={formData.publisher}
                     onChange={handleChange}
                     placeholder="e.g. MIT Press, Pearson, Wiley"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+                    className="w-full px-4 py-2.5 rounded-xl border border-card-border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
                     Publication Year
                   </label>
                   <input
@@ -678,7 +681,7 @@ function SellBookWizard() {
                     placeholder="e.g. 2022"
                     min="1900"
                     max={new Date().getFullYear() + 1}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+                    className="w-full px-4 py-2.5 rounded-xl border border-card-border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </div>
               </div>
@@ -686,10 +689,10 @@ function SellBookWizard() {
               {/* Description */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Book Description <span className="text-rose-500">*</span>
+                  <label className="block text-xs font-bold text-text uppercase tracking-wider">
+                    Book Description <span className="text-rose-400">*</span>
                   </label>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-muted">
                     {formData.description.length} / 2500 (min 10)
                   </span>
                 </div>
@@ -699,12 +702,12 @@ function SellBookWizard() {
                   value={formData.description}
                   onChange={handleChange}
                   placeholder="Describe your copy's highlights, binding condition, whether it includes study notes or CDs, and why it is great for this course..."
-                  className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500 ${
-                    stepErrors.description ? 'border-rose-400 bg-rose-50/20' : 'border-slate-300'
+                  className={`w-full px-4 py-2.5 rounded-xl border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30 ${
+                    stepErrors.description ? 'border-rose-400 bg-rose-950/20' : 'border-card-border'
                   }`}
                 />
                 {stepErrors.description && (
-                  <p className="text-xs text-rose-600 mt-1 font-medium">
+                  <p className="text-xs text-rose-400 mt-1 font-medium">
                     {stepErrors.description}
                   </p>
                 )}
@@ -717,8 +720,8 @@ function SellBookWizard() {
         {currentStep === 2 && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Step 2: Academic Context</h2>
-              <p className="text-sm text-slate-500 mt-1">
+              <h2 className="text-xl font-bold text-heading">Step 2: Academic Context</h2>
+              <p className="text-sm text-text mt-1">
                 Help students from your university find books tailored for their specific syllabus.
               </p>
             </div>
@@ -726,60 +729,60 @@ function SellBookWizard() {
             <div className="space-y-4">
               {/* University Campus */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  University / College <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
+                  University / College <span className="text-rose-400">*</span>
                 </label>
                 <div className="relative">
                   <select
                     name="university"
                     value={formData.university}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-campus-500 ${
-                      stepErrors.university ? 'border-rose-400' : 'border-slate-300'
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm text-heading bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30 ${
+                      stepErrors.university ? 'border-rose-400' : 'border-card-border'
                     }`}
                   >
-                    <option value="">Select your campus</option>
+                    <option value="" className="bg-card text-heading">Select your campus</option>
                     {universities.map((uni) => (
-                      <option key={uni._id} value={uni._id}>
+                      <option key={uni._id} value={uni._id} className="bg-card text-heading">
                         {uni.name} ({uni.code}) - {uni.city}, {uni.state}
                       </option>
                     ))}
                   </select>
                 </div>
                 {stepErrors.university && (
-                  <p className="text-xs text-rose-600 mt-1 font-medium">{stepErrors.university}</p>
+                  <p className="text-xs text-rose-400 mt-1 font-medium">{stepErrors.university}</p>
                 )}
               </div>
 
               {/* Category */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Academic Category <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
+                  Academic Category <span className="text-rose-400">*</span>
                 </label>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-campus-500 ${
-                    stepErrors.category ? 'border-rose-400' : 'border-slate-300'
+                  className={`w-full px-4 py-2.5 rounded-xl border text-sm text-heading bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30 ${
+                    stepErrors.category ? 'border-rose-400' : 'border-card-border'
                   }`}
                 >
-                  <option value="">Select category</option>
+                  <option value="" className="bg-card text-heading">Select category</option>
                   {categories.map((cat) => (
-                    <option key={cat._id} value={cat._id}>
+                    <option key={cat._id} value={cat._id} className="bg-card text-heading">
                       {cat.name}
                     </option>
                   ))}
                 </select>
                 {stepErrors.category && (
-                  <p className="text-xs text-rose-600 mt-1 font-medium">{stepErrors.category}</p>
+                  <p className="text-xs text-rose-400 mt-1 font-medium">{stepErrors.category}</p>
                 )}
               </div>
 
               {/* Subject & Course Code */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
                     Subject / Department
                   </label>
                   <input
@@ -788,11 +791,11 @@ function SellBookWizard() {
                     value={formData.subject}
                     onChange={handleChange}
                     placeholder="e.g. Data Structures & Algorithms"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+                    className="w-full px-4 py-2.5 rounded-xl border border-card-border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
                     Course Code
                   </label>
                   <input
@@ -801,14 +804,14 @@ function SellBookWizard() {
                     value={formData.course}
                     onChange={handleChange}
                     placeholder="e.g. CS 106B / 6.006"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+                    className="w-full px-4 py-2.5 rounded-xl border border-card-border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </div>
               </div>
 
               {/* Semester / Term */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
                   Semester / Academic Term
                 </label>
                 <input
@@ -817,7 +820,7 @@ function SellBookWizard() {
                   value={formData.semester}
                   onChange={handleChange}
                   placeholder="e.g. Fall 2026, Spring Semester, 3rd Year"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-card-border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30"
                 />
               </div>
             </div>
@@ -828,8 +831,8 @@ function SellBookWizard() {
         {currentStep === 3 && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Step 3: Book Photos</h2>
-              <p className="text-sm text-slate-500 mt-1">
+              <h2 className="text-xl font-bold text-heading">Step 3: Book Photos</h2>
+              <p className="text-sm text-text mt-1">
                 Upload clear photos of the book cover, spine, and inner sample pages (max 5 photos, 5MB each).
               </p>
             </div>
@@ -846,16 +849,16 @@ function SellBookWizard() {
                 e.stopPropagation();
                 handleFileSelect(e.dataTransfer.files);
               }}
-              className="border-2 border-dashed border-campus-300 hover:border-campus-500 bg-campus-50/40 hover:bg-campus-50/70 rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3"
+              className="border-2 border-dashed border-card-border hover:border-accent bg-card/40 hover:bg-card/70 rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3"
             >
-              <div className="w-12 h-12 rounded-full bg-campus-100 text-campus-700 flex items-center justify-center shadow-xs">
+              <div className="w-12 h-12 rounded-full border border-card-border bg-card text-accent flex items-center justify-center shadow-xs">
                 <UploadCloud className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-800">
+                <p className="text-sm font-bold text-heading">
                   Click to select photos or drag and drop here
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted mt-1">
                   Supported formats: JPG, PNG, WEBP (Max 5MB each)
                 </p>
               </div>
@@ -871,12 +874,12 @@ function SellBookWizard() {
 
             {/* Previews Grid */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+              <div className="flex items-center justify-between text-xs font-semibold text-text">
                 <span>
                   Attached Images:{' '}
                   {existingImages.length - removedImageIds.length + newImageFiles.length} / 5
                 </span>
-                <span className="text-slate-400">First image will be the primary cover photo</span>
+                <span className="text-muted">First image will be the primary cover photo</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -890,8 +893,8 @@ function SellBookWizard() {
                       key={`existing-${idx}`}
                       className={`relative aspect-3/4 rounded-xl overflow-hidden border ${
                         isRemoved
-                          ? 'border-rose-300 opacity-40 bg-slate-100'
-                          : 'border-slate-200 shadow-xs'
+                          ? 'border-rose-400 opacity-40 bg-card'
+                          : 'border-card-border shadow-xs'
                       }`}
                     >
                       <img
@@ -900,7 +903,7 @@ function SellBookWizard() {
                         className="w-full h-full object-cover"
                       />
                       {idx === 0 && !isRemoved && (
-                        <span className="absolute top-1 left-1 bg-campus-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-xs">
+                        <span className="absolute top-1 left-1 bg-btn-primary text-btn-primary-text text-[10px] font-bold px-1.5 py-0.5 rounded shadow-xs">
                           Cover
                         </span>
                       )}
@@ -909,7 +912,7 @@ function SellBookWizard() {
                           <button
                             type="button"
                             onClick={() => handleRestoreExistingImage(img)}
-                            className="bg-slate-800 text-white p-1 rounded-md text-[10px] font-bold hover:bg-slate-900"
+                            className="bg-card border border-card-border text-heading p-1 rounded-md text-[10px] font-bold"
                             title="Undo Remove"
                           >
                             Restore
@@ -933,14 +936,14 @@ function SellBookWizard() {
                 {newImagePreviews.map((previewUrl, idx) => (
                   <div
                     key={`new-${idx}`}
-                    className="relative aspect-3/4 rounded-xl overflow-hidden border border-campus-300 shadow-xs ring-2 ring-campus-500/20"
+                    className="relative aspect-3/4 rounded-xl overflow-hidden border border-card-border shadow-xs ring-2 ring-accent/30"
                   >
                     <img
                       src={previewUrl}
                       alt="New upload preview"
                       className="w-full h-full object-cover"
                     />
-                    <span className="absolute bottom-1 left-1 bg-slate-900/80 text-white text-[9px] font-medium px-1.5 py-0.5 rounded">
+                    <span className="absolute bottom-1 left-1 bg-card/90 text-heading text-[9px] font-medium px-1.5 py-0.5 rounded">
                       {(newImageFiles[idx].size / 1024 / 1024).toFixed(1)} MB
                     </span>
                     <button
@@ -962,16 +965,16 @@ function SellBookWizard() {
         {currentStep === 4 && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Step 4: Pricing & Condition</h2>
-              <p className="text-sm text-slate-500 mt-1">
+              <h2 className="text-xl font-bold text-heading">Step 4: Pricing & Condition</h2>
+              <p className="text-sm text-text mt-1">
                 Choose whether you want to sell, exchange, or donate this book to a peer.
               </p>
             </div>
 
             {/* Listing Type Selection */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                Listing Type <span className="text-rose-500">*</span>
+              <label className="block text-xs font-bold text-text uppercase tracking-wider mb-2">
+                Listing Type <span className="text-rose-400">*</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
@@ -1000,16 +1003,16 @@ function SellBookWizard() {
                     onClick={() => handleListingTypeSelect(item.type)}
                     className={`p-4 rounded-2xl border text-left transition flex flex-col justify-between ${
                       formData.listingType === item.type
-                        ? 'border-campus-600 bg-campus-50/60 ring-2 ring-campus-600 ring-offset-1'
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                        ? 'border-accent bg-accent/20 ring-2 ring-accent'
+                        : 'border-card-border hover:border-card-border/80 bg-card/60'
                     }`}
                   >
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 inline-block mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-card-border bg-card text-heading inline-block mb-2">
                         {item.badge}
                       </span>
-                      <h4 className="font-bold text-sm text-slate-900">{item.title}</h4>
-                      <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
+                      <h4 className="font-bold text-sm text-heading">{item.title}</h4>
+                      <p className="text-xs text-muted mt-1">{item.desc}</p>
                     </div>
                   </button>
                 ))}
@@ -1018,8 +1021,8 @@ function SellBookWizard() {
 
             {/* Condition Selection */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                Book Condition <span className="text-rose-500">*</span>
+              <label className="block text-xs font-bold text-text uppercase tracking-wider mb-2">
+                Book Condition <span className="text-rose-400">*</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                 {CONDITION_OPTIONS.map((opt) => (
@@ -1029,19 +1032,19 @@ function SellBookWizard() {
                     onClick={() => handleConditionSelect(opt.value)}
                     className={`p-3 rounded-xl border text-left transition ${
                       formData.condition === opt.value
-                        ? 'border-campus-600 bg-campus-50/70 text-campus-900 ring-1 ring-campus-600'
-                        : 'border-slate-200 hover:border-slate-300 bg-white text-slate-800'
+                        ? 'border-accent bg-accent/20 text-heading ring-1 ring-accent'
+                        : 'border-card-border hover:border-card-border/80 bg-card/60 text-text'
                     }`}
                   >
                     <div className="font-bold text-xs">{opt.label}</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                    <div className="text-[11px] text-muted mt-0.5 leading-snug">
                       {opt.desc}
                     </div>
                   </button>
                 ))}
               </div>
               {stepErrors.condition && (
-                <p className="text-xs text-rose-600 mt-1 font-medium">{stepErrors.condition}</p>
+                <p className="text-xs text-rose-400 mt-1 font-medium">{stepErrors.condition}</p>
               )}
             </div>
 
@@ -1049,11 +1052,11 @@ function SellBookWizard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               {/* Original Price */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Original Retail Price (₹) <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
+                  Original Retail Price (₹) <span className="text-rose-400">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 font-bold text-sm">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-muted font-bold text-sm">
                     ₹
                   </span>
                   <input
@@ -1064,23 +1067,23 @@ function SellBookWizard() {
                     value={formData.originalPrice}
                     onChange={handleChange}
                     placeholder="e.g. 120.00"
-                    className={`w-full pl-8 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500 ${
-                      stepErrors.originalPrice ? 'border-rose-400' : 'border-slate-300'
+                    className={`w-full pl-8 pr-4 py-2.5 rounded-xl border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30 ${
+                      stepErrors.originalPrice ? 'border-rose-400' : 'border-card-border'
                     }`}
                   />
                 </div>
                 {stepErrors.originalPrice && (
-                  <p className="text-xs text-rose-600 mt-1 font-medium">{stepErrors.originalPrice}</p>
+                  <p className="text-xs text-rose-400 mt-1 font-medium">{stepErrors.originalPrice}</p>
                 )}
               </div>
 
               {/* Selling Price */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Selling Price (₹) <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
+                  Selling Price (₹) <span className="text-rose-400">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 font-bold text-sm">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-muted font-bold text-sm">
                     ₹
                   </span>
                   <input
@@ -1092,18 +1095,18 @@ function SellBookWizard() {
                     value={formData.listingType === 'donate' ? '0' : formData.sellingPrice}
                     onChange={handleChange}
                     placeholder="e.g. 45.00"
-                    className={`w-full pl-8 pr-4 py-2.5 rounded-xl border text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500 ${
-                      formData.listingType === 'donate' ? 'bg-slate-100 text-slate-500' : ''
-                    } ${stepErrors.sellingPrice ? 'border-rose-400' : 'border-slate-300'}`}
+                    className={`w-full pl-8 pr-4 py-2.5 rounded-xl border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30 ${
+                      formData.listingType === 'donate' ? 'opacity-60 cursor-not-allowed' : ''
+                    } ${stepErrors.sellingPrice ? 'border-rose-400' : 'border-card-border'}`}
                   />
                 </div>
                 {formData.listingType === 'donate' ? (
-                  <p className="text-xs text-emerald-700 font-medium mt-1">
+                  <p className="text-xs text-accent font-medium mt-1">
                     Free donation mode sets price to ₹0.00 automatically.
                   </p>
                 ) : (
                   stepErrors.sellingPrice && (
-                    <p className="text-xs text-rose-600 mt-1 font-medium">
+                    <p className="text-xs text-rose-400 mt-1 font-medium">
                       {stepErrors.sellingPrice}
                     </p>
                   )
@@ -1112,36 +1115,37 @@ function SellBookWizard() {
             </div>
 
             {formData.listingType === 'sell' && Number(formData.originalPrice) > 0 && (
-              <div className="rounded-2xl border border-campus-200 bg-gradient-to-r from-campus-50 to-emerald-50 p-4 sm:p-5">
+              <div className="rounded-2xl border border-card-border bg-card/60 p-4 sm:p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="flex items-center gap-2 text-sm font-bold text-campus-900">
-                      <Sparkles className="h-4 w-4 text-campus-600" />
+                    <p className="flex items-center gap-2 text-sm font-bold text-heading">
+                      <Sparkles className="h-4 w-4 text-accent" />
                       Suggested price
                     </p>
                     {priceSuggestionLoading ? (
-                      <div className="mt-3 h-5 w-56 animate-pulse rounded bg-campus-100" />
+                      <div className="mt-3 h-5 w-56 animate-pulse rounded bg-card" />
                     ) : priceSuggestion ? (
                       <>
-                        <p className="mt-2 text-2xl font-extrabold text-slate-900">
+                        <p className="mt-2 text-2xl font-extrabold text-heading">
                           {formatPrice(priceSuggestion.suggested)}
-                          <span className="ml-2 text-xs font-medium text-slate-500">
+                          <span className="ml-2 text-xs font-medium text-muted">
                             range {formatPrice(priceSuggestion.min)}–{formatPrice(priceSuggestion.max)}
                           </span>
                         </p>
-                        <p className="mt-1 text-xs text-slate-600">
+                        <p className="mt-1 text-xs text-muted">
                           Based on {priceSuggestion.basedOn}
                           {priceSuggestion.sampleSize > 0 && ` · ${priceSuggestion.sampleSize} comparable listing${priceSuggestion.sampleSize === 1 ? '' : 's'}`}
                         </p>
                       </>
                     ) : priceSuggestionError ? (
-                      <p role="status" className="mt-2 text-xs text-rose-700">{priceSuggestionError}</p>
+                      <p role="status" className="mt-2 text-xs text-rose-400">{priceSuggestionError}</p>
                     ) : (
-                      <p className="mt-2 text-xs text-slate-600">Add a title, category, condition, and original price to get a market estimate.</p>
+                      <p className="mt-2 text-xs text-muted">Add a title, category, condition, and original price to get a market estimate.</p>
                     )}
                   </div>
-                  <button
+                  <Button
                     type="button"
+                    variant="primary"
                     disabled={!priceSuggestion || priceSuggestionLoading}
                     onClick={() => {
                       if (priceSuggestion) {
@@ -1156,10 +1160,9 @@ function SellBookWizard() {
                         });
                       }
                     }}
-                    className="shrink-0 rounded-xl bg-campus-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-campus-800 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Apply suggestion
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -1169,12 +1172,12 @@ function SellBookWizard() {
               Number(formData.originalPrice) > 0 &&
               Number(formData.sellingPrice) >= 0 &&
               Number(formData.sellingPrice) <= Number(formData.originalPrice) && (
-                <div className="p-3 bg-campus-50 border border-campus-200 rounded-xl flex items-center justify-between text-xs font-medium text-campus-900">
+                <div className="p-3 bg-card/60 border border-card-border rounded-xl flex items-center justify-between text-xs font-medium text-text">
                   <span className="flex items-center gap-1.5">
-                    <BadgePercent className="w-4 h-4 text-campus-700" />
+                    <BadgePercent className="w-4 h-4 text-accent" />
                     Student Discount Savings:
                   </span>
-                  <span className="font-bold text-campus-800">
+                  <span className="font-bold text-accent">
                     {Math.round(
                       ((Number(formData.originalPrice) - Number(formData.sellingPrice)) /
                         Number(formData.originalPrice)) *
@@ -1188,7 +1191,7 @@ function SellBookWizard() {
             {/* Exchange preferences notes */}
             {formData.listingType === 'exchange' && (
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-text uppercase tracking-wider mb-1">
                   Exchange Preferences (What books or notes are you looking for?)
                 </label>
                 <textarea
@@ -1197,7 +1200,7 @@ function SellBookWizard() {
                   value={formData.exchangePreferences}
                   onChange={handleChange}
                   placeholder="e.g. Looking for Computer Architecture by Hennessy & Patterson, or Organic Chemistry 8th edition..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-card-border text-sm text-heading placeholder:text-muted bg-card/60 focus:outline-none focus:ring-2 focus:ring-accent/30"
                 />
               </div>
             )}
@@ -1208,16 +1211,16 @@ function SellBookWizard() {
         {currentStep === 5 && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Step 5: Review & Confirm</h2>
-              <p className="text-sm text-slate-500 mt-1">
+              <h2 className="text-xl font-bold text-heading">Step 5: Review & Confirm</h2>
+              <p className="text-sm text-text mt-1">
                 Please double check all the details below before publishing your listing.
               </p>
             </div>
 
             {/* Book Card Preview */}
-            <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50 p-6 flex flex-col md:flex-row gap-6 shadow-xs">
+            <div className="border border-card-border rounded-2xl overflow-hidden bg-card/60 p-6 flex flex-col md:flex-row gap-6 shadow-xs text-text">
               {/* Photo Preview */}
-              <div className="w-full md:w-48 h-64 shrink-0 rounded-xl overflow-hidden bg-slate-200 border border-slate-200 flex items-center justify-center">
+              <div className="w-full md:w-48 h-64 shrink-0 rounded-xl overflow-hidden bg-card border border-card-border flex items-center justify-center">
                 {newImagePreviews[0] ? (
                   <img
                     src={newImagePreviews[0]}
@@ -1235,8 +1238,8 @@ function SellBookWizard() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="text-center p-4 text-slate-400">
-                    <BookOpen className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                  <div className="text-center p-4 text-muted">
+                    <BookOpen className="w-10 h-10 mx-auto mb-2 text-muted" />
                     <span className="text-xs">No cover photo attached</span>
                   </div>
                 )}
@@ -1246,13 +1249,13 @@ function SellBookWizard() {
               <div className="flex-1 space-y-3">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-campus-100 text-campus-800 mb-1.5">
+                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-card-border bg-card text-heading mb-1.5">
                       {selectedCat?.name || 'General Category'}
                     </span>
-                    <h3 className="text-xl font-bold text-slate-900 leading-snug">
+                    <h3 className="text-xl font-bold text-heading leading-snug">
                       {formData.title || 'Untitled Book'}
                     </h3>
-                    <p className="text-sm text-slate-600 mt-0.5 font-medium">
+                    <p className="text-sm text-text mt-0.5 font-medium">
                       By {formData.author || 'Unknown Author'} ({formData.edition || '1st Edition'})
                     </p>
                   </div>
@@ -1260,20 +1263,20 @@ function SellBookWizard() {
                   {/* Price Tag */}
                   <div className="text-right shrink-0">
                     {formData.listingType === 'donate' ? (
-                      <span className="text-lg font-extrabold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200">
+                      <span className="text-lg font-extrabold text-accent border border-card-border bg-card px-3 py-1 rounded-xl">
                         FREE
                       </span>
                     ) : formData.listingType === 'exchange' ? (
-                      <span className="text-lg font-extrabold text-amber-600 bg-amber-50 px-3 py-1 rounded-xl border border-amber-200">
+                      <span className="text-lg font-extrabold text-amber-400 border border-card-border bg-card px-3 py-1 rounded-xl">
                         EXCHANGE
                       </span>
                     ) : (
                       <div>
-                        <div className="text-2xl font-black text-campus-700">
+                        <div className="text-2xl font-black text-accent">
                           {formatPrice(Number(formData.sellingPrice || 0))}
                         </div>
                         {Number(formData.originalPrice) > 0 && (
-                          <div className="text-xs text-slate-400 line-through">
+                          <div className="text-xs text-muted line-through">
                             {formatPrice(Number(formData.originalPrice))}
                           </div>
                         )}
@@ -1284,27 +1287,27 @@ function SellBookWizard() {
 
                 {/* Badges Bar */}
                 <div className="flex flex-wrap items-center gap-2 pt-2">
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700">
-                    Condition: <strong className="text-slate-900">{formData.condition}</strong>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-card-border bg-card text-text">
+                    Condition: <strong className="text-heading">{formData.condition}</strong>
                   </span>
                   {formData.course && (
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700">
-                      Course: <strong className="text-slate-900">{formData.course}</strong>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-card-border bg-card text-text">
+                      Course: <strong className="text-heading">{formData.course}</strong>
                     </span>
                   )}
                   {selectedUni && (
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700">
-                      Campus: <strong className="text-slate-900">{selectedUni.name}</strong>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-card-border bg-card text-text">
+                      Campus: <strong className="text-heading">{selectedUni.name}</strong>
                     </span>
                   )}
                 </div>
 
                 {/* Description Preview */}
-                <div className="pt-2 border-t border-slate-200">
-                  <p className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <div className="pt-2 border-t border-card-border">
+                  <p className="text-xs font-bold text-text uppercase tracking-wider mb-1">
                     Description:
                   </p>
-                  <p className="text-sm text-slate-600 whitespace-pre-line line-clamp-3">
+                  <p className="text-sm text-muted whitespace-pre-line line-clamp-3">
                     {formData.description}
                   </p>
                 </div>
@@ -1312,10 +1315,10 @@ function SellBookWizard() {
             </div>
 
             {/* Note on Pending Review */}
-            <div className="p-4 bg-amber-50/60 border border-amber-200/80 rounded-2xl flex items-start gap-3 text-xs text-amber-800">
-              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="p-4 bg-card/60 border border-card-border rounded-2xl flex items-start gap-3 text-xs text-text">
+              <AlertCircle className="w-4 h-4 text-accent shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold">Campus Verification Policy: </span>
+                <span className="font-bold text-heading">Campus Verification Policy: </span>
                 {isEditing
                   ? 'Your updated details will be saved immediately to your inventory.'
                   : 'New listings default to pending review to maintain textbook quality and safety across our campus community.'}
@@ -1325,37 +1328,40 @@ function SellBookWizard() {
         )}
 
         {/* Wizard Controls */}
-        <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+        <div className="mt-8 pt-6 border-t border-card-border flex items-center justify-between">
           <div>
             {currentStep > 1 && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={handleBack}
                 disabled={submitting}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold transition"
+                className="inline-flex items-center gap-1.5"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Previous Step
-              </button>
+              </Button>
             )}
           </div>
 
           <div className="flex items-center gap-3">
             {currentStep < 5 ? (
-              <button
+              <Button
                 type="button"
+                variant="primary"
                 onClick={handleNext}
-                className="inline-flex items-center gap-1.5 bg-campus-600 hover:bg-campus-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition"
+                className="inline-flex items-center gap-1.5"
               >
-                Next Step
+                <span>Next Step</span>
                 <ChevronRight className="w-4 h-4" />
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="button"
+                variant="primary"
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="inline-flex items-center gap-2 bg-campus-600 hover:bg-campus-700 disabled:bg-campus-400 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition cursor-pointer"
+                className="inline-flex items-center gap-2"
               >
                 {submitting ? (
                   <>
@@ -1368,11 +1374,11 @@ function SellBookWizard() {
                     {isEditing ? 'Save Book Changes' : 'Publish Book Listing'}
                   </>
                 )}
-              </button>
+              </Button>
             )}
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -1383,8 +1389,8 @@ export default function SellPage() {
       <Suspense
         fallback={
           <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-3">
-            <Loader2 className="w-8 h-8 animate-spin text-campus-600" />
-            <p className="text-slate-500 text-sm">Loading Sell Studio...</p>
+            <Loader2 className="w-8 h-8 animate-spin text-accent" />
+            <p className="text-muted text-sm">Loading Sell Studio...</p>
           </div>
         }
       >

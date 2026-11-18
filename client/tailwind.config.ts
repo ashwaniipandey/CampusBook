@@ -10,6 +10,37 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        'bg-from': 'var(--bg-from)',
+        'bg-to': 'var(--bg-to)',
+        card: {
+          DEFAULT: 'var(--card-bg)',
+          bg: 'var(--card-bg)',
+          border: 'var(--card-border)',
+        },
+        'card-border': 'var(--card-border)',
+        heading: 'var(--heading)',
+        body: 'var(--text)',
+        text: 'var(--text)',
+        muted: 'var(--muted)',
+        accent: 'var(--accent)',
+        chip: {
+          DEFAULT: 'var(--chip-bg)',
+          bg: 'var(--chip-bg)',
+        },
+        'chip-bg': 'var(--chip-bg)',
+        btn: {
+          primary: {
+            DEFAULT: 'var(--btn-primary-bg)',
+            bg: 'var(--btn-primary-bg)',
+            text: 'var(--btn-primary-text)',
+          },
+          secondary: {
+            DEFAULT: 'var(--btn-secondary-bg)',
+            bg: 'var(--btn-secondary-bg)',
+            text: 'var(--btn-secondary-text)',
+          },
+        },
+        // Keep campus palette backwards-compatible for any lingering utility usages
         campus: {
           50: '#f0fdf4',
           100: '#dcfce7',

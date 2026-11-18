@@ -221,23 +221,23 @@ function NavbarInner() {
 
   const navPillClass = (active: boolean) =>
     active
-      ? 'rounded-full bg-[#22c55e] px-4 py-1.5 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/20 transition-all duration-200'
-      : 'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold text-white/80 hover:text-emerald-300 hover:bg-emerald-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:bg-emerald-500/15 transition-all duration-200';
+      ? 'rounded-full bg-accent px-4 py-1.5 text-xs font-bold text-btn-primary-text shadow-sm transition-all duration-200'
+      : 'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold text-heading/85 hover:text-heading hover:bg-card border border-transparent hover:border-card-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-200';
 
   const iconBtnClass =
-    'relative flex h-9 w-9 items-center justify-center rounded-full text-white/75 hover:bg-emerald-500/15 hover:text-emerald-300 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400';
+    'relative flex h-9 w-9 items-center justify-center rounded-full text-heading/85 hover:bg-card hover:text-heading transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent border border-transparent hover:border-card-border';
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#02130b]/90 backdrop-blur-xl transition-colors duration-200">
+    <header className="sticky top-0 z-50 w-full border-b border-card-border bg-card/80 backdrop-blur-xl transition-colors duration-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" aria-label="CampusBook home" className="group flex shrink-0 items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 shadow-sm transition group-hover:scale-105 group-hover:bg-emerald-500 group-hover:text-slate-950">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/20 border border-card-border text-accent shadow-sm transition group-hover:scale-105 group-hover:bg-accent group-hover:text-btn-primary-text">
               <BookOpen className="h-5 w-5" aria-hidden="true" />
             </span>
-            <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white dark:text-white">
-              Campus<span className="text-emerald-400">Book</span>
+            <span className="text-lg sm:text-xl font-extrabold tracking-tight text-heading">
+              Campus<span className="text-accent">Book</span>
             </span>
           </Link>
 
@@ -281,7 +281,7 @@ function NavbarInner() {
               {searchOpen && (
                 <div
                   id="navbar-search-panel"
-                  className="absolute right-0 top-full z-[70] mt-2 w-[min(24rem,calc(100vw-2rem))] rounded-2xl border border-white/15 bg-slate-950/95 p-3.5 shadow-2xl backdrop-blur-2xl"
+                  className="absolute right-0 top-full z-[70] mt-2 w-[min(24rem,calc(100vw-2rem))] rounded-2xl border border-card-border bg-card p-3.5 shadow-2xl backdrop-blur-2xl"
                 >
                   <SearchAutocomplete
                     value={searchValue}
@@ -304,7 +304,7 @@ function NavbarInner() {
               >
                 <MessageCircle className="h-4 w-4" />
                 {totalUnread > 0 && (
-                  <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-bold text-slate-950">
+                  <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-btn-primary-text">
                     {totalUnread > 99 ? '99+' : totalUnread}
                   </span>
                 )}
@@ -329,7 +329,7 @@ function NavbarInner() {
               >
                 <Bell className="h-4 w-4" />
                 {unreadNotificationCount > 0 && (
-                  <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-[#02130b] animate-pulse" />
+                  <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent ring-2 ring-card-border animate-pulse" />
                 )}
               </button>
 
@@ -349,7 +349,7 @@ function NavbarInner() {
             <Link href="/cart" aria-label="Shopping Cart" title="Cart" className={iconBtnClass}>
               <ShoppingCart className="h-4 w-4" />
               {isAuthenticated && cartCount > 0 && (
-                <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-bold text-slate-950">
+                <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-btn-primary-text">
                   {cartCount}
                 </span>
               )}
@@ -380,12 +380,12 @@ function NavbarInner() {
                   aria-label={`Account menu for ${user.name}`}
                   aria-expanded={userDropdownOpen}
                   title={user.name}
-                  className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-emerald-400/80 transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-accent transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   {user.avatar ? (
                     <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
                   ) : (
-                    <span className="flex h-full w-full items-center justify-center bg-emerald-700 text-xs font-extrabold text-white">
+                    <span className="flex h-full w-full items-center justify-center bg-accent text-xs font-extrabold text-btn-primary-text">
                       {getInitials(user.name)}
                     </span>
                   )}
@@ -404,7 +404,7 @@ function NavbarInner() {
             ) : (
               <Link
                 href="/login"
-                className="ml-1 inline-flex h-8 items-center rounded-full bg-emerald-500/20 border border-emerald-500/40 px-3.5 text-xs font-bold text-emerald-300 hover:bg-emerald-500 hover:text-slate-950 transition"
+                className="ml-1 inline-flex h-8 items-center rounded-full bg-accent/20 border border-card-border px-3.5 text-xs font-bold text-heading hover:bg-accent hover:text-btn-primary-text transition"
               >
                 Sign In
               </Link>
@@ -422,14 +422,14 @@ function NavbarInner() {
               >
                 <MessageCircle className="h-4 w-4" />
                 {totalUnread > 0 && (
-                  <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-emerald-400" />
+                  <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-accent" />
                 )}
               </Link>
             )}
             <Link href="/cart" aria-label="Shopping Cart" className={iconBtnClass}>
               <ShoppingCart className="h-4 w-4" />
               {cartCount > 0 && (
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-accent" />
               )}
             </Link>
             <button
@@ -450,7 +450,7 @@ function NavbarInner() {
         <div
           id="navbar-mobile-menu"
           ref={mobilePanelRef}
-          className="border-b border-white/10 bg-[#02130b] px-4 py-5 shadow-2xl lg:hidden sm:px-6"
+          className="border-b border-card-border bg-card px-4 py-5 shadow-2xl backdrop-blur-2xl lg:hidden sm:px-6"
         >
           <nav className="space-y-1.5">
             <Link
@@ -458,8 +458,8 @@ function NavbarInner() {
               onClick={() => setMobileMenuOpen(false)}
               className={`block rounded-xl px-4 py-2.5 text-sm font-bold transition ${
                 isHomeActive
-                  ? 'bg-[#22c55e] text-slate-950'
-                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+                  ? 'bg-accent text-btn-primary-text'
+                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
               }`}
             >
               Home
@@ -469,8 +469,8 @@ function NavbarInner() {
               onClick={() => setMobileMenuOpen(false)}
               className={`block rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 isExploreActive
-                  ? 'bg-[#22c55e] text-slate-950 font-bold'
-                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+                  ? 'bg-accent text-btn-primary-text font-bold'
+                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
               }`}
             >
               Explore
@@ -480,47 +480,47 @@ function NavbarInner() {
               onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 isExchangeActive
-                  ? 'bg-[#22c55e] text-slate-950 font-bold'
-                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+                  ? 'bg-accent text-btn-primary-text font-bold'
+                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
               }`}
             >
-              <ArrowLeftRight className={`h-4 w-4 ${isExchangeActive ? 'text-slate-950' : 'text-emerald-400'}`} /> Exchange
+              <ArrowLeftRight className={`h-4 w-4 ${isExchangeActive ? 'text-btn-primary-text' : 'text-accent'}`} /> Exchange
             </Link>
             <Link
               href="/explore?listingType=donate"
               onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 isDonateActive
-                  ? 'bg-[#22c55e] text-slate-950 font-bold'
-                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+                  ? 'bg-accent text-btn-primary-text font-bold'
+                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
               }`}
             >
-              <Heart className={`h-4 w-4 ${isDonateActive ? 'text-slate-950' : 'text-rose-400'}`} /> Free Donations
+              <Heart className={`h-4 w-4 ${isDonateActive ? 'text-btn-primary-text' : 'text-rose-400'}`} /> Free Donations
             </Link>
             <Link
               href="/colleges"
               onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 isCollegesActive
-                  ? 'bg-[#22c55e] text-slate-950 font-bold'
-                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+                  ? 'bg-accent text-btn-primary-text font-bold'
+                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
               }`}
             >
-              <GraduationCap className={`h-4 w-4 ${isCollegesActive ? 'text-slate-950' : 'text-emerald-400'}`} /> Colleges
+              <GraduationCap className={`h-4 w-4 ${isCollegesActive ? 'text-btn-primary-text' : 'text-accent'}`} /> Colleges
             </Link>
             <Link
               href="/events"
               onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 isEventsActive
-                  ? 'bg-[#22c55e] text-slate-950 font-bold'
-                  : 'text-white/80 hover:bg-emerald-500/15 hover:text-emerald-300'
+                  ? 'bg-accent text-btn-primary-text font-bold'
+                  : 'text-heading/85 hover:bg-card/80 hover:text-heading'
               }`}
             >
-              <Calendar className={`h-4 w-4 ${isEventsActive ? 'text-slate-950' : 'text-amber-400'}`} /> Events
+              <Calendar className={`h-4 w-4 ${isEventsActive ? 'text-btn-primary-text' : 'text-amber-400'}`} /> Events
             </Link>
 
-            <div className="my-3 border-t border-white/10" />
+            <div className="my-3 border-t border-card-border" />
 
             {user?.role === 'admin' && (
               <Link
@@ -535,7 +535,7 @@ function NavbarInner() {
             <Link
               href={sellHref}
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-slate-950"
+              className="flex items-center justify-center gap-2 rounded-xl bg-btn-primary-bg px-4 py-2.5 text-sm font-bold text-btn-primary-text shadow-sm"
             >
               <PlusCircle className="h-4 w-4" /> Sell a Book
             </Link>
@@ -545,13 +545,13 @@ function NavbarInner() {
                 <Link
                   href="/messages"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between rounded-lg px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5"
+                  className="flex items-center justify-between rounded-lg px-4 py-2 text-xs font-semibold text-text hover:bg-card/80"
                 >
                   <span className="flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4 text-emerald-400" /> Messages
+                    <MessageCircle className="h-4 w-4 text-accent" /> Messages
                   </span>
                   {totalUnread > 0 && (
-                    <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-slate-950">
+                    <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-btn-primary-text">
                       {totalUnread}
                     </span>
                   )}
@@ -559,14 +559,14 @@ function NavbarInner() {
                 <Link
                   href="/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-lg px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5"
+                  className="block rounded-lg px-4 py-2 text-xs font-semibold text-text hover:bg-card/80"
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/profile"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-lg px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5"
+                  className="block rounded-lg px-4 py-2 text-xs font-semibold text-text hover:bg-card/80"
                 >
                   Profile
                 </Link>
@@ -576,7 +576,7 @@ function NavbarInner() {
                     setMobileMenuOpen(false);
                     void logout();
                   }}
-                  className="block w-full text-left rounded-lg px-4 py-2 text-xs font-semibold text-rose-400 hover:bg-white/5"
+                  className="block w-full text-left rounded-lg px-4 py-2 text-xs font-semibold text-rose-400 hover:bg-card/80"
                 >
                   Sign Out
                 </button>
@@ -585,7 +585,7 @@ function NavbarInner() {
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-center rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
+                className="block text-center rounded-xl border border-card-border px-4 py-2 text-sm font-semibold text-heading hover:bg-card"
               >
                 Sign In
               </Link>
@@ -597,7 +597,7 @@ function NavbarInner() {
       {notificationToast && (
         <div
           role="status"
-          className="fixed right-4 top-20 z-[80] max-w-sm rounded-2xl border border-emerald-400/30 bg-[#02130b]/95 p-4 text-xs font-semibold text-white shadow-2xl backdrop-blur-xl"
+          className="fixed right-4 top-20 z-[80] max-w-sm rounded-2xl border border-card-border bg-card p-4 text-xs font-semibold text-heading shadow-2xl backdrop-blur-xl"
         >
           {notificationToast}
         </div>
@@ -632,18 +632,18 @@ function NotificationDropdown({
   return (
     <div
       id={id}
-      className="absolute right-0 top-full z-[70] mt-2 w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-3xl border border-white/15 bg-slate-950/95 shadow-2xl backdrop-blur-2xl"
+      className="absolute right-0 top-full z-[70] mt-2 w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-3xl border border-card-border bg-card shadow-2xl backdrop-blur-2xl"
     >
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-card-border px-4 py-3">
         <div>
-          <h2 className="font-bold text-white">Notifications</h2>
-          <p className="text-[11px] text-emerald-400">{unreadCount} unread</p>
+          <h2 className="font-bold text-heading">Notifications</h2>
+          <p className="text-[11px] text-accent font-semibold">{unreadCount} unread</p>
         </div>
         <button
           type="button"
           disabled={!unreadCount}
           onClick={() => void markAll()}
-          className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 disabled:opacity-40"
+          className="inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline disabled:opacity-40"
         >
           <CheckCheck className="h-3.5 w-3.5" /> Mark all read
         </button>
@@ -657,19 +657,19 @@ function NotificationDropdown({
                 key={notification._id}
                 type="button"
                 onClick={() => void openNotification(notification)}
-                className={`flex w-full gap-3 border-b border-white/5 px-4 py-3 text-left transition hover:bg-white/5 ${
-                  notification.isRead ? 'opacity-70' : 'bg-emerald-950/30'
+                className={`flex w-full gap-3 border-b border-card-border/60 px-4 py-3 text-left transition hover:bg-card/80 ${
+                  notification.isRead ? 'opacity-70' : 'bg-card/40'
                 }`}
               >
-                <span className="relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
+                <span className="relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent/20 text-accent">
                   <Icon className="h-4 w-4" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-start justify-between gap-2">
-                    <span className="line-clamp-1 text-xs font-bold text-white">{notification.title}</span>
-                    <span className="shrink-0 text-[10px] text-slate-400">{relativeTime(notification.createdAt)}</span>
+                    <span className="line-clamp-1 text-xs font-bold text-heading">{notification.title}</span>
+                    <span className="shrink-0 text-[10px] text-muted">{relativeTime(notification.createdAt)}</span>
                   </span>
-                  <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-slate-300">
+                  <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-text">
                     {notification.message}
                   </span>
                 </span>
@@ -677,13 +677,13 @@ function NotificationDropdown({
             );
           })
         ) : (
-          <div className="px-5 py-8 text-center text-xs text-slate-400">You’re all caught up!</div>
+          <div className="px-5 py-8 text-center text-xs text-muted">You’re all caught up!</div>
         )}
       </div>
       <Link
         href="/notifications"
         onClick={close}
-        className="block border-t border-white/10 px-4 py-2.5 text-center text-xs font-bold text-emerald-400 hover:underline"
+        className="block border-t border-card-border px-4 py-2.5 text-center text-xs font-bold text-accent hover:underline"
       >
         View all notifications
       </Link>
@@ -708,25 +708,25 @@ function UserDropdown({
 }) {
   const dashboardHref = user.role === 'admin' ? '/admin' : '/dashboard';
   const linkClass =
-    'flex min-h-9 items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-white transition';
+    'flex min-h-9 items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-text hover:bg-card/80 hover:text-heading transition';
 
   return (
     <div
       id={id}
-      className="absolute right-0 top-full z-[70] mt-2 w-64 overflow-hidden rounded-2xl border border-white/15 bg-slate-950/95 py-2 shadow-2xl backdrop-blur-2xl"
+      className="absolute right-0 top-full z-[70] mt-2 w-64 overflow-hidden rounded-2xl border border-card-border bg-card py-2 shadow-2xl backdrop-blur-2xl"
     >
-      <div className="border-b border-white/10 px-4 py-3">
-        <p className="truncate font-bold text-white text-sm">{user.name}</p>
-        <p className="truncate text-xs text-slate-400">{user.email}</p>
-        <p className="mt-0.5 truncate text-[11px] font-semibold text-emerald-400">{universityName}</p>
+      <div className="border-b border-card-border px-4 py-3">
+        <p className="truncate font-bold text-heading text-sm">{user.name}</p>
+        <p className="truncate text-xs text-muted">{user.email}</p>
+        <p className="mt-0.5 truncate text-[11px] font-semibold text-accent">{universityName}</p>
         <div className="mt-2">
           {user.role === 'admin' ? (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-2.5 py-0.5 text-[10px] font-bold text-purple-300">
               <Shield className="h-3 w-3" /> Administrator
             </span>
           ) : isVerifiedStudent(user) ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
-              <BadgeCheck className="h-3 w-3" /> Verified Student
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/20 px-2.5 py-0.5 text-[10px] font-bold text-heading">
+              <BadgeCheck className="h-3 w-3 text-accent" /> Verified Student
             </span>
           ) : (
             <Link
@@ -742,10 +742,10 @@ function UserDropdown({
 
       <div className="space-y-0.5 px-2 py-2">
         <Link href="/my-books" onClick={close} className={linkClass}>
-          <BookOpen className="h-3.5 w-3.5 text-emerald-400" /> My Books
+          <BookOpen className="h-3.5 w-3.5 text-accent" /> My Books
         </Link>
         <Link href="/orders" onClick={close} className={linkClass}>
-          <ClipboardList className="h-3.5 w-3.5 text-emerald-400" /> Orders
+          <ClipboardList className="h-3.5 w-3.5 text-accent" /> Orders
         </Link>
         <Link href="/wishlist" onClick={close} className={linkClass}>
           <Heart className="h-3.5 w-3.5 text-rose-400" /> Wishlist
@@ -754,19 +754,19 @@ function UserDropdown({
           <ArrowLeftRight className="h-3.5 w-3.5 text-amber-400" /> Exchanges
         </Link>
         <Link href="/donations" onClick={close} className={linkClass}>
-          <HeartHandshake className="h-3.5 w-3.5 text-emerald-400" /> Donations
+          <HeartHandshake className="h-3.5 w-3.5 text-accent" /> Donations
         </Link>
         <Link href="/messages" onClick={close} className={linkClass}>
-          <MessageCircle className="h-3.5 w-3.5 text-emerald-400" /> Messages
+          <MessageCircle className="h-3.5 w-3.5 text-accent" /> Messages
           {totalUnread > 0 && (
-            <span className="ml-auto rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold text-slate-950">
+            <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold text-btn-primary-text">
               {totalUnread}
             </span>
           )}
         </Link>
       </div>
 
-      <div className="mx-3 border-t border-white/10" />
+      <div className="mx-3 border-t border-card-border" />
 
       <div className="space-y-0.5 px-2 py-2">
         {user.role === 'admin' && (
@@ -782,14 +782,14 @@ function UserDropdown({
           <LayoutDashboard className="h-3.5 w-3.5 text-purple-400" /> Dashboard
         </Link>
         <Link href="/profile" onClick={close} className={linkClass}>
-          <UserIcon className="h-3.5 w-3.5 text-slate-400" /> Profile
+          <UserIcon className="h-3.5 w-3.5 text-muted" /> Profile
         </Link>
         <Link href="/settings" onClick={close} className={linkClass}>
-          <Settings className="h-3.5 w-3.5 text-slate-400" /> Settings
+          <Settings className="h-3.5 w-3.5 text-muted" /> Settings
         </Link>
       </div>
 
-      <div className="mx-3 border-t border-white/10" />
+      <div className="mx-3 border-t border-card-border" />
 
       <div className="px-2 pt-2">
         <button

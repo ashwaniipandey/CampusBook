@@ -16,7 +16,7 @@ export default function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="Theme mode"
-      className="relative inline-flex h-9 items-center rounded-full border border-emerald-500/30 bg-emerald-950/40 p-1 backdrop-blur-md dark:border-emerald-500/30 dark:bg-emerald-950/40 light:border-slate-200 light:bg-slate-100"
+      className="relative inline-flex h-9 items-center rounded-full border border-card-border bg-card p-1 backdrop-blur-md"
     >
       <button
         type="button"
@@ -27,8 +27,8 @@ export default function ThemeToggle() {
         title="Light theme"
         className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
           !isDark
-            ? 'bg-emerald-400 text-slate-950 shadow-sm'
-            : 'text-emerald-300/70 hover:text-emerald-200'
+            ? 'bg-accent text-btn-primary-text shadow-sm'
+            : 'text-muted hover:text-heading'
         }`}
       >
         <Sun className="h-3.5 w-3.5" aria-hidden="true" />
@@ -43,8 +43,8 @@ export default function ThemeToggle() {
         title="Dark theme"
         className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
           isDark
-            ? 'bg-emerald-500 text-slate-950 shadow-sm'
-            : 'text-slate-600 hover:text-slate-900 dark:text-emerald-300/70 dark:hover:text-emerald-200'
+            ? 'bg-accent text-btn-primary-text shadow-sm'
+            : 'text-muted hover:text-heading'
         }`}
       >
         <Moon className="h-3.5 w-3.5" aria-hidden="true" />

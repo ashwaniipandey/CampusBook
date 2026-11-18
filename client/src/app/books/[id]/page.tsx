@@ -47,17 +47,17 @@ function BookCard({ book }: { book: Book }) {
   return (
     <Link
       href={`/books/${book._id}`}
-      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-campus-300 hover:shadow-lg"
+      className="group overflow-hidden rounded-2xl border border-card-border bg-card transition hover:-translate-y-0.5 hover:border-accent shadow-sm"
     >
-      <div className="aspect-[4/3] bg-slate-100">
+      <div className="aspect-[4/3] bg-card/40">
         <BookCover src={image ? getImageUrl(image) : ''} alt={`Cover of ${book.title}`} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
       </div>
       <div className="space-y-2 p-4">
-        <h3 className="line-clamp-2 min-h-10 text-sm font-bold text-slate-900 group-hover:text-campus-700">{book.title}</h3>
-        <p className="truncate text-xs text-slate-500">{book.author}</p>
+        <h3 className="line-clamp-2 min-h-10 text-sm font-bold text-heading group-hover:text-accent">{book.title}</h3>
+        <p className="truncate text-xs text-muted">{book.author}</p>
         <div className="flex items-center justify-between gap-2">
-          <span className="font-extrabold text-campus-700">{price}</span>
-          <span className="rounded-full bg-campus-50 px-2.5 py-1 text-[10px] font-semibold text-campus-700">{book.condition}</span>
+          <span className="font-extrabold text-heading">{price}</span>
+          <span className="rounded-full bg-chip border border-card-border/60 px-2.5 py-1 text-[10px] font-semibold text-heading">{book.condition}</span>
         </div>
       </div>
     </Link>
@@ -330,14 +330,14 @@ export default function BookDetailPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10">
+    <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-10">
       {toast && (
         <div
           role="status"
-          className={`fixed right-4 top-20 z-[70] flex max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg ${
+          className={`fixed right-4 top-20 z-[70] flex max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur-xl ${
             toast.type === 'error'
-              ? 'border-rose-200 bg-rose-50 text-rose-800'
-              : 'border-campus-200 bg-campus-50 text-campus-800'
+              ? 'border-rose-400/30 bg-card text-rose-300'
+              : 'border-card-border bg-card text-heading'
           }`}
         >
           <span>{toast.message}</span>
@@ -349,7 +349,7 @@ export default function BookDetailPage() {
 
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex items-center justify-between">
-          <Link href="/explore" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-campus-700">
+          <Link href="/explore" className="inline-flex items-center gap-2 text-sm font-semibold text-text hover:text-heading">
             <ArrowLeft className="h-4 w-4" />
             Back to marketplace
           </Link>
@@ -358,7 +358,7 @@ export default function BookDetailPage() {
               <button
                 type="button"
                 onClick={shareBook}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-campus-300"
+                className="inline-flex items-center gap-2 rounded-xl border border-card-border bg-card px-3 py-2 text-sm font-semibold text-heading hover:bg-card/80"
               >
                 <Share2 className="h-4 w-4" />
                 <span className="hidden sm:inline">Share</span>
@@ -370,7 +370,7 @@ export default function BookDetailPage() {
                   disabled={authLoading || wishlistLoading}
                   aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                   aria-pressed={wishlisted}
-                  className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:border-rose-200 hover:text-rose-600 disabled:opacity-50"
+                  className="rounded-xl border border-card-border bg-card p-2 text-muted hover:text-rose-400 hover:bg-card/80 disabled:opacity-50"
                 >
                   <Heart className={`h-5 w-5 ${wishlisted ? 'fill-rose-500 text-rose-500' : ''}`} />
                 </button>
@@ -382,26 +382,26 @@ export default function BookDetailPage() {
         {loading && (
           <div className="grid animate-pulse gap-8 lg:grid-cols-2">
             <div className="space-y-3">
-              <div className="aspect-[4/3] rounded-3xl bg-slate-200" />
+              <div className="aspect-[4/3] rounded-3xl bg-card/60" />
               <div className="grid grid-cols-4 gap-3">
-                {[0, 1, 2, 3].map((item) => <div key={item} className="aspect-square rounded-xl bg-slate-200" />)}
+                {[0, 1, 2, 3].map((item) => <div key={item} className="aspect-square rounded-xl bg-card/60" />)}
               </div>
             </div>
             <div className="space-y-4">
-              <div className="h-5 w-1/4 rounded bg-slate-200" />
-              <div className="h-10 w-3/4 rounded bg-slate-200" />
-              <div className="h-32 rounded-2xl bg-slate-200" />
-              <div className="h-48 rounded-2xl bg-slate-200" />
+              <div className="h-5 w-1/4 rounded bg-card/60" />
+              <div className="h-10 w-3/4 rounded bg-card/60" />
+              <div className="h-32 rounded-2xl bg-card/60" />
+              <div className="h-48 rounded-2xl bg-card/60" />
             </div>
           </div>
         )}
 
         {!loading && errorMessage && (
-          <section className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
-            <BookOpen className="mx-auto mb-4 h-10 w-10 text-slate-300" />
-            <h1 className="text-2xl font-bold text-slate-900">{isNotFound ? 'Book not found' : 'Unable to load this book'}</h1>
-            <p className="mt-2 text-sm text-slate-600">{errorMessage}</p>
-            <Link href="/explore" className="mt-6 inline-flex rounded-xl bg-campus-600 px-5 py-3 text-sm font-bold text-white hover:bg-campus-700">
+          <section className="mx-auto max-w-xl rounded-3xl border border-card-border bg-card px-6 py-14 text-center shadow-sm backdrop-blur-md">
+            <BookOpen className="mx-auto mb-4 h-10 w-10 text-muted" />
+            <h1 className="text-2xl font-bold text-heading">{isNotFound ? 'Book not found' : 'Unable to load this book'}</h1>
+            <p className="mt-2 text-sm text-muted">{errorMessage}</p>
+            <Link href="/explore" className="mt-6 inline-flex rounded-xl bg-btn-primary px-5 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90">
               Browse books
             </Link>
           </section>
@@ -411,23 +411,23 @@ export default function BookDetailPage() {
           <>
             <section className="grid items-start gap-8 lg:grid-cols-2">
               <div className="space-y-4">
-                <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-white">
+                <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl border border-card-border bg-card shadow-sm">
                   {images.length ? (
                     <img src={images[activeImage] || images[0]} alt={book.title} className="h-full w-full object-contain p-4" />
                   ) : (
-                    <div className="text-center text-slate-300">
+                    <div className="text-center text-muted">
                       <BookOpen className="mx-auto h-16 w-16" />
-                      <p className="mt-2 text-sm text-slate-500">No photos available</p>
+                      <p className="mt-2 text-sm text-muted">No photos available</p>
                     </div>
                   )}
-                  <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-slate-800 shadow">
+                  <div className="absolute left-4 top-4 rounded-full border border-card-border bg-card/90 px-3 py-1.5 text-xs font-bold text-heading shadow backdrop-blur">
                     {book.condition}
                   </div>
                   {book.listingType === 'donate' && (
-                    <div className="absolute right-4 top-4 rounded-full bg-campus-600 px-3 py-1.5 text-xs font-extrabold text-white">FREE</div>
+                    <div className="absolute right-4 top-4 rounded-full bg-accent px-3 py-1.5 text-xs font-extrabold text-btn-primary-text">FREE</div>
                   )}
                   {isSold && (
-                    <div className="absolute bottom-4 right-4 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-bold text-white">SOLD</div>
+                    <div className="absolute bottom-4 right-4 rounded-full bg-black/80 px-3 py-1.5 text-xs font-bold text-white">SOLD</div>
                   )}
                 </div>
                 {images.length > 1 && (
@@ -439,7 +439,7 @@ export default function BookDetailPage() {
                         onClick={() => setActiveImage(index)}
                         aria-label={`View photo ${index + 1}`}
                         aria-pressed={activeImage === index}
-                        className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 ${activeImage === index ? 'border-campus-600 ring-2 ring-campus-100' : 'border-slate-200'}`}
+                        className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 transition ${activeImage === index ? 'border-accent' : 'border-card-border opacity-70 hover:opacity-100'}`}
                       >
                         <img src={image} alt="" className="h-full w-full object-cover" />
                       </button>
@@ -450,33 +450,33 @@ export default function BookDetailPage() {
 
               <div className="space-y-6">
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-campus-50 px-3 py-1 text-xs font-bold text-campus-800">{categoryName}</span>
-                  {book.subject && <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{book.subject}</span>}
-                  {book.course && <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{book.course}</span>}
+                  <span className="rounded-full bg-accent text-btn-primary-text px-3 py-1 text-xs font-bold">{categoryName}</span>
+                  {book.subject && <span className="rounded-full bg-chip border border-card-border/60 px-3 py-1 text-xs font-semibold text-heading">{book.subject}</span>}
+                  {book.course && <span className="rounded-full bg-chip border border-card-border/60 px-3 py-1 text-xs font-semibold text-heading">{book.course}</span>}
                 </div>
                 <div>
-                  <h1 className="text-3xl font-black leading-tight tracking-tight text-slate-950 sm:text-4xl">{book.title}</h1>
-                  <p className="mt-2 text-base text-slate-600">By <span className="font-semibold text-slate-900">{book.author}</span></p>
+                  <h1 className="text-3xl font-black leading-tight tracking-tight text-heading sm:text-4xl">{book.title}</h1>
+                  <p className="mt-2 text-base text-text">By <span className="font-semibold text-heading">{book.author}</span></p>
                 </div>
 
-                <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
+                <div className="rounded-3xl border border-card-border bg-card p-5 sm:p-6 shadow-sm backdrop-blur-md">
                   <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
                     {book.listingType === 'donate' ? (
                       <>
-                        <span className="text-3xl font-black text-campus-700">Free</span>
-                        <span className="mb-1 rounded-full bg-campus-50 px-3 py-1 text-xs font-bold text-campus-700">Donation</span>
+                        <span className="text-3xl font-black text-heading">Free</span>
+                        <span className="mb-1 rounded-full bg-accent text-btn-primary-text px-3 py-1 text-xs font-bold">Donation</span>
                       </>
                     ) : (
                       <>
-                        <span className="text-3xl font-black text-slate-950">{formatPrice(sellingPrice)}</span>
+                        <span className="text-3xl font-black text-heading">{formatPrice(sellingPrice)}</span>
                         {originalPrice > sellingPrice && (
-                          <span className="mb-1 text-lg text-slate-400 line-through">{formatPrice(originalPrice)}</span>
+                          <span className="mb-1 text-lg text-muted line-through">{formatPrice(originalPrice)}</span>
                         )}
-                        {discount > 0 && <span className="mb-1 rounded-full bg-campus-50 px-3 py-1 text-xs font-bold text-campus-800">{discount}% off</span>}
+                        {discount > 0 && <span className="mb-1 rounded-full bg-accent text-btn-primary-text px-3 py-1 text-xs font-bold">{discount}% off</span>}
                       </>
                     )}
                   </div>
-                  <p className="mt-2 text-sm text-slate-500">
+                  <p className="mt-2 text-sm text-muted">
                     {isSold ? 'This listing has been sold.' : isOwner ? 'This is your listing.' : book.listingType === 'exchange' ? 'Exchange listing' : 'Arrange a safe campus handoff with the seller.'}
                   </p>
 
@@ -487,7 +487,7 @@ export default function BookDetailPage() {
                           type="button"
                           onClick={addToCart}
                           disabled={addingToCart || authLoading}
-                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-campus-600 px-4 py-3 text-sm font-bold text-campus-700 hover:bg-campus-50 disabled:opacity-50"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-card-border/60 bg-btn-secondary px-4 py-3 text-sm font-bold text-btn-secondary-text hover:opacity-90 disabled:opacity-50"
                         >
                           {addingToCart ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
                           {addingToCart ? 'Adding…' : 'Add to Cart'}
@@ -496,7 +496,7 @@ export default function BookDetailPage() {
                           type="button"
                           onClick={() => requireLogin(true) && setOrderModalOpen(true)}
                           disabled={authLoading}
-                          className="rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-50"
+                          className="rounded-xl bg-btn-primary px-4 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:opacity-50"
                         >
                           Buy Now
                         </button>
@@ -504,7 +504,7 @@ export default function BookDetailPage() {
                     </div>
                   ) : (
                     <div className="mt-5 space-y-3">
-                      <p className="text-sm font-semibold text-slate-500">
+                      <p className="text-sm font-semibold text-muted">
                         {isSold
                           ? 'Purchase unavailable · This book is sold'
                           : isOwner
@@ -522,7 +522,7 @@ export default function BookDetailPage() {
                       type="button"
                       onClick={() => void openExchangeRequest()}
                       disabled={myBooksLoading || authLoading}
-                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-campus-600 px-4 py-3 text-sm font-bold text-campus-700 hover:bg-campus-50 disabled:opacity-50"
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-card-border/60 bg-btn-secondary px-4 py-3 text-sm font-bold text-btn-secondary-text hover:opacity-90 disabled:opacity-50"
                     >
                       {myBooksLoading && <LoaderCircle className="h-4 w-4 animate-spin" />}
                       Request Exchange
@@ -537,7 +537,7 @@ export default function BookDetailPage() {
                         setDonationModalOpen(true);
                       }}
                       disabled={authLoading}
-                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-50"
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-btn-primary px-4 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:opacity-50"
                     >
                       Request Donation
                     </button>
@@ -547,7 +547,7 @@ export default function BookDetailPage() {
                       type="button"
                       onClick={() => void chatWithSeller()}
                       disabled={authLoading || openingConversation}
-                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-700 hover:border-campus-400 hover:bg-campus-50 hover:text-campus-800 disabled:opacity-50"
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-card-border bg-card px-4 py-3 text-sm font-bold text-heading hover:bg-card/80 disabled:opacity-50"
                     >
                       {openingConversation ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
                       {openingConversation ? 'Opening chat…' : 'Chat with Seller'}
@@ -555,9 +555,9 @@ export default function BookDetailPage() {
                   )}
                 </div>
 
-                <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
-                  <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500">Book details</h2>
-                  <dl className="divide-y divide-slate-100">
+                <div className="rounded-3xl border border-card-border bg-card p-5 sm:p-6 shadow-sm backdrop-blur-md">
+                  <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-muted">Book details</h2>
+                  <dl className="divide-y divide-card-border">
                     {[
                       ['Category', categoryName],
                       ['Subject', book.subject],
@@ -567,81 +567,81 @@ export default function BookDetailPage() {
                       ['ISBN', book.isbn],
                     ].map(([label, value]) => (
                       <div key={label} className="grid grid-cols-3 gap-3 py-3 text-sm">
-                        <dt className="font-medium text-slate-500">{label}</dt>
-                        <dd className="col-span-2 break-words font-semibold text-slate-800">{value || 'Not provided'}</dd>
+                        <dt className="font-medium text-muted">{label}</dt>
+                        <dd className="col-span-2 break-words font-semibold text-heading">{value || 'Not provided'}</dd>
                       </div>
                     ))}
                   </dl>
                 </div>
 
                 {book.description && (
-                  <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
-                    <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-500">Description</h2>
-                    <p className="whitespace-pre-line text-sm leading-6 text-slate-700">{book.description}</p>
+                  <div className="rounded-3xl border border-card-border bg-card p-5 sm:p-6 shadow-sm backdrop-blur-md">
+                    <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-muted">Description</h2>
+                    <p className="whitespace-pre-line text-sm leading-6 text-text">{book.description}</p>
                   </div>
                 )}
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
+            <section className="rounded-3xl border border-card-border bg-card p-5 sm:p-6 shadow-sm backdrop-blur-md">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   {seller?.avatar ? (
                     <img src={seller.avatar} alt="" className="h-14 w-14 rounded-2xl object-cover" />
                   ) : (
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-campus-50 text-xl font-bold text-campus-700">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-xl font-bold text-btn-primary-text">
                       {seller?.name?.slice(0, 1).toUpperCase() || 'S'}
                     </div>
                   )}
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-bold text-slate-900">{seller?.name || 'Campus seller'}</h2>
+                      <h2 className="font-bold text-heading">{seller?.name || 'Campus seller'}</h2>
                       {seller?.role === 'admin' ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-800 dark:bg-purple-950/60 dark:text-purple-300">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/20 px-2 py-0.5 text-[11px] font-bold text-purple-300">
                           <Shield className="h-3.5 w-3.5" /> Official
                         </span>
                       ) : (seller?.isVerified || seller?.verificationStatus === 'verified') ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-campus-50 px-2 py-1 text-[11px] font-semibold text-campus-700">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Verified
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent/20 px-2 py-1 text-[11px] font-semibold text-heading">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-accent" /> Verified
                         </span>
                       ) : null}
                     </div>
-                    <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
+                    <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
                       <GraduationCap className="h-4 w-4" /> {universityName}
                     </p>
                   </div>
                 </div>
                 <div className="sm:text-right">
-                  <p className="inline-flex items-center gap-1 font-bold text-amber-600">
+                  <p className="inline-flex items-center gap-1 font-bold text-amber-400">
                     <Star className="h-4 w-4 fill-current" /> {Number(seller?.rating ?? 0).toFixed(1)}
                   </p>
-                  <p className="text-xs text-slate-500">{seller?.totalRatings ?? 0} reviews</p>
+                  <p className="text-xs text-muted">{seller?.totalRatings ?? 0} reviews</p>
                 </div>
               </div>
               {sellerId && (
-                <button type="button" onClick={toggleReviews} className="mt-5 text-sm font-bold text-campus-700 hover:text-campus-900">
+                <button type="button" onClick={toggleReviews} className="mt-5 text-sm font-bold text-accent hover:underline">
                   {reviewsOpen ? 'Hide reviews' : 'View reviews'}
                 </button>
               )}
               {reviewsOpen && (
-                <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+                <div className="mt-4 space-y-3 border-t border-card-border pt-4">
                   {reviewsLoading ? (
-                    <p className="text-sm text-slate-500">Loading reviews…</p>
+                    <p className="text-sm text-muted">Loading reviews…</p>
                   ) : reviews.length ? (
                     reviews.slice(0, 5).map((review) => (
-                      <article key={review._id} className="rounded-2xl bg-slate-50 p-4">
+                      <article key={review._id} className="rounded-2xl border border-card-border/60 bg-card/60 p-4">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-sm font-bold text-slate-800">{getReviewerName(review)}</p>
-                          <div className="flex items-center gap-1 text-xs font-bold text-amber-600">
+                          <p className="text-sm font-bold text-heading">{getReviewerName(review)}</p>
+                          <div className="flex items-center gap-1 text-xs font-bold text-amber-400">
                             <Star className="h-3.5 w-3.5 fill-current" /> {review.rating}/5
                           </div>
                         </div>
-                        {review.comment && <p className="mt-2 text-sm leading-5 text-slate-600">{review.comment}</p>}
-                        {review.createdAt && <p className="mt-2 text-xs text-slate-400">{new Date(review.createdAt).toLocaleDateString()}</p>}
+                        {review.comment && <p className="mt-2 text-sm leading-5 text-text">{review.comment}</p>}
+                        {review.createdAt && <p className="mt-2 text-xs text-muted">{new Date(review.createdAt).toLocaleDateString()}</p>}
                       </article>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-500">No reviews yet.</p>
+                    <p className="text-sm text-muted">No reviews yet.</p>
                   )}
                 </div>
               )}
@@ -650,8 +650,8 @@ export default function BookDetailPage() {
             {similarBooks.length > 0 && (
               <section className="space-y-4">
                 <div>
-                  <h2 className="text-xl font-extrabold text-slate-900">Similar books</h2>
-                  <p className="mt-1 text-sm text-slate-500">More books you might be interested in.</p>
+                  <h2 className="text-xl font-extrabold text-heading">Similar books</h2>
+                  <p className="mt-1 text-sm text-muted">More books you might be interested in.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
                   {similarBooks.map((similarBook) => <BookCard key={similarBook._id} book={similarBook} />)}
@@ -671,39 +671,39 @@ export default function BookDetailPage() {
         >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 id="order-dialog-title" className="text-xl font-extrabold text-slate-900">Arrange your purchase</h2>
-                <p className="mt-1 text-sm text-slate-500">Choose a campus meeting point and add any notes.</p>
+                <h2 id="order-dialog-title" className="text-xl font-extrabold text-heading">Arrange your purchase</h2>
+                <p className="mt-1 text-sm text-muted">Choose a campus meeting point and add any notes.</p>
               </div>
-              <button type="button" aria-label="Close dialog" disabled={submittingOrder} onClick={() => setOrderModalOpen(false)} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100">
+              <button type="button" aria-label="Close dialog" disabled={submittingOrder} onClick={() => setOrderModalOpen(false)} className="rounded-lg p-1 text-muted hover:text-heading hover:bg-card">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={submitOrder} className="mt-5 space-y-4">
-              <label className="block text-sm font-semibold text-slate-700">
+              <label className="block text-sm font-semibold text-heading">
                 Meeting location
                 <span className="relative mt-1.5 block">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted" />
                   <input
                     value={meetingLocation}
                     onChange={(event) => setMeetingLocation(event.target.value)}
                     maxLength={200}
                     placeholder="e.g. Main library entrance"
-                    className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-3 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100"
+                    className="w-full rounded-xl border border-card-border bg-card/60 py-2.5 pl-10 pr-3 text-sm text-heading placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
                   />
                 </span>
               </label>
-              <label className="block text-sm font-semibold text-slate-700">
-                Notes <span className="font-normal text-slate-400">(optional)</span>
+              <label className="block text-sm font-semibold text-heading">
+                Notes <span className="font-normal text-muted">(optional)</span>
                 <textarea
                   value={orderNotes}
                   onChange={(event) => setOrderNotes(event.target.value)}
                   maxLength={500}
                   rows={3}
                   placeholder="Add a note for the seller"
-                  className="mt-1.5 w-full resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100"
+                  className="mt-1.5 w-full resize-y rounded-xl border border-card-border bg-card/60 px-3 py-2.5 text-sm text-heading placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
                 />
               </label>
-              <button type="submit" disabled={submittingOrder} className="flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-60">
+              <button type="submit" disabled={submittingOrder} className="flex w-full items-center justify-center gap-2 rounded-xl bg-btn-primary px-4 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:opacity-60">
                 {submittingOrder && <LoaderCircle className="h-4 w-4 animate-spin" />}
                 {submittingOrder ? 'Placing order…' : `Place order · ${formatPrice(sellingPrice)}`}
               </button>
@@ -720,33 +720,33 @@ export default function BookDetailPage() {
         >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 id="exchange-dialog-title" className="text-xl font-extrabold text-slate-900">Request an exchange</h2>
-                <p className="mt-1 text-sm text-slate-500">Choose one of your approved books to offer for “{book.title}”.</p>
+                <h2 id="exchange-dialog-title" className="text-xl font-extrabold text-heading">Request an exchange</h2>
+                <p className="mt-1 text-sm text-muted">Choose one of your approved books to offer for “{book.title}”.</p>
               </div>
-              <button type="button" aria-label="Close dialog" disabled={submittingRequest} onClick={() => setExchangeModalOpen(false)} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100">
+              <button type="button" aria-label="Close dialog" disabled={submittingRequest} onClick={() => setExchangeModalOpen(false)} className="rounded-lg p-1 text-muted hover:text-heading hover:bg-card">
                 <X className="h-5 w-5" />
               </button>
             </div>
             {myBooks.length === 0 ? (
-              <div className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
+              <div className="mt-5 rounded-2xl border border-card-border/60 bg-card/60 p-4 text-sm text-text">
                 <p>You have no eligible approved books to offer.</p>
-                <Link href="/sell" className="mt-2 inline-flex font-bold text-campus-700 hover:text-campus-900">List a book</Link>
+                <Link href="/sell" className="mt-2 inline-flex font-bold text-accent hover:underline">List a book</Link>
               </div>
             ) : (
               <form onSubmit={submitExchangeRequest} className="mt-5 space-y-4">
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-sm font-semibold text-heading">
                   Your offer
-                  <select value={offeredBookId} onChange={(event) => setOfferedBookId(event.target.value)} required className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100">
+                  <select value={offeredBookId} onChange={(event) => setOfferedBookId(event.target.value)} required className="mt-1.5 w-full rounded-xl border border-card-border bg-card px-3 py-2.5 text-sm text-heading outline-none focus:border-accent focus:ring-2 focus:ring-accent/30">
                     {myBooks.map((ownedBook) => (
-                      <option key={ownedBook._id} value={ownedBook._id}>{ownedBook.title}</option>
+                      <option key={ownedBook._id} value={ownedBook._id} className="bg-card text-heading">{ownedBook.title}</option>
                     ))}
                   </select>
                 </label>
-                <label className="block text-sm font-semibold text-slate-700">
-                  Message <span className="font-normal text-slate-400">(optional)</span>
-                  <textarea value={requestMessage} onChange={(event) => setRequestMessage(event.target.value)} maxLength={1000} rows={3} placeholder="Add a note for the owner" className="mt-1.5 w-full resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100" />
+                <label className="block text-sm font-semibold text-heading">
+                  Message <span className="font-normal text-muted">(optional)</span>
+                  <textarea value={requestMessage} onChange={(event) => setRequestMessage(event.target.value)} maxLength={1000} rows={3} placeholder="Add a note for the owner" className="mt-1.5 w-full resize-y rounded-xl border border-card-border bg-card/60 px-3 py-2.5 text-sm text-heading placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/30" />
                 </label>
-                <button type="submit" disabled={!offeredBookId || submittingRequest} className="flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-60">
+                <button type="submit" disabled={!offeredBookId || submittingRequest} className="flex w-full items-center justify-center gap-2 rounded-xl bg-btn-primary px-4 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:opacity-60">
                   {submittingRequest && <LoaderCircle className="h-4 w-4 animate-spin" />}
                   {submittingRequest ? 'Sending…' : 'Send Request'}
                 </button>
@@ -764,19 +764,19 @@ export default function BookDetailPage() {
         >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 id="donation-dialog-title" className="text-xl font-extrabold text-slate-900">Request this donation</h2>
-                <p className="mt-1 text-sm text-slate-500">Send an optional message to the donor.</p>
+                <h2 id="donation-dialog-title" className="text-xl font-extrabold text-heading">Request this donation</h2>
+                <p className="mt-1 text-sm text-muted">Send an optional message to the donor.</p>
               </div>
-              <button type="button" aria-label="Close dialog" disabled={submittingRequest} onClick={() => setDonationModalOpen(false)} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100">
+              <button type="button" aria-label="Close dialog" disabled={submittingRequest} onClick={() => setDonationModalOpen(false)} className="rounded-lg p-1 text-muted hover:text-heading hover:bg-card">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={submitDonationRequest} className="mt-5 space-y-4">
-              <label className="block text-sm font-semibold text-slate-700">
-                Message <span className="font-normal text-slate-400">(optional)</span>
-                <textarea value={requestMessage} onChange={(event) => setRequestMessage(event.target.value)} maxLength={1000} rows={4} placeholder="Add a note for the donor" className="mt-1.5 w-full resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100" />
+              <label className="block text-sm font-semibold text-heading">
+                Message <span className="font-normal text-muted">(optional)</span>
+                <textarea value={requestMessage} onChange={(event) => setRequestMessage(event.target.value)} maxLength={1000} rows={4} placeholder="Add a note for the donor" className="mt-1.5 w-full resize-y rounded-xl border border-card-border bg-card/60 px-3 py-2.5 text-sm text-heading placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/30" />
               </label>
-              <button type="submit" disabled={submittingRequest} className="flex w-full items-center justify-center gap-2 rounded-xl bg-campus-600 px-4 py-3 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-60">
+              <button type="submit" disabled={submittingRequest} className="flex w-full items-center justify-center gap-2 rounded-xl bg-btn-primary px-4 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:opacity-60">
                 {submittingRequest && <LoaderCircle className="h-4 w-4 animate-spin" />}
                 {submittingRequest ? 'Sending…' : 'Send Request'}
               </button>

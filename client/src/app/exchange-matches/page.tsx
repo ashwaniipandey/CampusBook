@@ -90,38 +90,38 @@ function ExchangeMatchesContent() {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="flex items-center gap-2 text-sm font-bold text-campus-700"><Sparkles className="h-4 w-4" /> SMART EXCHANGE MATCHING</p>
-            <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">Exchange matches</h1>
-            <p className="mt-1 text-sm text-slate-600">Students who want books you have, and may have books you want.</p>
+            <p className="flex items-center gap-2 text-sm font-bold text-accent"><Sparkles className="h-4 w-4" /> SMART EXCHANGE MATCHING</p>
+            <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-heading">Exchange matches</h1>
+            <p className="mt-1 text-sm text-text">Students who want books you have, and may have books you want.</p>
           </div>
-          <Link href="/sell" className="rounded-xl bg-campus-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-campus-800">List an exchange book</Link>
+          <Link href="/sell" className="rounded-xl bg-btn-primary px-4 py-2.5 text-sm font-bold text-btn-primary-text hover:opacity-90">List an exchange book</Link>
         </div>
 
         {toast && (
-          <div role="status" className="mb-5 rounded-xl border border-campus-200 bg-campus-50 px-4 py-3 text-sm text-campus-900">
+          <div role="status" className="mb-5 rounded-xl border border-card-border bg-card px-4 py-3 text-sm text-heading backdrop-blur-xl">
             {toast}
           </div>
         )}
 
         {loading ? (
           <div className="grid gap-5 lg:grid-cols-2">
-            {[0, 1, 2, 3].map((item) => <div key={item} className="h-72 animate-pulse rounded-2xl bg-slate-200" />)}
+            {[0, 1, 2, 3].map((item) => <div key={item} className="h-72 animate-pulse rounded-2xl border border-card-border bg-card/60" />)}
           </div>
         ) : error ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center">
-            <p className="font-semibold text-rose-800">{error}</p>
-            <button type="button" onClick={() => void loadMatches()} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-campus-700 px-4 py-2 text-sm font-bold text-white">
+          <div className="rounded-2xl border border-rose-400/30 bg-card p-6 text-center">
+            <p className="font-semibold text-rose-300">{error}</p>
+            <button type="button" onClick={() => void loadMatches()} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-btn-primary px-4 py-2 text-sm font-bold text-btn-primary-text hover:opacity-90">
               <RefreshCw className="h-4 w-4" /> Retry
             </button>
           </div>
         ) : matches.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center">
-            <ArrowLeftRight className="mx-auto h-10 w-10 text-campus-500" />
-            <h2 className="mt-3 text-lg font-bold text-slate-900">No exchange matches yet</h2>
-            <p className="mx-auto mt-1 max-w-md text-sm text-slate-600">Add books to your wishlist and list an approved book with exchange preferences to find students with shared interests.</p>
+          <div className="rounded-2xl border border-card-border bg-card px-6 py-16 text-center shadow-sm backdrop-blur-md">
+            <ArrowLeftRight className="mx-auto h-10 w-10 text-accent" />
+            <h2 className="mt-3 text-lg font-bold text-heading">No exchange matches yet</h2>
+            <p className="mx-auto mt-1 max-w-md text-sm text-muted">Add books to your wishlist and list an approved book with exchange preferences to find students with shared interests.</p>
             <div className="mt-5 flex justify-center gap-3">
-              <Link href="/wishlist" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">View wishlist</Link>
-              <Link href="/explore?listingType=exchange" className="rounded-lg bg-campus-700 px-4 py-2 text-sm font-semibold text-white hover:bg-campus-800">Explore exchanges</Link>
+              <Link href="/wishlist" className="rounded-lg border border-card-border bg-card px-4 py-2 text-sm font-semibold text-heading hover:bg-card/80">View wishlist</Link>
+              <Link href="/explore?listingType=exchange" className="rounded-lg bg-btn-primary px-4 py-2 text-sm font-semibold text-btn-primary-text hover:opacity-90">Explore exchanges</Link>
             </div>
           </div>
         ) : (
@@ -132,21 +132,21 @@ function ExchangeMatchesContent() {
                 ? match.otherUser.university.name
                 : '';
               return (
-                <article key={key} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <article key={key} className="rounded-2xl border border-card-border bg-card p-5 shadow-sm backdrop-blur-md">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-campus-100 font-bold text-campus-800">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent font-bold text-btn-primary-text">
                         {match.otherUser.name.slice(0, 1).toUpperCase()}
                       </div>
                       <div>
-                        <h2 className="flex items-center gap-1.5 font-bold text-slate-900">
+                        <h2 className="flex items-center gap-1.5 font-bold text-heading">
                           {match.otherUser.name}
-                          <BadgeCheck className="h-4 w-4 text-campus-600" />
+                          <BadgeCheck className="h-4 w-4 text-accent" />
                         </h2>
-                        <p className="text-xs text-slate-500">{university || 'Campus student'} · ★ {Number(match.otherUser.rating || 0).toFixed(1)} ({match.otherUser.totalRatings || 0})</p>
+                        <p className="text-xs text-muted">{university || 'Campus student'} · ★ {Number(match.otherUser.rating || 0).toFixed(1)} ({match.otherUser.totalRatings || 0})</p>
                       </div>
                     </div>
-                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${match.matchType === 'mutual' ? 'bg-campus-100 text-campus-800' : 'bg-amber-100 text-amber-800'}`}>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${match.matchType === 'mutual' ? 'bg-accent text-btn-primary-text' : 'bg-amber-500 text-btn-primary-text'}`}>
                       {match.matchScore}% {match.matchType === 'mutual' ? 'mutual' : 'match'}
                     </span>
                   </div>
@@ -156,26 +156,26 @@ function ExchangeMatchesContent() {
                       { title: 'Your book', book: match.yourBook },
                       { title: 'Their book', book: match.theirBook },
                     ].map(({ title, book }) => (
-                      <Link key={book._id} href={`/books/${book._id}`} className="overflow-hidden rounded-xl border border-slate-200 hover:border-campus-300">
-                        <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                      <Link key={book._id} href={`/books/${book._id}`} className="overflow-hidden rounded-xl border border-card-border bg-card/40 hover:border-accent transition">
+                        <div className="aspect-[4/3] overflow-hidden bg-card/60">
                           <BookCover src={cover(book)} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
                         </div>
                         <div className="p-3">
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-campus-700">{title}</p>
-                          <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900">{book.title}</p>
-                          <p className="mt-1 text-xs text-slate-500">{book.author}</p>
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-accent">{title}</p>
+                          <p className="mt-1 line-clamp-2 text-sm font-semibold text-heading">{book.title}</p>
+                          <p className="mt-1 text-xs text-muted">{book.author}</p>
                         </div>
                       </Link>
                     ))}
                   </div>
 
-                  <p className="mt-4 rounded-xl bg-campus-50 px-3 py-2 text-sm text-campus-900">{match.reason}</p>
+                  <p className="mt-4 rounded-xl border border-card-border/60 bg-chip px-3 py-2 text-sm text-heading">{match.reason}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button
                       type="button"
                       disabled={busyMatch !== null || sentMatches.includes(key)}
                       onClick={() => void sendRequest(match)}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-campus-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-campus-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-btn-primary px-4 py-2.5 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {busyMatch === key ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeftRight className="h-4 w-4" />}
                       {sentMatches.includes(key) ? 'Request sent' : 'Send exchange request'}
@@ -184,7 +184,7 @@ function ExchangeMatchesContent() {
                       type="button"
                       disabled={busyMatch !== null}
                       onClick={() => void messageStudent(match)}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-card-border bg-card px-4 py-2.5 text-sm font-semibold text-heading hover:bg-card/80 disabled:opacity-50"
                     >
                       {busyMatch === `message:${match.otherUser._id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
                       Message

@@ -123,7 +123,7 @@ export function MotionDialog({
   return (
     <motion.div
       role="presentation"
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/60 p-4"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4"
       initial={reduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -138,7 +138,7 @@ export function MotionDialog({
         aria-modal="true"
         aria-labelledby={labelledBy}
         tabIndex={-1}
-        className={`max-h-[90vh] w-full overflow-y-auto rounded-3xl bg-white shadow-2xl focus:outline-none ${panelClassName}`}
+        className={`max-h-[90vh] w-full overflow-y-auto rounded-3xl border border-card-border bg-card shadow-2xl backdrop-blur-2xl text-text focus:outline-none ${panelClassName}`}
         initial={reduceMotion ? false : { opacity: 0, y: 12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={reduceMotion ? undefined : { opacity: 0, y: 8, scale: 0.99 }}

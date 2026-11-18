@@ -476,14 +476,14 @@ function ExploreContent() {
 
   // Reusable Filter Sidebar Component
   const FilterSidebar = () => (
-    <div className="divide-y divide-slate-100 text-sm [&>div]:pt-5 [&>div:first-child]:pt-0">
+    <div className="divide-y divide-card-border text-sm [&>div]:pt-5 [&>div:first-child]:pt-0">
       {/* Header with Clear All */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-        <div className="flex items-center gap-2 font-bold text-slate-900">
-          <Filter className="w-4 h-4 text-campus-600" />
+      <div className="flex items-center justify-between pb-3 border-b border-card-border">
+        <div className="flex items-center gap-2 font-bold text-heading">
+          <Filter className="w-4 h-4 text-accent" />
           <span>Filters</span>
           {activeFiltersCount > 0 && (
-            <span className="bg-campus-100 text-campus-800 text-[11px] font-bold px-2 py-0.5 rounded-full">
+            <span className="bg-accent text-btn-primary-text text-[11px] font-bold px-2 py-0.5 rounded-full">
               {activeFiltersCount}
             </span>
           )}
@@ -491,7 +491,7 @@ function ExploreContent() {
         {activeFiltersCount > 0 && (
           <button
             onClick={handleClearAll}
-            className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
+            className="text-xs font-semibold text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
           >
             <RotateCcw className="w-3 h-3" />
             Clear All
@@ -501,17 +501,17 @@ function ExploreContent() {
 
       {/* 1. University Filter */}
       <div>
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+        <label className="block text-xs font-bold text-heading uppercase tracking-wider mb-2">
           Campus / University
         </label>
         <select
           value={selectedUniversity}
           onChange={(e) => handleUniversityChange(e.target.value)}
-          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-campus-500 dark:bg-slate-900 dark:text-slate-100"
+          className="w-full rounded-xl border border-card-border bg-card/60 px-3 py-2 text-xs text-heading focus:outline-none focus:ring-2 focus:ring-accent"
         >
-          <option value="">All Universities</option>
+          <option value="" className="bg-card text-heading">All Universities</option>
           {universities.map((uni) => (
-            <option key={uni._id} value={uni._id}>
+            <option key={uni._id} value={uni._id} className="bg-card text-heading">
               {uni.name} ({uni.code})
             </option>
           ))}
@@ -520,7 +520,7 @@ function ExploreContent() {
 
       {/* 2. Listing Type Filter */}
       <div>
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+        <label className="block text-xs font-bold text-heading uppercase tracking-wider mb-2">
           Listing Offer Type
         </label>
         <div className="grid grid-cols-3 gap-1.5">
@@ -538,8 +538,8 @@ function ExploreContent() {
                 onClick={() => handleListingTypeChange(type.id)}
                 className={`py-2 px-1.5 rounded-xl border text-[11px] font-bold transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
                   isSelected
-                    ? 'border-campus-600 bg-campus-50 text-campus-800 ring-1 ring-campus-600'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                    ? 'border-accent bg-accent text-btn-primary-text ring-1 ring-accent'
+                    : 'border-card-border bg-card/40 text-heading hover:bg-card'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -552,7 +552,7 @@ function ExploreContent() {
 
       {/* 3. Categories with Counts */}
       <div>
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+        <label className="block text-xs font-bold text-heading uppercase tracking-wider mb-2">
           Academic Categories
         </label>
         <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
@@ -564,20 +564,20 @@ function ExploreContent() {
             return (
               <label
                 key={cat._id}
-                className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 cursor-pointer select-none transition"
+                className="flex items-center justify-between p-2 rounded-xl hover:bg-card/60 cursor-pointer select-none transition"
               >
                 <div className="flex items-center gap-2.5">
                   <input
                     type="checkbox"
                     checked={isChecked}
                     onChange={() => handleCategoryToggle(cat._id)}
-                    className="w-4 h-4 rounded text-campus-600 focus:ring-campus-500 border-slate-300"
+                    className="w-4 h-4 rounded text-accent focus:ring-accent border-card-border"
                   />
-                  <span className={`text-xs ${isChecked ? 'font-bold text-slate-900' : 'text-slate-700'}`}>
+                  <span className={`text-xs ${isChecked ? 'font-bold text-heading' : 'text-text'}`}>
                     {cat.name}
                   </span>
                 </div>
-                <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded-full">
+                <span className="text-[11px] font-semibold text-muted bg-chip border border-card-border/60 px-1.5 py-0.2 rounded-full">
                   {count}
                 </span>
               </label>
@@ -589,7 +589,7 @@ function ExploreContent() {
       {/* 4. Price Range */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+          <label className="block text-xs font-bold text-heading uppercase tracking-wider">
             Price Range ($)
           </label>
           {(minPriceInput || maxPriceInput) && (
@@ -610,7 +610,7 @@ function ExploreContent() {
                   page: 1,
                 });
               }}
-              className="text-[11px] text-slate-400 hover:text-slate-600 underline"
+              className="text-[11px] text-muted hover:text-heading underline"
             >
               Reset
             </button>
@@ -618,31 +618,31 @@ function ExploreContent() {
         </div>
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted text-xs">$</span>
             <input
               type="number"
               min="0"
               placeholder="Min"
               value={minPriceInput}
               onChange={(e) => setMinPriceInput(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 py-1.5 pl-6 pr-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-campus-500 dark:bg-slate-900 dark:text-slate-100"
+              className="w-full rounded-xl border border-card-border bg-card/60 py-1.5 pl-6 pr-2 text-xs text-heading placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
-          <span className="text-slate-400 text-xs font-bold">—</span>
+          <span className="text-muted text-xs font-bold">—</span>
           <div className="relative flex-1">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted text-xs">$</span>
             <input
               type="number"
               min="0"
               placeholder="Max"
               value={maxPriceInput}
               onChange={(e) => setMaxPriceInput(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 py-1.5 pl-6 pr-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-campus-500 dark:bg-slate-900 dark:text-slate-100"
+              className="w-full rounded-xl border border-card-border bg-card/60 py-1.5 pl-6 pr-2 text-xs text-heading placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
           <button
             onClick={handleApplyPrice}
-            className="px-3 py-1.5 rounded-xl bg-campus-600 hover:bg-campus-700 text-white text-xs font-bold shadow-xs transition"
+            className="px-3 py-1.5 rounded-xl bg-btn-primary hover:opacity-90 text-btn-primary-text text-xs font-bold shadow-xs transition"
           >
             Go
           </button>
@@ -651,7 +651,7 @@ function ExploreContent() {
 
       {/* 5. Book Condition */}
       <div>
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+        <label className="block text-xs font-bold text-heading uppercase tracking-wider mb-2">
           Book Condition
         </label>
         <div className="space-y-1">
@@ -662,20 +662,20 @@ function ExploreContent() {
             return (
               <label
                 key={cond.value}
-                className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 cursor-pointer select-none transition"
+                className="flex items-center justify-between p-2 rounded-xl hover:bg-card/60 cursor-pointer select-none transition"
               >
                 <div className="flex items-center gap-2.5">
                   <input
                     type="checkbox"
                     checked={isChecked}
                     onChange={() => handleConditionToggle(cond.value)}
-                    className="w-4 h-4 rounded text-campus-600 focus:ring-campus-500 border-slate-300"
+                    className="w-4 h-4 rounded text-accent focus:ring-accent border-card-border"
                   />
-                  <span className={`text-xs ${isChecked ? 'font-bold text-slate-900' : 'text-slate-700'}`}>
+                  <span className={`text-xs ${isChecked ? 'font-bold text-heading' : 'text-text'}`}>
                     {cond.label}
                   </span>
                 </div>
-                <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded-full">
+                <span className="text-[11px] font-semibold text-muted bg-chip border border-card-border/60 px-1.5 py-0.2 rounded-full">
                   {count}
                 </span>
               </label>
@@ -686,7 +686,7 @@ function ExploreContent() {
 
       {/* 6. Semester Filter */}
       <div>
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+        <label className="block text-xs font-bold text-heading uppercase tracking-wider mb-2">
           Academic Semester
         </label>
         <input
@@ -712,13 +712,13 @@ function ExploreContent() {
             }
           }}
           placeholder="e.g. Fall 2026, Spring (Enter)"
-          className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+          className="w-full px-3 py-2 rounded-xl border border-card-border bg-card/60 text-xs text-heading placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
 
       <div className="space-y-3">
         <div>
-          <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">Edition</label>
+          <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-heading">Edition</label>
           <input
             type="text"
             value={editionInput}
@@ -730,11 +730,11 @@ function ExploreContent() {
               }
             }}
             placeholder="e.g. 3rd Edition"
-            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+            className="w-full rounded-xl border border-card-border bg-card/60 px-3 py-2 text-xs text-heading placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">Course</label>
+          <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-heading">Course</label>
           <input
             type="text"
             value={courseInput}
@@ -746,10 +746,10 @@ function ExploreContent() {
               }
             }}
             placeholder="e.g. Computer Science"
-            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-campus-500"
+            className="w-full rounded-xl border border-card-border bg-card/60 px-3 py-2 text-xs text-heading placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
-        <button type="button" onClick={applyAcademicFilters} className="w-full rounded-xl bg-campus-50 px-3 py-2 text-xs font-bold text-campus-800 hover:bg-campus-100">
+        <button type="button" onClick={applyAcademicFilters} className="w-full rounded-xl border border-card-border/60 bg-btn-secondary px-3 py-2 text-xs font-bold text-btn-secondary-text hover:opacity-90">
           Apply academic filters
         </button>
       </div>
@@ -761,10 +761,10 @@ function ExploreContent() {
       {toast && (
         <div
           role="status"
-          className={`fixed right-4 top-20 z-[70] flex max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg ${
+          className={`fixed right-4 top-20 z-[70] flex max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur-xl ${
             toast.type === 'error'
-              ? 'border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300'
-              : 'border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
+              ? 'border-rose-400/30 bg-card text-rose-300'
+              : 'border-card-border bg-card text-heading'
           }`}
         >
           <span>{toast.message}</span>
@@ -775,23 +775,23 @@ function ExploreContent() {
       )}
       {/* Breadcrumb & Title */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1">
+        <div className="flex items-center gap-2 text-xs font-semibold text-accent uppercase tracking-wider mb-1">
           <BookOpen className="w-3.5 h-3.5" />
           <span>Campus Marketplace</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-heading tracking-tight">
           Explore Student Books
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs sm:text-sm text-text mt-1">
           Browse verified textbook listings from students across top universities.
         </p>
-        <div className="mt-4 inline-flex rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-1 shadow-sm" role="group" aria-label="University listing scope">
+        <div className="mt-4 inline-flex rounded-xl border border-card-border bg-card/60 p-1 shadow-sm backdrop-blur-md" role="group" aria-label="University listing scope">
           <button
             type="button"
             onClick={() => handleUniversityScopeChange('mine')}
             disabled={authLoading}
             aria-pressed={universityScope === 'mine'}
-            className={`rounded-lg px-3 py-2 text-xs font-bold transition disabled:cursor-wait disabled:opacity-50 ${universityScope === 'mine' ? 'bg-emerald-600 dark:bg-emerald-500 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/10'}`}
+            className={`rounded-lg px-3 py-2 text-xs font-bold transition disabled:cursor-wait disabled:opacity-50 ${universityScope === 'mine' ? 'bg-btn-primary text-btn-primary-text' : 'text-muted hover:text-heading hover:bg-card'}`}
           >
             My University
           </button>
@@ -799,7 +799,7 @@ function ExploreContent() {
             type="button"
             onClick={() => handleUniversityScopeChange('all')}
             aria-pressed={universityScope !== 'mine'}
-            className={`rounded-lg px-3 py-2 text-xs font-bold transition ${universityScope !== 'mine' ? 'bg-emerald-600 dark:bg-emerald-500 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/10'}`}
+            className={`rounded-lg px-3 py-2 text-xs font-bold transition ${universityScope !== 'mine' ? 'bg-btn-primary text-btn-primary-text' : 'text-muted hover:text-heading hover:bg-card'}`}
           >
             All Universities
           </button>
@@ -809,7 +809,7 @@ function ExploreContent() {
       {/* Main Layout Grid: Left Sidebar (Desktop) + Right Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         {/* Desktop Sidebar Column */}
-        <aside className="hidden lg:block lg:col-span-1 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-xs dark:backdrop-blur-md sticky top-20">
+        <aside className="hidden lg:block lg:col-span-1 bg-card border border-card-border rounded-3xl p-6 shadow-sm backdrop-blur-md sticky top-20">
           <FilterSidebar />
         </aside>
 
@@ -818,18 +818,18 @@ function ExploreContent() {
           <div className="fixed inset-0 z-50 lg:hidden flex">
             {/* Backdrop */}
             <div
-              className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
               onClick={() => setMobileFiltersOpen(false)}
             />
 
             {/* Slide-in panel */}
-            <div className="relative ml-auto w-full max-w-xs sm:max-w-sm h-full bg-white dark:bg-slate-900 border-l dark:border-white/10 shadow-2xl p-6 overflow-y-auto flex flex-col justify-between animate-in slide-in-from-right duration-200">
+            <div className="relative ml-auto w-full max-w-xs sm:max-w-sm h-full bg-card border-l border-card-border shadow-2xl p-6 overflow-y-auto flex flex-col justify-between backdrop-blur-2xl animate-in slide-in-from-right duration-200">
               <div>
-                <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-white/10">
-                  <h3 className="font-bold text-base text-slate-900 dark:text-white">Filter Marketplace</h3>
+                <div className="flex items-center justify-between pb-4 mb-4 border-b border-card-border">
+                  <h3 className="font-bold text-base text-heading">Filter Marketplace</h3>
                   <button
                     onClick={() => setMobileFiltersOpen(false)}
-                    className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500"
+                    className="p-1.5 rounded-xl hover:bg-card text-muted hover:text-heading"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -837,10 +837,10 @@ function ExploreContent() {
                 <FilterSidebar />
               </div>
 
-              <div className="pt-6 border-t border-slate-200 mt-6">
+              <div className="pt-6 border-t border-card-border mt-6">
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
-                  className="w-full bg-campus-600 hover:bg-campus-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-sm"
+                  className="w-full bg-btn-primary hover:opacity-90 text-btn-primary-text font-bold py-2.5 rounded-xl text-sm shadow-sm"
                 >
                   Show Results ({totalBooks})
                 </button>
@@ -852,22 +852,22 @@ function ExploreContent() {
         {/* Right Content Column */}
         <main className="lg:col-span-3 space-y-6">
           {/* Top Control Bar: Search Input, Counter & Sort */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-xs space-y-3">
+          <div className="bg-card border border-card-border rounded-2xl p-3 sm:p-4 shadow-sm backdrop-blur-md space-y-3">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               {/* Search Field */}
               <div className="relative flex-1">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="Search by title, author, course (e.g. CS106), ISBN, or subject..."
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-9 text-xs text-slate-900 placeholder:text-slate-500 focus:border-campus-500 focus:outline-none focus:ring-2 focus:ring-campus-500/30 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400 sm:text-sm"
+                  className="w-full rounded-xl border border-card-border bg-card/60 py-2.5 pl-10 pr-9 text-xs text-heading placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 sm:text-sm"
                 />
                 {searchInput && (
                   <button
                     onClick={() => setSearchInput('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-heading p-0.5"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -880,12 +880,12 @@ function ExploreContent() {
                 <button
                   type="button"
                   onClick={() => setMobileFiltersOpen(true)}
-                  className="lg:hidden flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 shadow-2xs cursor-pointer"
+                  className="lg:hidden flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-card-border bg-card hover:bg-card/80 text-xs font-bold text-heading shadow-xs cursor-pointer"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-campus-600" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-accent" />
                   <span>Filters</span>
                   {activeFiltersCount > 0 && (
-                    <span className="bg-campus-600 text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">
+                    <span className="bg-accent text-btn-primary-text text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">
                       {activeFiltersCount}
                     </span>
                   )}
@@ -893,32 +893,32 @@ function ExploreContent() {
 
                 {/* Sort Dropdown */}
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+                  <ArrowUpDown className="w-3.5 h-3.5 text-muted hidden sm:block" />
                   <select
                     value={currentSort}
                     onChange={(e) => handleSortChange(e.target.value)}
-                    className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 focus:border-campus-500 focus:outline-none focus:ring-2 focus:ring-campus-500/30 dark:bg-slate-900 dark:text-slate-100"
+                    className="cursor-pointer rounded-xl border border-card-border bg-card px-3 py-2 text-xs font-semibold text-heading focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
                   >
-                    <option value="newest">Newest</option>
-                    <option value="price_asc">Price: Low to High</option>
-                    <option value="price_desc">Price: High to Low</option>
-                    <option value="popular">Popular</option>
-                    <option value="relevance" disabled={!searchInput.trim()}>Most relevant</option>
+                    <option value="newest" className="bg-card text-heading">Newest</option>
+                    <option value="price_asc" className="bg-card text-heading">Price: Low to High</option>
+                    <option value="price_desc" className="bg-card text-heading">Price: High to Low</option>
+                    <option value="popular" className="bg-card text-heading">Popular</option>
+                    <option value="relevance" disabled={!searchInput.trim()} className="bg-card text-heading">Most relevant</option>
                   </select>
                 </div>
               </div>
             </div>
 
             {/* Active Filters Pill Bar & Results Counter */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
-              <div className="font-semibold text-slate-600">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-card-border text-xs">
+              <div className="font-semibold text-text">
                 {loading ? (
                   <span>Searching marketplace...</span>
                 ) : (
                   <span>
-                    Found <strong className="text-slate-900">{totalBooks}</strong> textbooks
+                    Found <strong className="text-heading">{totalBooks}</strong> textbooks
                     {totalPages > 1 && (
-                      <span className="text-slate-400 font-normal ml-1">
+                      <span className="text-muted font-normal ml-1">
                         (Page {currentPage} of {totalPages})
                       </span>
                     )}
@@ -928,81 +928,81 @@ function ExploreContent() {
 
               {activeFiltersCount > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] text-slate-400 font-medium">Active:</span>
+                  <span className="text-[11px] text-muted font-medium">Active:</span>
                   {searchInput.trim() && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-chip border border-card-border/60 px-2.5 py-1 text-[11px] text-heading">
                       “{searchInput.trim()}”
-                      <button type="button" aria-label="Clear search filter" onClick={() => setSearchInput('')} className="hover:text-rose-500">
+                      <button type="button" aria-label="Clear search filter" onClick={() => setSearchInput('')} className="hover:text-rose-400">
                         <X className="h-3 w-3" />
                       </button>
                     </span>
                   )}
                   {selectedCategories.map((categoryId) => (
-                    <span key={categoryId} className="inline-flex items-center gap-1 rounded-full bg-campus-50 px-2.5 py-1 text-[11px] text-campus-800 dark:bg-campus-900/50 dark:text-campus-200">
+                    <span key={categoryId} className="inline-flex items-center gap-1 rounded-full bg-accent text-btn-primary-text px-2.5 py-1 text-[11px] font-semibold">
                       {categories.find((category) => category._id === categoryId)?.name || 'Category'}
-                      <button type="button" aria-label="Remove category filter" onClick={() => handleCategoryToggle(categoryId)} className="hover:text-rose-500">
+                      <button type="button" aria-label="Remove category filter" onClick={() => handleCategoryToggle(categoryId)} className="hover:opacity-75">
                         <X className="h-3 w-3" />
                       </button>
                     </span>
                   ))}
                   {universityScope === 'mine' && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-campus-50 px-2.5 py-1 text-[11px] text-campus-800 dark:bg-campus-900/50 dark:text-campus-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-accent text-btn-primary-text px-2.5 py-1 text-[11px] font-semibold">
                       My University
-                      <button type="button" aria-label="Show all universities" onClick={() => handleUniversityScopeChange('all')} className="hover:text-rose-500">
+                      <button type="button" aria-label="Show all universities" onClick={() => handleUniversityScopeChange('all')} className="hover:opacity-75">
                         <X className="h-3 w-3" />
                       </button>
                     </span>
                   )}
                   {selectedUniversity && (
-                    <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[11px]">
+                    <span className="inline-flex items-center gap-1 bg-chip border border-card-border/60 text-heading px-2 py-0.5 rounded-md text-[11px]">
                       {universities.find((university) => university._id === selectedUniversity)?.name || 'Campus'}
-                      <button onClick={() => handleUniversityChange('')} className="hover:text-rose-500">
+                      <button onClick={() => handleUniversityChange('')} className="hover:text-rose-400">
                         <X className="w-3 h-3" />
                       </button>
                     </span>
                   )}
                   {selectedListingType && (
-                    <span className="inline-flex items-center gap-1 bg-campus-50 text-campus-700 px-2 py-0.5 rounded-md text-[11px] capitalize">
+                    <span className="inline-flex items-center gap-1 bg-accent text-btn-primary-text px-2 py-0.5 rounded-md text-[11px] capitalize font-semibold">
                       {selectedListingType}
-                      <button onClick={() => handleListingTypeChange(selectedListingType)} className="hover:text-rose-500">
+                      <button onClick={() => handleListingTypeChange(selectedListingType)} className="hover:opacity-75">
                         <X className="w-3 h-3" />
                       </button>
                     </span>
                   )}
                   {selectedConditions.map((cond) => (
-                    <span key={cond} className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[11px]">
+                    <span key={cond} className="inline-flex items-center gap-1 bg-chip border border-card-border/60 text-heading px-2 py-0.5 rounded-md text-[11px]">
                       {cond}
-                      <button onClick={() => handleConditionToggle(cond)} className="hover:text-rose-500">
+                      <button onClick={() => handleConditionToggle(cond)} className="hover:text-rose-400">
                         <X className="w-3 h-3" />
                       </button>
                     </span>
                   ))}
                   {editionInput && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-chip border border-card-border/60 px-2.5 py-1 text-[11px] text-heading">
                       Edition: {editionInput}
-                      <button type="button" aria-label="Remove edition filter" onClick={() => { setEditionInput(''); updateUrlParams({ edition: '', page: 1 }); }} className="hover:text-rose-500">
+                      <button type="button" aria-label="Remove edition filter" onClick={() => { setEditionInput(''); updateUrlParams({ edition: '', page: 1 }); }} className="hover:text-rose-400">
                         <X className="h-3 w-3" />
                       </button>
                     </span>
                   )}
                   {courseInput && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-chip border border-card-border/60 px-2.5 py-1 text-[11px] text-heading">
                       Course: {courseInput}
-                      <button type="button" aria-label="Remove course filter" onClick={() => { setCourseInput(''); updateUrlParams({ course: '', page: 1 }); }} className="hover:text-rose-500">
+                      <button type="button" aria-label="Remove course filter" onClick={() => { setCourseInput(''); updateUrlParams({ course: '', page: 1 }); }} className="hover:text-rose-400">
                         <X className="h-3 w-3" />
                       </button>
                     </span>
                   )}
                   {semesterInput && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-chip border border-card-border/60 px-2.5 py-1 text-[11px] text-heading">
                       Semester: {semesterInput}
-                      <button type="button" aria-label="Remove semester filter" onClick={() => { setSemesterInput(''); updateUrlParams({ semester: '', page: 1 }); }} className="hover:text-rose-500">
+                      <button type="button" aria-label="Remove semester filter" onClick={() => { setSemesterInput(''); updateUrlParams({ semester: '', page: 1 }); }} className="hover:text-rose-400">
                         <X className="h-3 w-3" />
                       </button>
                     </span>
                   )}
                   {(minPriceInput || maxPriceInput) && (
-                    <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[11px]">
+                    <span className="inline-flex items-center gap-1 bg-chip border border-card-border/60 text-heading px-2 py-0.5 rounded-md text-[11px]">
                       {formatPrice(minPriceInput || '0')} - {maxPriceInput ? formatPrice(maxPriceInput) : 'Any'}
                       <button
                         onClick={() => {
@@ -1021,7 +1021,7 @@ function ExploreContent() {
                             page: 1,
                           });
                         }}
-                        className="hover:text-rose-500"
+                        className="hover:text-rose-400"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -1029,7 +1029,7 @@ function ExploreContent() {
                   )}
                   <button
                     onClick={handleClearAll}
-                    className="text-[11px] text-rose-600 hover:underline font-semibold ml-1 cursor-pointer"
+                    className="text-[11px] text-rose-400 hover:underline font-semibold ml-1 cursor-pointer"
                   >
                     Clear All
                   </button>
@@ -1040,14 +1040,14 @@ function ExploreContent() {
 
           {/* Error Alert with Retry */}
           {errorMsg && (
-            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-card border border-rose-400/30 text-rose-300 flex items-center justify-between">
               <div className="flex items-center gap-2.5 text-xs sm:text-sm font-medium">
-                <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
               <button
                 onClick={() => router.refresh()}
-                className="text-xs font-bold text-rose-700 underline hover:no-underline cursor-pointer"
+                className="text-xs font-bold text-rose-300 underline hover:no-underline cursor-pointer"
               >
                 Retry
               </button>
@@ -1060,14 +1060,14 @@ function ExploreContent() {
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className="bg-white border border-slate-200 rounded-3xl p-4 space-y-3 shadow-xs"
+                  className="bg-card border border-card-border rounded-3xl p-4 space-y-3 shadow-xs"
                 >
-                  <div className="aspect-16/10 bg-slate-200 rounded-2xl" />
+                  <div className="aspect-16/10 bg-card/60 rounded-2xl" />
                   <div className="space-y-2">
-                    <div className="h-4 bg-slate-200 rounded-md w-3/4" />
-                    <div className="h-3 bg-slate-200 rounded-md w-1/2" />
+                    <div className="h-4 bg-card/80 rounded-md w-3/4" />
+                    <div className="h-3 bg-card/60 rounded-md w-1/2" />
                   </div>
-                  <div className="h-6 bg-slate-200 rounded-lg w-1/3 pt-2" />
+                  <div className="h-6 bg-card/60 rounded-lg w-1/3 pt-2" />
                 </div>
               ))}
             </div>
@@ -1075,13 +1075,13 @@ function ExploreContent() {
 
           {/* Empty State */}
           {!loading && books.length === 0 && (
-            <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-xs max-w-md mx-auto my-12 space-y-4">
-              <div className="w-16 h-16 rounded-3xl bg-campus-50 text-campus-600 flex items-center justify-center mx-auto shadow-inner">
+            <div className="bg-card border border-card-border rounded-3xl p-12 text-center shadow-sm max-w-md mx-auto my-12 space-y-4 backdrop-blur-md">
+              <div className="w-16 h-16 rounded-3xl bg-accent/20 text-accent flex items-center justify-center mx-auto shadow-inner">
                 <BookOpen className="w-8 h-8" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">No books match your filters</h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
+                <h3 className="text-lg font-bold text-heading">No books match your filters</h3>
+                <p className="text-xs text-muted mt-1 max-w-xs mx-auto leading-relaxed">
                   Try clearing some filters, expanding your price range, or searching for a different course code.
                 </p>
               </div>
@@ -1089,7 +1089,7 @@ function ExploreContent() {
                 <button
                   type="button"
                   onClick={handleClearAll}
-                  className="inline-flex items-center gap-2 bg-campus-600 hover:bg-campus-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer"
+                  className="inline-flex items-center gap-2 bg-btn-primary hover:opacity-90 text-btn-primary-text px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   Reset All Filters
@@ -1127,11 +1127,11 @@ function ExploreContent() {
                   <Link
                     key={book._id}
                     href={`/books/${book._id}`}
-                    className="group flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-campus-300 hover:shadow-[0_16px_36px_-18px_rgba(21,128,61,0.42)] focus-visible:ring-2 focus-visible:ring-campus-500 dark:bg-slate-900"
+                    className="group flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-card-border bg-card shadow-sm transition duration-200 hover:-translate-y-1 hover:border-accent focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <div>
                       {/* Image Thumbnail with Wishlist Heart */}
-                      <div className="relative aspect-[4/3] overflow-hidden border-b border-slate-100 bg-slate-100">
+                      <div className="relative aspect-[4/3] overflow-hidden border-b border-card-border bg-card/40">
                         <BookCover
                           src={coverUrl}
                           alt={`Cover of ${book.title}`}
@@ -1140,7 +1140,7 @@ function ExploreContent() {
 
                         {/* Condition Badge */}
                         <div className="absolute top-3 left-3">
-                          <span className="rounded-full border border-white/80 bg-white/95 px-2.5 py-1 text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-100">
+                          <span className="rounded-full border border-card-border bg-card/90 px-2.5 py-1 text-[10px] font-bold text-heading shadow-sm backdrop-blur">
                             {book.condition}
                           </span>
                         </div>
@@ -1152,7 +1152,7 @@ function ExploreContent() {
                           disabled={authLoading || wishlistLoading || pendingWishlist[book._id]}
                           aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                           aria-pressed={isWishlisted}
-                          className="absolute top-3 right-3 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-xs backdrop-blur-xs transition text-slate-400 hover:text-rose-500 disabled:opacity-50"
+                          className="absolute top-3 right-3 p-1.5 rounded-full bg-card/90 hover:bg-card shadow-xs backdrop-blur-xs transition text-muted hover:text-rose-400 disabled:opacity-50"
                           title={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
                         >
                           <Heart
@@ -1165,7 +1165,7 @@ function ExploreContent() {
                         {/* Course Code Tag */}
                         {book.course && (
                           <div className="absolute bottom-2.5 left-3">
-                            <span className="bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">
+                            <span className="bg-black/60 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">
                               {book.course}
                             </span>
                           </div>
@@ -1175,23 +1175,23 @@ function ExploreContent() {
                       {/* Content Info */}
                       <div className="p-4 space-y-2">
                         {catName && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-campus-700 bg-campus-50 px-2 py-0.5 rounded-md inline-block">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-chip border border-card-border/60 px-2 py-0.5 rounded-md inline-block">
                             {catName}
                           </span>
                         )}
 
-                        <h3 className="font-bold text-sm text-slate-900 leading-snug line-clamp-2 group-hover:text-campus-700 transition">
+                        <h3 className="font-bold text-sm text-heading leading-snug line-clamp-2 group-hover:text-accent transition">
                           {book.title}
                         </h3>
 
-                        <p className="line-clamp-1 text-xs font-medium text-slate-500">
+                        <p className="line-clamp-1 text-xs font-medium text-muted">
                           By {book.author} ({book.edition || '1st Edition'})
                         </p>
 
                         {/* University Name */}
                         {uniName && (
-                          <div className="flex items-center gap-1 text-[11px] text-slate-500 truncate pt-1">
-                            <GraduationCap className="w-3.5 h-3.5 text-campus-600 shrink-0" />
+                          <div className="flex items-center gap-1 text-[11px] text-muted truncate pt-1">
+                            <GraduationCap className="w-3.5 h-3.5 text-accent shrink-0" />
                             <span className="truncate">{uniName}</span>
                           </div>
                         )}
@@ -1199,22 +1199,22 @@ function ExploreContent() {
                     </div>
 
                     {/* Price Footer */}
-                    <div className="flex items-center justify-between border-t border-slate-100 p-4 pt-3">
+                    <div className="flex items-center justify-between border-t border-card-border p-4 pt-3">
                       {book.listingType === 'donate' ? (
-                        <span className="text-xs font-black text-emerald-700 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg">
+                        <span className="text-xs font-black text-btn-primary-text bg-accent px-2.5 py-1 rounded-lg">
                           Free
                         </span>
                       ) : book.listingType === 'exchange' ? (
-                        <span className="text-xs font-black text-amber-700 bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-lg">
+                        <span className="text-xs font-black text-btn-primary-text bg-amber-500 px-2.5 py-1 rounded-lg">
                           Exchange
                         </span>
                       ) : (
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-lg font-black text-slate-900">
+                          <span className="text-lg font-black text-heading">
                             {formatPrice(sell)}
                           </span>
                           {orig > 0 && (
-                            <span className="text-xs text-slate-400 line-through">
+                            <span className="text-xs text-muted line-through">
                               {formatPrice(orig)}
                             </span>
                           )}
@@ -1223,7 +1223,7 @@ function ExploreContent() {
 
                       {/* Discount Badge */}
                       {discount > 0 && book.listingType === 'sell' && (
-                        <span className="text-[10px] font-bold text-campus-700 bg-campus-100 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] font-bold text-btn-primary-text bg-accent px-2 py-0.5 rounded-md">
                           {discount}% OFF
                         </span>
                       )}
@@ -1236,12 +1236,12 @@ function ExploreContent() {
 
           {/* Pagination Controls */}
           {!loading && totalPages > 1 && (
-            <div className="flex items-center justify-between pt-6 border-t border-slate-200">
+            <div className="flex items-center justify-between pt-6 border-t border-card-border">
               <button
                 type="button"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-card-border bg-card text-xs font-bold text-heading hover:bg-card/80 disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Previous
@@ -1264,15 +1264,15 @@ function ExploreContent() {
                     return (
                       <React.Fragment key={p}>
                         {showEllipsis && (
-                          <span className="px-2 text-slate-400 text-xs">...</span>
+                          <span className="px-2 text-muted text-xs">...</span>
                         )}
                         <button
                           type="button"
                           onClick={() => handlePageChange(p)}
                           className={`w-8 h-8 rounded-xl text-xs font-bold transition ${
                             currentPage === p
-                              ? 'bg-campus-600 text-white shadow-xs'
-                              : 'text-slate-700 hover:bg-slate-100'
+                              ? 'bg-btn-primary text-btn-primary-text shadow-xs'
+                              : 'text-heading hover:bg-card'
                           }`}
                         >
                           {p}
@@ -1286,7 +1286,7 @@ function ExploreContent() {
                 type="button"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-card-border bg-card text-xs font-bold text-heading hover:bg-card/80 disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 Next
                 <ChevronRight className="w-4 h-4" />
@@ -1305,7 +1305,7 @@ export default function ExplorePage() {
       fallback={
         <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-3">
           <Loader2 className="w-8 h-8 animate-spin text-campus-600" />
-          <p className="text-slate-500 text-sm">Loading Campus Marketplace...</p>
+          <p className="text-muted text-sm">Loading Campus Marketplace...</p>
         </div>
       }
     >

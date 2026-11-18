@@ -200,18 +200,18 @@ export default function OrdersPage() {
 
   if (authLoading || !user || loading) {
     return (
-      <main className="min-h-[65vh] bg-slate-50 px-4 py-10 sm:px-6 lg:px-8">
+      <main className="min-h-[65vh] px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
-          <div className="mb-6 h-8 w-48 animate-pulse rounded-lg bg-slate-200" />
-          <div className="mb-6 h-12 animate-pulse rounded-xl bg-slate-200" />
+          <div className="mb-6 h-8 w-48 animate-pulse rounded-lg bg-card/60" />
+          <div className="mb-6 h-12 animate-pulse rounded-xl bg-card/60" />
           <div className="space-y-4">
             {[0, 1, 2].map((item) => (
-              <div key={item} className="flex animate-pulse gap-4 rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="h-28 w-28 shrink-0 rounded-xl bg-slate-200" />
+              <div key={item} className="flex animate-pulse gap-4 rounded-2xl border border-card-border bg-card p-4">
+                <div className="h-28 w-28 shrink-0 rounded-xl bg-card/60" />
                 <div className="flex-1 space-y-3 py-2">
-                  <div className="h-4 w-3/4 rounded bg-slate-200" />
-                  <div className="h-3 w-1/2 rounded bg-slate-200" />
-                  <div className="h-3 w-1/3 rounded bg-slate-200" />
+                  <div className="h-4 w-3/4 rounded bg-card/60" />
+                  <div className="h-3 w-1/2 rounded bg-card/60" />
+                  <div className="h-3 w-1/3 rounded bg-card/60" />
                 </div>
               </div>
             ))}
@@ -224,7 +224,7 @@ export default function OrdersPage() {
   const displayedOrders = activeRole === 'buying' ? buyingOrders : sellingOrders;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="min-h-screen px-4 py-8 sm:px-6 lg:px-8">
       {toast && (
         <div
           role="status"
@@ -243,11 +243,11 @@ export default function OrdersPage() {
 
       <div className="mx-auto max-w-5xl">
         <div className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-wider text-campus-700">Your marketplace activity</p>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Orders</h1>
+          <p className="text-xs font-bold uppercase tracking-wider text-accent">Your marketplace activity</p>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-heading sm:text-3xl">Orders</h1>
         </div>
 
-        <div role="tablist" aria-label="Order type" className="mb-6 grid grid-cols-2 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+        <div role="tablist" aria-label="Order type" className="mb-6 grid grid-cols-2 rounded-xl border border-card-border bg-card p-1 shadow-sm">
           {([
             ['buying', 'Buying', buyingOrders.length],
             ['selling', 'Selling', sellingOrders.length],
@@ -259,7 +259,7 @@ export default function OrdersPage() {
               aria-selected={activeRole === role}
               onClick={() => setActiveRole(role)}
               className={`rounded-lg px-4 py-2.5 text-sm font-bold transition ${
-                activeRole === role ? 'bg-campus-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
+                activeRole === role ? 'bg-btn-primary text-btn-primary-text shadow-sm' : 'text-text hover:bg-card/60'
               }`}
             >
               {label} <span className="ml-1 opacity-80">({count})</span>
@@ -268,24 +268,24 @@ export default function OrdersPage() {
         </div>
 
         {errorMessage ? (
-          <section className="rounded-3xl border border-rose-200 bg-white px-6 py-14 text-center shadow-sm">
-            <h2 className="text-xl font-bold text-slate-900">Unable to load orders</h2>
-            <p className="mt-2 text-sm text-slate-600">{errorMessage}</p>
-            <button type="button" onClick={() => void loadOrders()} className="mt-6 rounded-xl bg-campus-600 px-5 py-3 text-sm font-bold text-white hover:bg-campus-700">
+          <section className="rounded-3xl border border-rose-200 bg-card px-6 py-14 text-center shadow-sm">
+            <h2 className="text-xl font-bold text-heading">Unable to load orders</h2>
+            <p className="mt-2 text-sm text-text">{errorMessage}</p>
+            <button type="button" onClick={() => void loadOrders()} className="mt-6 rounded-xl bg-btn-primary px-5 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90">
               Try again
             </button>
           </section>
         ) : displayedOrders.length === 0 ? (
-          <section className="rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-campus-50 text-campus-600">
+          <section className="rounded-3xl border border-card-border bg-card px-6 py-16 text-center shadow-sm">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-campus-50 text-accent">
               <BookOpen className="h-8 w-8" />
             </div>
-            <h2 className="mt-5 text-xl font-bold text-slate-900">No orders yet</h2>
-            <p className="mt-2 text-sm text-slate-500">
+            <h2 className="mt-5 text-xl font-bold text-heading">No orders yet</h2>
+            <p className="mt-2 text-sm text-muted">
               {activeRole === 'buying' ? 'Explore the marketplace to find books for your courses.' : 'Your book sales and order requests will appear here.'}
             </p>
             {activeRole === 'buying' && (
-              <Link href="/explore" className="mt-6 inline-flex rounded-xl bg-campus-600 px-5 py-3 text-sm font-bold text-white hover:bg-campus-700">
+              <Link href="/explore" className="mt-6 inline-flex rounded-xl bg-btn-primary px-5 py-3 text-sm font-bold text-btn-primary-text hover:opacity-90">
                 Explore books
               </Link>
             )}
@@ -308,36 +308,36 @@ export default function OrdersPage() {
               const canComplete = status === 'confirmed';
 
               return (
-                <article key={order._id} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-5">
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                      <span className="font-bold text-slate-700">{order.orderNumber || 'Order'}</span>
+                <article key={order._id} className="overflow-hidden rounded-3xl border border-card-border bg-card shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-card-border bg-card/60 px-4 py-3 sm:px-5">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                      <span className="font-bold text-heading">{order.orderNumber || 'Order'}</span>
                       {order.createdAt && <span>· {new Date(order.createdAt).toLocaleDateString()}</span>}
                     </div>
-                    <span className={`rounded-full border px-3 py-1 text-xs font-bold capitalize ${STATUS_STYLES[status] || 'border-slate-200 bg-slate-100 text-slate-700'}`}>
+                    <span className={`rounded-full border px-3 py-1 text-xs font-bold capitalize ${STATUS_STYLES[status] || 'border-card-border bg-card/60 text-heading'}`}>
                       {STATUS_LABELS[status] || status.replaceAll('_', ' ')}
                     </span>
                   </div>
 
                   <div className="grid gap-5 p-4 sm:grid-cols-[112px_1fr_auto] sm:p-5">
-                    <Link href={bookHref} className="block h-44 overflow-hidden rounded-xl bg-slate-100 sm:h-28 sm:w-28">
+                    <Link href={bookHref} className="block h-44 overflow-hidden rounded-xl bg-card/60 sm:h-28 sm:w-28">
                       <BookCover src={image ? getImageUrl(image) : ''} alt={`Cover of ${book.title}`} className="h-full w-full object-cover" />
                     </Link>
 
                     <div className="min-w-0 space-y-2">
-                      <Link href={bookHref} className="line-clamp-2 font-bold leading-snug text-slate-900 hover:text-campus-700">
+                      <Link href={bookHref} className="line-clamp-2 font-bold leading-snug text-heading hover:text-accent">
                         {book?.title || 'Book listing unavailable'}
                       </Link>
-                      {book?.author && <p className="text-sm text-slate-500">By {book.author}</p>}
-                      <p className="text-sm text-slate-600">
-                        {activeRole === 'buying' ? 'Seller' : 'Buyer'}: <span className="font-semibold text-slate-800">{getUserName(otherParty)}</span>
+                      {book?.author && <p className="text-sm text-muted">By {book.author}</p>}
+                      <p className="text-sm text-text">
+                        {activeRole === 'buying' ? 'Seller' : 'Buyer'}: <span className="font-semibold text-heading">{getUserName(otherParty)}</span>
                       </p>
-                      <p className="flex items-start gap-1.5 text-sm text-slate-600">
-                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-campus-600" />
+                      <p className="flex items-start gap-1.5 text-sm text-text">
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                         {order.meetingLocation || order.pickupLocation || 'Meeting location not set'}
                       </p>
                       {order.notes && (
-                        <p className="flex items-start gap-1.5 text-sm text-slate-500">
+                        <p className="flex items-start gap-1.5 text-sm text-muted">
                           <MessageSquare className="mt-0.5 h-4 w-4 shrink-0" />
                           {order.notes}
                         </p>
@@ -345,10 +345,10 @@ export default function OrdersPage() {
                     </div>
 
                     <div className="flex items-start justify-between gap-3 sm:flex-col sm:items-end">
-                      <p className="text-lg font-extrabold text-slate-900">
+                      <p className="text-lg font-extrabold text-heading">
                         {book?.listingType === 'donate' ? 'Free' : formatPrice(price)}
                       </p>
-                      <Link href={bookHref} className="text-xs font-bold text-campus-700 hover:text-campus-900">
+                      <Link href={bookHref} className="text-xs font-bold text-accent hover:opacity-80">
                         View book
                       </Link>
                       {otherParty && book?._id && (
@@ -356,7 +356,7 @@ export default function OrdersPage() {
                           type="button"
                           disabled={messagingOrderId === order._id}
                           onClick={() => void messageOrderParty(order, otherParty)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:border-campus-300 hover:bg-campus-50 hover:text-campus-800 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-card-border px-2.5 py-1.5 text-xs font-bold text-heading hover:border-accent hover:bg-card/60 hover:text-accent disabled:opacity-50"
                         >
                           {messagingOrderId === order._id
                             ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
@@ -368,14 +368,14 @@ export default function OrdersPage() {
                   </div>
 
                   {(canConfirm || canBuyerCancel || canSellerCancel || canComplete) && (
-                    <div className="flex flex-wrap gap-2 border-t border-slate-100 px-4 py-4 sm:px-5">
+                    <div className="flex flex-wrap gap-2 border-t border-card-border px-4 py-4 sm:px-5">
                       {canConfirm && (
-                        <button type="button" disabled={updatingOrderId === order._id} onClick={() => setPendingAction({ order, status: 'confirmed' })} className="rounded-xl bg-campus-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-50">
+                        <button type="button" disabled={updatingOrderId === order._id} onClick={() => setPendingAction({ order, status: 'confirmed' })} className="rounded-xl bg-btn-primary px-4 py-2.5 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:opacity-50">
                           Confirm
                         </button>
                       )}
                       {canComplete && (
-                        <button type="button" disabled={updatingOrderId === order._id} onClick={() => setPendingAction({ order, status: 'completed' })} className="inline-flex items-center gap-2 rounded-xl bg-campus-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-50">
+                        <button type="button" disabled={updatingOrderId === order._id} onClick={() => setPendingAction({ order, status: 'completed' })} className="inline-flex items-center gap-2 rounded-xl bg-btn-primary px-4 py-2.5 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:opacity-50">
                           <CheckCircle2 className="h-4 w-4" /> Mark Completed
                         </button>
                       )}
@@ -388,19 +388,19 @@ export default function OrdersPage() {
                   )}
 
                   {activeRole === 'buying' && status === 'completed' && (
-                    <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
+                    <div className="border-t border-card-border px-4 py-4 sm:px-5">
                       {review ? (
-                        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-campus-800">
+                        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-accent">
                           <Check className="h-4 w-4" /> Reviewed
                           <span className="flex items-center gap-0.5 text-amber-500" aria-label={`${review.rating} out of 5 stars`}>
                             {Array.from({ length: 5 }, (_, index) => (
-                              <Star key={index} className={`h-4 w-4 ${index < review.rating ? 'fill-current' : 'text-slate-300'}`} />
+                              <Star key={index} className={`h-4 w-4 ${index < review.rating ? 'fill-current' : 'text-muted'}`} />
                             ))}
                           </span>
                         </div>
                       ) : (
                         <form onSubmit={(event) => void submitReview(event, order)} className="space-y-3">
-                          <h3 className="text-sm font-bold text-slate-900">Leave a review</h3>
+                          <h3 className="text-sm font-bold text-heading">Leave a review</h3>
                           <div className="flex items-center gap-1" role="radiogroup" aria-label="Rating">
                             {Array.from({ length: 5 }, (_, index) => {
                               const rating = index + 1;
@@ -414,7 +414,7 @@ export default function OrdersPage() {
                                   onClick={() => setReviewForms((previous) => ({ ...previous, [order._id]: { ...reviewForm, rating } }))}
                                   className="rounded p-0.5 text-amber-500 hover:scale-110"
                                 >
-                                  <Star className={`h-6 w-6 ${rating <= reviewForm.rating ? 'fill-current' : 'text-slate-300'}`} />
+                                  <Star className={`h-6 w-6 ${rating <= reviewForm.rating ? 'fill-current' : 'text-muted'}`} />
                                 </button>
                               );
                             })}
@@ -425,9 +425,9 @@ export default function OrdersPage() {
                             maxLength={1000}
                             rows={3}
                             placeholder="Share your experience (optional)"
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-campus-500 focus:ring-2 focus:ring-campus-100"
+                            className="w-full rounded-xl border border-card-border bg-card/60 px-3 py-2.5 text-sm text-heading placeholder:text-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
                           />
-                          <button type="submit" disabled={submittingReviewId === order._id} className="inline-flex items-center gap-2 rounded-xl bg-campus-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-campus-700 disabled:opacity-50">
+                          <button type="submit" disabled={submittingReviewId === order._id} className="inline-flex items-center gap-2 rounded-xl bg-btn-primary px-4 py-2.5 text-sm font-bold text-btn-primary-text hover:opacity-90 disabled:opacity-50">
                             {submittingReviewId === order._id && <LoaderCircle className="h-4 w-4 animate-spin" />}
                             Submit review
                           </button>
@@ -449,10 +449,10 @@ export default function OrdersPage() {
           closeDisabled={updatingOrderId === pendingAction.order._id}
           panelClassName="max-w-sm p-6"
         >
-            <h2 id="order-action-title" className="text-lg font-extrabold text-slate-900">
+            <h2 id="order-action-title" className="text-lg font-extrabold text-heading">
               {pendingAction.status === 'confirmed' ? 'Confirm this order?' : pendingAction.status === 'completed' ? 'Mark this order completed?' : 'Cancel this order?'}
             </h2>
-            <p className="mt-2 text-sm leading-5 text-slate-600">
+            <p className="mt-2 text-sm leading-5 text-text">
               {pendingAction.status === 'cancelled'
                 ? 'This will cancel the order. The other party will be notified.'
                 : pendingAction.status === 'completed'
@@ -460,10 +460,10 @@ export default function OrdersPage() {
                   : 'Confirm that you can fulfill this order.'}
             </p>
             <div className="mt-6 flex justify-end gap-2">
-              <button type="button" disabled={updatingOrderId === pendingAction.order._id} onClick={() => setPendingAction(null)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50">
+              <button type="button" disabled={updatingOrderId === pendingAction.order._id} onClick={() => setPendingAction(null)} className="rounded-xl border border-card-border px-4 py-2.5 text-sm font-semibold text-text hover:bg-card/60 disabled:opacity-50">
                 Keep order
               </button>
-              <button type="button" disabled={updatingOrderId === pendingAction.order._id} onClick={() => void updateOrder()} className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60 ${pendingAction.status === 'cancelled' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-campus-600 hover:bg-campus-700'}`}>
+              <button type="button" disabled={updatingOrderId === pendingAction.order._id} onClick={() => void updateOrder()} className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60 ${pendingAction.status === 'cancelled' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-btn-primary text-btn-primary-text hover:opacity-90'}`}>
                 {updatingOrderId === pendingAction.order._id && <LoaderCircle className="h-4 w-4 animate-spin" />}
                 {pendingAction.status === 'confirmed' ? 'Confirm order' : pendingAction.status === 'completed' ? 'Mark completed' : 'Cancel order'}
               </button>

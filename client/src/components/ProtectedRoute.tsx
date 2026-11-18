@@ -42,8 +42,8 @@ export default function ProtectedRoute({
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-campus-600" />
-        <p className="text-sm text-slate-500 font-medium">Verifying campus credentials...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+        <p className="text-sm text-muted font-medium">Verifying campus credentials...</p>
       </div>
     );
   }
