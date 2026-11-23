@@ -4,29 +4,32 @@
 
 :root {
   color-scheme: light;
-  --bg-from: #7C9E78;
-  --bg-to: #5A7F58;
-  --card-bg: rgba(255, 255, 255, 0.18);
-  --card-border: rgba(255, 255, 255, 0.35);
-  --heading: #F2F6EA;
-  --text: #1B2E22;
-  --muted: #2F4A38;
-  --btn-primary-bg: #16271C;
+  --bg-from: #ECFDF5;
+  --bg-to: #F6FAF7;
+  --card-bg: #FFFFFF;
+  --card-border: #E3EBE5;
+  --heading: #0F1F17;
+  --text: #0F1F17;
+  --muted: #4B5F54;
+  --btn-primary-bg: #059669;
   --btn-primary-text: #FFFFFF;
-  --btn-secondary-bg: #C8EBA5;
-  --btn-secondary-text: #16271C;
-  --accent: #C8EBA5;
-  --chip-bg: rgba(255, 255, 255, 0.18);
+  --btn-secondary-bg: #D1FAE5;
+  --btn-secondary-text: #065F46;
+  --accent: #D1FAE5;
+  --accent-text: #065F46;
+  --chip-bg: #D1FAE5;
+  --destructive: #E11D48;
+  --card-shadow: 0 1px 2px rgba(16,24,20,.04), 0 8px 24px rgba(16,24,20,.06);
 
-  --popover-bg: #F2F6EA;
-  --popover-text: #1B2E22;
-  --popover-heading: #10200F;
-  --popover-muted: #3F5A45;
-  --popover-border: rgba(22, 39, 28, 0.15);
-  --popover-hover: rgba(22, 39, 28, 0.08);
+  --popover-bg: #FFFFFF;
+  --popover-text: #0F1F17;
+  --popover-heading: #0F1F17;
+  --popover-muted: #4B5F54;
+  --popover-border: #E3EBE5;
+  --popover-hover: rgba(5, 150, 105, 0.06);
 
-  --scrollbar-track: rgba(0, 0, 0, 0.05);
-  --scrollbar-thumb: rgba(27, 46, 34, 0.35);
+  --scrollbar-track: rgba(0, 0, 0, 0.04);
+  --scrollbar-thumb: rgba(16, 24, 20, 0.2);
 }
 
 .dark,
@@ -73,8 +76,7 @@ select,
 textarea {
   background-color: var(--card-bg);
   border-color: var(--card-border);
-  color: var(--heading);
-  backdrop-filter: blur(8px);
+  color: var(--text);
 }
 
 select option {
@@ -85,9 +87,9 @@ select option {
 input:not([type='checkbox']):not([type='radio']):focus,
 select:focus,
 textarea:focus {
-  border-color: var(--accent);
+  border-color: #059669;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(200, 235, 165, 0.25);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
 }
 
 input::placeholder,

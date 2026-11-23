@@ -9,6 +9,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      boxShadow: {
+        card: 'var(--card-shadow)',
+      },
       colors: {
         'bg-from': 'var(--bg-from)',
         'bg-to': 'var(--bg-to)',
@@ -23,6 +26,8 @@ const config: Config = {
         text: 'var(--text)',
         muted: 'var(--muted)',
         accent: 'var(--accent)',
+        'accent-text': 'var(--accent-text)',
+        destructive: 'var(--destructive)',
         chip: {
           DEFAULT: 'var(--chip-bg)',
           bg: 'var(--chip-bg)',
