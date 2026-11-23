@@ -12,6 +12,7 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const { user } = useAuth();
   const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
+  const isMessagesRoute = pathname === '/messages' || pathname.startsWith('/messages/');
   const verificationStatus = user?.verificationStatus || (user?.isVerified ? 'verified' : 'unverified');
 
   return (
@@ -35,7 +36,7 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
         </div>
       )}
       <MotionPage pageKey={pathname}>{children}</MotionPage>
-      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && !isMessagesRoute && <Footer />}
     </>
   );
 }

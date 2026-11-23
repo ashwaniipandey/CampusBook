@@ -348,8 +348,11 @@ export default function MessagesInbox({ selectedId = null }: { selectedId?: stri
  preservedScrollRef.current = false;
  return;
  }
- if (!pendingScrollRef.current) {
- bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+ if (!pendingScrollRef.current && messageListRef.current) {
+ messageListRef.current.scrollTo({
+ top: messageListRef.current.scrollHeight,
+ behavior: 'smooth',
+ });
  }
  }, [messages, typingUserId]);
 
@@ -522,7 +525,7 @@ export default function MessagesInbox({ selectedId = null }: { selectedId?: stri
  const isMobileThread = Boolean(selectedId);
 
  return (
- <div className="fixed inset-x-0 bottom-0 top-16 z-10 flex min-h-[32rem] overflow-hidden bg-card">
+ <div className="h-[calc(100dvh-4rem)] flex flex-col md:flex-row overflow-hidden bg-card">
  {toast && (
  <div
  role="status"
@@ -643,7 +646,7 @@ export default function MessagesInbox({ selectedId = null }: { selectedId?: stri
  </div>
  </aside>
 
- <section className={`${selectedId ? 'flex' : 'hidden'} min-w-0 flex-1 flex-col md:flex`}>
+ <section className={`${selectedId ? 'flex' : 'hidden'} min-w-0 flex-1 flex-col md:flex h-full`}>
  {!selectedId ? (
  <div className="hidden h-full flex-col items-center justify-center px-6 text-center md:flex">
  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-card/60 text-campus-600">
@@ -654,7 +657,7 @@ export default function MessagesInbox({ selectedId = null }: { selectedId?: stri
  </div>
  ) : (
  <>
- <header className="flex min-h-16 items-center gap-3 border-b border-card-border px-4 py-3">
+ <header className="shrink-0 flex min-h-16 items-center gap-3 border-b border-card-border px-4 py-3">
  <button type="button" onClick={() => router.push('/messages')} className="rounded-lg p-2 text-text hover:bg-card/60 md:hidden" aria-label="Back to messages">
  <ArrowLeft className="h-5 w-5" />
  </button>
@@ -675,7 +678,7 @@ export default function MessagesInbox({ selectedId = null }: { selectedId?: stri
  <p className={`text-xs ${isOtherOnline ? 'text-campus-700' : 'text-muted'}`}>
  {isOtherOnline ? 'Online' : lastSeenText}
  {typeof otherParticipant?.university === 'object' && otherParticipant.university?.name
- ? ` � ${otherParticipant.university.name}`
+ ? ` · ${otherParticipant.university.name}`
  : ''}
  </p>
  </div>
@@ -692,8 +695,8 @@ export default function MessagesInbox({ selectedId = null }: { selectedId?: stri
  </header>
 
  {connectionStatus !== 'connected' && (
- <div role="status" className="border-b border-amber-200 bg-amber-50 px-4 py-1.5 text-center text-xs font-medium text-amber-800">
- Reconnecting�
+ <div role="status" className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-1.5 text-center text-xs font-medium text-amber-800">
+ Reconnecting...
  </div>
  )}
 
@@ -724,7 +727,7 @@ export default function MessagesInbox({ selectedId = null }: { selectedId?: stri
  onClick={() => void loadOlderMessages()}
  className="rounded-full border border-card-border bg-card px-4 py-2 text-xs font-semibold text-text shadow-sm hover:border-campus-300 hover:text-accent disabled:opacity-60"
  >
- {olderLoading ? 'Loading�' : 'Load older messages'}
+ {olderLoading ? 'Loading...' : 'Load older messages'}
  </button>
  </div>
  )}
@@ -747,7 +750,7 @@ export default function MessagesInbox({ selectedId = null }: { selectedId?: stri
  )}
  <div className={`flex ${ownMessage ? 'justify-end' : 'justify-start'}`}>
  <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 shadow-sm sm:max-w-[70%] ${
- ownMessage ? 'rounded-br-md bg-btn-primary text-white' : 'rounded-bl-md bg-card text-text'
+ ownMessage ? 'rounded-br-md bg-emerald-600 text-white' : 'rounded-bl-md bg-white text-zinc-900 border border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100'
  } ${message.deliveryState === 'failed' ? 'ring-2 ring-rose-300' : ''}`}>
  {(message.text || message.content) && <p className="whitespace-pre-wrap break-words text-sm">{message.text || message.content}</p>}
  {imageUrl && (
@@ -755,14 +758,14 @@ export default function MessagesInbox({ selectedId = null }: { selectedId?: stri
  <img src={imageUrl} alt="Shared image" className="max-h-72 max-w-full rounded-lg object-cover" />
  </button>
  )}
- <div className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${ownMessage ? 'text-campus-100' : 'text-muted'}`}>
+ <div className={`mt-1 flex items-center justify-end gap-1 text-[10px] text-current opacity-70`}>
  {message.deliveryState === 'failed' ? (
  <button type="button" onClick={() => void sendMessage(undefined, message)} className="font-bold text-rose-200 underline">
  Retry
  </button>
  ) : (
  <>
- <span>{message.deliveryState === 'sending' ? 'Sending�' : formatTime(message.createdAt)}</span>
+ <span>{message.deliveryState === 'sending' ? 'Sending...' : formatTime(message.createdAt)}</span>
  {ownMessage && message.deliveryState !== 'sending' && (
  isRead
  ? <CheckCheck aria-label="Read" className="h-3.5 w-3.5 text-sky-200" />
@@ -776,13 +779,13 @@ export default function MessagesInbox({ selectedId = null }: { selectedId?: stri
  </div>
  );
  })}
- {typingUserId && <p className="text-xs italic text-muted">{getUserName(otherParticipant)} is typing�</p>}
+ {typingUserId && <p className="text-xs italic text-muted">{getUserName(otherParticipant)} is typing...</p>}
  <div ref={bottomRef} />
  </div>
  )}
  </div>
 
- <form onSubmit={(event) => void sendMessage(event)} className="border-t border-card-border bg-card p-3 sm:p-4">
+ <form onSubmit={(event) => void sendMessage(event)} className="shrink-0 border-t border-card-border bg-card p-3 sm:p-4">
  {imagePreview && (
  <div className="mb-3 inline-flex items-start gap-2 rounded-xl border border-card-border bg-card/60 p-2">
  <img src={imagePreview} alt="Image preview" className="h-16 w-16 rounded-lg object-cover" />
@@ -809,7 +812,7 @@ export default function MessagesInbox({ selectedId = null }: { selectedId?: stri
  maxLength={2000}
  rows={1}
  disabled={sending}
- placeholder="Write a message�"
+ placeholder="Write a message..."
  className="max-h-32 min-h-11 min-w-0 flex-1 resize-y rounded-xl border border-card-border bg-card/60 px-4 py-3 text-sm outline-none transition focus:border-campus-500 focus:bg-card focus:ring-2 focus:ring-campus-100 disabled:opacity-60"
  />
  <button type="submit" disabled={(!draft.trim() && !selectedImage) || sending} aria-label="Send message" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-btn-primary text-white hover:bg-btn-primary disabled:cursor-not-allowed disabled:opacity-50">

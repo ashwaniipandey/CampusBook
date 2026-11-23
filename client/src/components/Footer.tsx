@@ -1,8 +1,16 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { BookOpen, ShieldCheck, Heart } from 'lucide-react';
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname === '/messages' || pathname?.startsWith('/messages/')) {
+    return null;
+  }
+
   return (
     <footer className="border-t border-card-border bg-card/40 backdrop-blur-md text-text text-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
