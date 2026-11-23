@@ -424,7 +424,7 @@ export default function BookDetailPage() {
                     {book.condition}
                   </div>
                   {book.listingType === 'donate' && (
-                    <div className="absolute right-4 top-4 rounded-full bg-accent px-3 py-1.5 text-xs font-extrabold text-btn-primary-text">FREE</div>
+                    <div className="absolute right-4 top-4 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-extrabold text-white dark:bg-accent dark:text-btn-primary-text">FREE</div>
                   )}
                   {isSold && (
                     <div className="absolute bottom-4 right-4 rounded-full bg-black/80 px-3 py-1.5 text-xs font-bold text-white">SOLD</div>
@@ -450,7 +450,7 @@ export default function BookDetailPage() {
 
               <div className="space-y-6">
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-accent text-btn-primary-text px-3 py-1 text-xs font-bold">{categoryName}</span>
+                  <span className="rounded-full bg-emerald-600 text-white px-3 py-1 text-xs font-bold dark:bg-accent dark:text-btn-primary-text">{categoryName}</span>
                   {book.subject && <span className="rounded-full bg-chip border border-card-border/60 px-3 py-1 text-xs font-semibold text-heading">{book.subject}</span>}
                   {book.course && <span className="rounded-full bg-chip border border-card-border/60 px-3 py-1 text-xs font-semibold text-heading">{book.course}</span>}
                 </div>

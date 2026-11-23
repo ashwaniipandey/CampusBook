@@ -9,11 +9,11 @@ export default function EventsPage() {
   return (
     <main className="min-h-[85vh] px-4 py-20 sm:px-6 lg:px-8 flex items-center justify-center">
       <div className="mx-auto max-w-2xl text-center">
-        <Chip active>
-          <Calendar className="h-4 w-4" /> Campus Events &amp; Book Fairs
-        </Chip>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-accent dark:text-btn-primary-text">
+          <Calendar className="h-4 w-4 text-emerald-700 dark:text-current" /> Campus Events &amp; Book Fairs
+        </div>
         <h1 className="mt-6 text-4xl sm:text-6xl font-extrabold tracking-tight text-heading">
-          Campus Book Fairs &amp; <span className="text-accent italic">Drives</span>
+          Campus Book Fairs &amp; <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent dark:from-emerald-300 dark:to-emerald-400 italic">Drives</span>
         </h1>
         <p className="mt-4 text-base text-text leading-relaxed">
           Upcoming semester book drives, peer exchange meetups, and campus donation events are being scheduled for this semester.

@@ -480,10 +480,10 @@ function ExploreContent() {
       {/* Header with Clear All */}
       <div className="flex items-center justify-between pb-3 border-b border-card-border">
         <div className="flex items-center gap-2 font-bold text-heading">
-          <Filter className="w-4 h-4 text-accent" />
+          <Filter className="w-4 h-4 text-emerald-700 dark:text-accent" />
           <span>Filters</span>
           {activeFiltersCount > 0 && (
-            <span className="bg-accent text-btn-primary-text text-[11px] font-bold px-2 py-0.5 rounded-full">
+            <span className="bg-emerald-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full dark:bg-accent dark:text-btn-primary-text">
               {activeFiltersCount}
             </span>
           )}
@@ -538,7 +538,7 @@ function ExploreContent() {
                 onClick={() => handleListingTypeChange(type.id)}
                 className={`py-2 px-1.5 rounded-xl border text-[11px] font-bold transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
                   isSelected
-                    ? 'border-accent bg-accent text-btn-primary-text ring-1 ring-accent'
+                    ? 'border-emerald-600 bg-emerald-600 text-white ring-1 ring-emerald-600 dark:border-accent dark:bg-accent dark:text-btn-primary-text dark:ring-accent'
                     : 'border-card-border bg-card/40 text-heading hover:bg-card'
                 }`}
               >
@@ -882,10 +882,10 @@ function ExploreContent() {
                   onClick={() => setMobileFiltersOpen(true)}
                   className="lg:hidden flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-card-border bg-card hover:bg-card/80 text-xs font-bold text-heading shadow-xs cursor-pointer"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-accent" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-700 dark:text-accent" />
                   <span>Filters</span>
                   {activeFiltersCount > 0 && (
-                    <span className="bg-accent text-btn-primary-text text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">
+                    <span className="bg-emerald-600 text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full dark:bg-accent dark:text-btn-primary-text">
                       {activeFiltersCount}
                     </span>
                   )}
@@ -938,7 +938,7 @@ function ExploreContent() {
                     </span>
                   )}
                   {selectedCategories.map((categoryId) => (
-                    <span key={categoryId} className="inline-flex items-center gap-1 rounded-full bg-accent text-btn-primary-text px-2.5 py-1 text-[11px] font-semibold">
+                    <span key={categoryId} className="inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white px-2.5 py-1 text-[11px] font-semibold dark:bg-accent dark:text-btn-primary-text">
                       {categories.find((category) => category._id === categoryId)?.name || 'Category'}
                       <button type="button" aria-label="Remove category filter" onClick={() => handleCategoryToggle(categoryId)} className="hover:opacity-75">
                         <X className="h-3 w-3" />
@@ -946,7 +946,7 @@ function ExploreContent() {
                     </span>
                   ))}
                   {universityScope === 'mine' && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-accent text-btn-primary-text px-2.5 py-1 text-[11px] font-semibold">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white px-2.5 py-1 text-[11px] font-semibold dark:bg-accent dark:text-btn-primary-text">
                       My University
                       <button type="button" aria-label="Show all universities" onClick={() => handleUniversityScopeChange('all')} className="hover:opacity-75">
                         <X className="h-3 w-3" />
@@ -962,7 +962,7 @@ function ExploreContent() {
                     </span>
                   )}
                   {selectedListingType && (
-                    <span className="inline-flex items-center gap-1 bg-accent text-btn-primary-text px-2 py-0.5 rounded-md text-[11px] capitalize font-semibold">
+                    <span className="inline-flex items-center gap-1 bg-emerald-600 text-white px-2 py-0.5 rounded-md text-[11px] capitalize font-semibold dark:bg-accent dark:text-btn-primary-text">
                       {selectedListingType}
                       <button onClick={() => handleListingTypeChange(selectedListingType)} className="hover:opacity-75">
                         <X className="w-3 h-3" />
@@ -1175,7 +1175,7 @@ function ExploreContent() {
                       {/* Content Info */}
                       <div className="p-4 space-y-2">
                         {catName && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-chip border border-card-border/60 px-2 py-0.5 rounded-md inline-block">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md inline-block dark:text-accent dark:bg-chip dark:border-card-border/60">
                             {catName}
                           </span>
                         )}
@@ -1201,7 +1201,7 @@ function ExploreContent() {
                     {/* Price Footer */}
                     <div className="flex items-center justify-between border-t border-card-border p-4 pt-3">
                       {book.listingType === 'donate' ? (
-                        <span className="text-xs font-black text-btn-primary-text bg-accent px-2.5 py-1 rounded-lg">
+                        <span className="text-xs font-black text-white bg-emerald-600 px-2.5 py-1 rounded-lg dark:bg-accent dark:text-btn-primary-text">
                           Free
                         </span>
                       ) : book.listingType === 'exchange' ? (

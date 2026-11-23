@@ -411,19 +411,19 @@ export default function HomePage() {
             {/* Left Column: Headline, Subtext, Search, CTAs */}
             <div className="lg:col-span-6 xl:col-span-6">
               {/* Pill Badge */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-card-border bg-card/60 px-3.5 py-1.5 text-xs font-semibold text-heading shadow-inner backdrop-blur-md">
-                <GraduationCap className="h-4 w-4 text-accent" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-semibold text-emerald-800 shadow-inner dark:border-card-border dark:bg-card/60 dark:text-heading backdrop-blur-md">
+                <GraduationCap className="h-4 w-4 text-emerald-700 dark:text-accent" />
                 <span>Student-to-Student Book Marketplace</span>
               </div>
 
               {/* Headline */}
               <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-heading sm:text-5xl lg:text-[52px] lg:leading-[1.12]">
                 Your Next Chapter Starts With a{' '}
-                <span className="relative inline-block whitespace-nowrap italic text-accent">
+                <span className="relative inline-block whitespace-nowrap italic bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent dark:from-emerald-300 dark:to-emerald-400">
                   Pre-Loved Book
                   {/* Hand-drawn curved underline */}
                   <svg
-                    className="absolute -bottom-2.5 left-0 w-full overflow-visible text-accent"
+                    className="absolute -bottom-2.5 left-0 w-full overflow-visible text-emerald-600 dark:text-accent"
                     height="12"
                     viewBox="0 0 240 12"
                     fill="none"

@@ -221,7 +221,7 @@ function NavbarInner() {
 
   const navPillClass = (active: boolean) =>
     active
-      ? 'rounded-full bg-accent px-4 py-1.5 text-xs font-bold text-btn-primary-text shadow-sm transition-all duration-200'
+      ? 'rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition-all duration-200 dark:bg-accent dark:text-btn-primary-text'
       : 'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold text-heading/85 hover:text-heading hover:bg-card border border-transparent hover:border-card-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all duration-200';
 
   const iconBtnClass =
@@ -233,11 +233,11 @@ function NavbarInner() {
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" aria-label="CampusBook home" className="group flex shrink-0 items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/20 border border-card-border text-accent shadow-sm transition group-hover:scale-105 group-hover:bg-accent group-hover:text-btn-primary-text">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 shadow-sm transition group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white dark:bg-accent/20 dark:border-card-border dark:text-accent dark:group-hover:bg-accent dark:group-hover:text-btn-primary-text">
               <BookOpen className="h-5 w-5" aria-hidden="true" />
             </span>
             <span className="text-lg sm:text-xl font-extrabold tracking-tight text-heading">
-              Campus<span className="text-accent">Book</span>
+              Campus<span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent dark:from-emerald-300 dark:to-emerald-400">Book</span>
             </span>
           </Link>
 

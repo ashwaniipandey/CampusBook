@@ -78,12 +78,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }`}>
  <div className="flex h-20 items-center justify-between border-b border-popover-border px-6">
  <Link href="/admin" className="flex items-center gap-3">
- <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-btn-primary-text">
+ <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white dark:bg-accent dark:text-btn-primary-text">
  <BookOpen className="h-5 w-5" />
  </span>
  <span>
  <span className="block text-lg font-extrabold tracking-tight text-popover-heading">CampusBook</span>
- <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Admin console</span>
+ <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-700 dark:text-accent">Admin console</span>
  </span>
  </Link>
  <button type="button" onClick={() => setSidebarOpen(false)} className="rounded-lg p-2 text-popover-muted hover:bg-popover-hover hover:text-popover-heading lg:hidden" aria-label="Close menu">
@@ -102,11 +102,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
  aria-current={active ? 'page' : undefined}
  className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${
  active
- ? 'bg-accent/15 text-accent ring-1 ring-inset ring-accent/20'
+ ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-accent/15 dark:text-accent dark:ring-accent/20'
  : 'text-popover-muted hover:bg-popover-hover hover:text-popover-heading'
  }`}
  >
- <Icon className={`h-4 w-4 ${active ? 'text-accent' : 'text-popover-muted'}`} />
+ <Icon className={`h-4 w-4 ${active ? 'text-emerald-700 dark:text-accent' : 'text-popover-muted'}`} />
  {label}
  </Link>
  );
@@ -118,7 +118,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
  href="/admin/profile"
  className="flex items-center gap-3 rounded-xl bg-popover-hover/50 p-3 transition hover:bg-popover-hover"
  >
- <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-accent/20 font-bold text-accent">
+ <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-emerald-100 font-bold text-emerald-700 dark:bg-accent/20 dark:text-accent">
  {user.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : user.name.slice(0, 1).toUpperCase()}
  </div>
  <div className="min-w-0 flex-1">

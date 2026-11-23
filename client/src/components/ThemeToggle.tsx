@@ -27,7 +27,7 @@ export default function ThemeToggle() {
         title="Light theme"
         className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
           !isDark
-            ? 'bg-accent text-btn-primary-text shadow-sm'
+            ? 'bg-emerald-600 text-white shadow-sm dark:bg-accent dark:text-btn-primary-text'
             : 'text-muted hover:text-heading'
         }`}
       >
@@ -43,7 +43,7 @@ export default function ThemeToggle() {
         title="Dark theme"
         className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 ${
           isDark
-            ? 'bg-accent text-btn-primary-text shadow-sm'
+            ? 'bg-emerald-600 text-white shadow-sm dark:bg-accent dark:text-btn-primary-text'
             : 'text-muted hover:text-heading'
         }`}
       >
